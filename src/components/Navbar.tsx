@@ -9,7 +9,13 @@ export const Navbar = () => {
         {/* Logo area */}
         <div className="flex items-center gap-2">
           <Menu className="h-6 w-6 md:hidden" />
-          <h1 className="text-2xl font-bold tracking-tight text-[#FDBA74]">ServiAPP</h1>
+          <a href="/" className="flex-shrink-0">
+            <img 
+              src="/serviapp-logo.png" 
+              alt="ServiAPP Logo" 
+              className="h-10 w-auto object-contain" 
+            />
+          </a>
         </div>
 
         {/* Search Bar */}
