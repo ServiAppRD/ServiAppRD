@@ -9,7 +9,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { 
   Loader2, LogOut, User, Phone, MapPin, Heart, 
   HelpCircle, ChevronRight, CreditCard, Gift, 
-  ArrowLeft, Bell, Shield, Settings, CheckCircle2
+  ArrowLeft, Bell, Shield, Settings
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -51,20 +51,30 @@ const Profile = () => {
   }, [navigate]);
 
   const calculateCompletion = (data: any) => {
+    // Ahora incluimos todos los campos requeridos, incluyendo la dirección
     const fields = [
       { key: 'first_name', label: 'Nombre' },
       { key: 'last_name', label: 'Apellido' },
       { key: 'phone', label: 'Teléfono' },
-      { key: 'city', label: 'Ciudad' }
+      { key: 'city', label: 'Ciudad' },
+      { key: 'address', label: 'Dirección' }
     ];
     
-    const completed = fields.filter(f => data[f.key] && data[f.key].trim() !== '').length;
+    // Verificación robusta de que el campo existe y no está vacío o solo con espacios
+    const completed = fields.filter(f => {
+      const value = data[f.key];
+      return value && String(value).trim() !== '';
+    }).length;
+
     const total = fields.length;
     const percent = Math.round((completed / total) * 100);
     
     setCompletionPercentage(percent);
 
-    const missing = fields.filter(f => !data[f.key] || data[f.key].trim() === '').map(f => f.label);
+    const missing = fields
+      .filter(f => !data[f.key] || String(data[f.key]).trim() === '')
+      .map(f => f.label);
+    
     setMissingFields(missing);
   };
 
@@ -98,6 +108,8 @@ const Profile = () => {
   const updateProfile = async () => {
     try {
       setUpdating(true);
+      // Validar campos obligatorios antes de guardar si el usuario intenta guardar vacíos
+      
       const updates = {
         id: session?.user.id,
         first_name: firstName,
@@ -303,16 +315,7 @@ const Profile = () => {
             </div>
         )}
         
-        {/* Fully Completed Badge */}
-        {completionPercentage === 100 && (
-             <div className="bg-green-50 rounded-2xl p-4 border border-green-100 flex items-center gap-3">
-                <CheckCircle2 className="h-6 w-6 text-green-500" />
-                <div>
-                    <h3 className="font-bold text-green-700 text-sm">¡Perfil Completado!</h3>
-                    <p className="text-xs text-green-600">Tienes acceso total a todas las funciones.</p>
-                </div>
-             </div>
-        )}
+        {/* Success badge removed as requested - Interface is cleaner when complete */}
 
         {/* Menu Sections */}
         <div className="space-y-6">
