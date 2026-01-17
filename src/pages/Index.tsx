@@ -3,6 +3,7 @@ import { ServiceCard } from "@/components/ServiceCard";
 import { Button } from "@/components/ui/button";
 import { Wrench } from "lucide-react";
 import { PullToRefresh } from "@/components/PullToRefresh";
+import { useNavigate } from "react-router-dom";
 
 // Empty arrays for now
 const recommendedServices: any[] = [];
@@ -16,6 +17,8 @@ const SectionHeader = ({ title }: { title: string }) => (
 );
 
 const Index = () => {
+  const navigate = useNavigate();
+
   const handleRefresh = async () => {
     // Simulamos carga y recargamos la página para "traer nuevas opciones"
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -35,7 +38,10 @@ const Index = () => {
                 <div className="relative z-10 max-w-lg">
                   <h3 className="text-2xl font-bold mb-2">¡Ofrece tus servicios gratis!</h3>
                   <p className="text-gray-300 text-sm mb-6 max-w-[70%]">Llega a miles de clientes potenciales en tu zona publicando tu perfil profesional.</p>
-                  <Button className="bg-[#F97316] text-white hover:bg-orange-600 font-bold border-0 shadow-lg hover:shadow-orange-500/20 transition-all">
+                  <Button 
+                    onClick={() => navigate('/publish')}
+                    className="bg-[#F97316] text-white hover:bg-orange-600 font-bold border-0 shadow-lg hover:shadow-orange-500/20 transition-all"
+                  >
                       Publicar Servicio
                   </Button>
                 </div>
