@@ -12,7 +12,7 @@ export const Navbar = () => {
         <div className="flex items-center gap-2 mb-3">
           {/* Logo */}
           <a href="/" className="flex-shrink-0 mr-2">
-            <h1 className="text-2xl font-bold text-[#F97316] tracking-tight">ServiAPP</h1>
+            <img src="/logo.png" alt="ServiAPP" className="h-10 object-contain" />
           </a>
         </div>
 

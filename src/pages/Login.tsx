@@ -19,17 +19,21 @@ const Login = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4 pb-24">
-      <div className="w-full max-w-sm space-y-6">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 pb-24">
+      <div className="w-full max-w-md">
         
-        {/* Header/Logo Section */}
-        <div className="text-center space-y-2 mb-8">
-          <h1 className="text-3xl font-extrabold text-[#F97316] tracking-tight">ServiAPP</h1>
-          <p className="text-gray-500 text-sm">Ingresa para gestionar tus servicios</p>
-        </div>
+        {/* Card Container */}
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+          
+          {/* Header/Logo Section */}
+          <div className="text-center space-y-2 mb-8">
+            <div className="flex justify-center mb-4">
+              <img src="/logo.png" alt="ServiAPP" className="h-16 object-contain" />
+            </div>
+            <p className="text-gray-500 text-sm">Ingresa para gestionar tus servicios</p>
+          </div>
 
-        {/* Auth Component */}
-        <div className="bg-white">
+          {/* Auth Component */}
           <Auth
             supabaseClient={supabase}
             appearance={{
@@ -65,7 +69,7 @@ const Login = () => {
                 anchor: 'text-[#F97316] hover:text-orange-700 font-medium',
               }
             }}
-            providers={[]} // No social providers for now
+            providers={[]}
             theme="light"
             localization={{
               variables: {
