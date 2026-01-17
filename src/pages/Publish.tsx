@@ -100,31 +100,36 @@ const Publish = () => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      let imageUrl = "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=500&auto=format&fit=crop&q=60"; // Fallback
+      let imageUrl = null;
 
-      // 1. Subir imagen si existe
+      // 1. Subir imagen (Requerido)
       if (formData.imageFile) {
+        // Limpiar nombre de archivo para evitar caracteres extraños
         const fileExt = formData.imageFile.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${fileName}`;
-
-        // Intentamos subir al bucket 'service-images'
-        // NOTA: Debes crear este bucket en tu dashboard de Supabase y hacerlo público
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        
+        // Subir al bucket
         const { error: uploadError, data } = await supabase.storage
           .from('service-images')
-          .upload(filePath, formData.imageFile);
+          .upload(fileName, formData.imageFile, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
         if (uploadError) {
-          console.error("Error subiendo imagen (probablemente falta el bucket 'service-images'):", uploadError);
-          // No detenemos el flujo, usamos el fallback o el preview local temporalmente (base64 no recomendado para DB)
-        } else {
-          // Obtener URL pública
-          const { data: { publicUrl } } = supabase.storage
-            .from('service-images')
-            .getPublicUrl(filePath);
-            
-          imageUrl = publicUrl;
+          console.error("Error upload:", uploadError);
+          throw new Error("Error al subir la imagen. Intenta de nuevo.");
         }
+
+        // Obtener URL pública
+        const { data: { publicUrl } } = supabase.storage
+          .from('service-images')
+          .getPublicUrl(fileName);
+          
+        imageUrl = publicUrl;
+      } else {
+        // Si no hay archivo (pero pasó la validación de preview), es un error raro
+        throw new Error("No se ha seleccionado ninguna imagen.");
       }
 
       // 2. Insertar en base de datos
@@ -147,7 +152,7 @@ const Publish = () => {
       
     } catch (error: any) {
       console.error(error);
-      showError("Error al publicar: " + error.message);
+      showError(error.message || "Ocurrió un error al publicar");
     } finally {
       setLoading(false);
     }
