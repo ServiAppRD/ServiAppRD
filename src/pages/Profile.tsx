@@ -5,15 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { showSuccess, showError } from "@/utils/toast";
-import { Loader2, LogOut, User } from "lucide-react";
+import { Loader2, LogOut, User, Phone } from "lucide-react";
 
 const Profile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [session, setSession] = useState<any>(null);
+  
+  // Form fields
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
 
   useEffect(() => {
     // Get session
@@ -32,7 +35,7 @@ const Profile = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('profiles')
-        .select('first_name, last_name')
+        .select('first_name, last_name, phone')
         .eq('id', userId)
         .single();
 
@@ -43,6 +46,7 @@ const Profile = () => {
       if (data) {
         setFirstName(data.first_name || "");
         setLastName(data.last_name || "");
+        setPhone(data.phone || "");
       }
     } catch (error) {
       console.error('Error:', error);
@@ -60,6 +64,7 @@ const Profile = () => {
           id: session?.user.id,
           first_name: firstName,
           last_name: lastName,
+          phone: phone,
           updated_at: new Date().toISOString(),
         });
 
@@ -117,6 +122,20 @@ const Profile = () => {
                   value={lastName} 
                   onChange={(e) => setLastName(e.target.value)} 
                   placeholder="Tu apellido"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">Teléfono</Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input 
+                  id="phone" 
+                  value={phone} 
+                  onChange={(e) => setPhone(e.target.value)} 
+                  placeholder="+52 555 555 5555"
+                  className="pl-10"
                 />
               </div>
             </div>
