@@ -28,7 +28,7 @@ const Login = () => {
           {/* Header/Logo Section */}
           <div className="text-center space-y-2 mb-8">
             <div className="flex justify-center mb-4">
-              <img src="/logo.png" alt="ServiAPP" className="h-16 object-contain" />
+              <img src="/logo.png" alt="ServiAPP" className="h-24 object-contain" />
             </div>
             <p className="text-gray-500 text-sm">Ingresa para gestionar tus servicios</p>
           </div>
