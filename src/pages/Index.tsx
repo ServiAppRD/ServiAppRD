@@ -8,7 +8,7 @@ import { Wrench, Zap, Paintbrush, Truck, Monitor, Scissors } from "lucide-react"
 const featuredServices: any[] = [];
 const recentServices: any[] = [];
 
-// Categories are structural navigation, so we keep them, but they don't represent specific fake products.
+// Categories are structural navigation
 const categories = [
   { icon: Wrench, label: "Plomería", count: "0" },
   { icon: Zap, label: "Electricidad", count: "0" },
@@ -23,16 +23,16 @@ const Index = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
 
-      {/* Categories Bar */}
-      <div className="bg-[#0F172A] text-gray-300 py-2 border-t border-gray-800 text-sm hidden md:block">
-        <div className="container mx-auto px-4 flex justify-between">
-          <span className="hover:text-[#F97316] cursor-pointer">Categorías y más</span>
+      {/* Categories Bar - White theme */}
+      <div className="bg-white text-gray-600 py-3 border-b border-gray-200 text-sm hidden md:block shadow-sm">
+        <div className="container mx-auto px-4 flex justify-between font-medium">
+          <span className="hover:text-[#F97316] cursor-pointer transition-colors">Categorías y más</span>
           <div className="flex gap-6">
-            <span className="hover:text-white cursor-pointer">Hogar</span>
-            <span className="hover:text-white cursor-pointer">Vehículos</span>
-            <span className="hover:text-white cursor-pointer">Tecnología</span>
-            <span className="hover:text-white cursor-pointer">Eventos</span>
-            <span className="hover:text-white cursor-pointer">Salud</span>
+            <span className="hover:text-[#F97316] cursor-pointer transition-colors">Hogar</span>
+            <span className="hover:text-[#F97316] cursor-pointer transition-colors">Vehículos</span>
+            <span className="hover:text-[#F97316] cursor-pointer transition-colors">Tecnología</span>
+            <span className="hover:text-[#F97316] cursor-pointer transition-colors">Eventos</span>
+            <span className="hover:text-[#F97316] cursor-pointer transition-colors">Salud</span>
           </div>
         </div>
       </div>
@@ -44,8 +44,6 @@ const Index = () => {
           
           {/* Sidebar Area */}
           <div className="hidden md:block md:col-span-3 space-y-4">
-            {/* "Mejora tu experiencia" section removed */}
-            
             <div className="bg-[#F97316]/20 p-4 rounded-lg border border-[#F97316] text-center">
               <p className="text-sm font-medium text-[#0F172A]">¿Necesitas ayuda?</p>
               <p className="text-xs text-gray-600 mt-1">Contacta soporte 24/7</p>
