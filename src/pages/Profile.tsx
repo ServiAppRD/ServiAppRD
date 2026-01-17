@@ -4,14 +4,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showSuccess, showError } from "@/utils/toast";
 import { 
   Loader2, LogOut, User, Phone, MapPin, Heart, 
   HelpCircle, ChevronRight, CreditCard, Gift, 
-  ArrowLeft, Bell, Shield, Settings
+  ArrowLeft, Bell, Shield, Settings, CheckCircle2
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+const DR_CITIES = [
+  "Santo Domingo", "Santiago de los Caballeros", "San Francisco de Macorís", 
+  "Higüey", "La Romana", "San Cristóbal", "San Pedro de Macorís", 
+  "La Vega", "Puerto Plata", "Barahona", "Punta Cana", "Bávaro"
+];
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -24,7 +31,13 @@ const Profile = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
+  const [city, setCity] = useState("");
+  const [address, setAddress] = useState("");
   const [updating, setUpdating] = useState(false);
+
+  // Completion Logic
+  const [completionPercentage, setCompletionPercentage] = useState(0);
+  const [missingFields, setMissingFields] = useState<string[]>([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -37,12 +50,30 @@ const Profile = () => {
     });
   }, [navigate]);
 
+  const calculateCompletion = (data: any) => {
+    const fields = [
+      { key: 'first_name', label: 'Nombre' },
+      { key: 'last_name', label: 'Apellido' },
+      { key: 'phone', label: 'Teléfono' },
+      { key: 'city', label: 'Ciudad' }
+    ];
+    
+    const completed = fields.filter(f => data[f.key] && data[f.key].trim() !== '').length;
+    const total = fields.length;
+    const percent = Math.round((completed / total) * 100);
+    
+    setCompletionPercentage(percent);
+
+    const missing = fields.filter(f => !data[f.key] || data[f.key].trim() === '').map(f => f.label);
+    setMissingFields(missing);
+  };
+
   const getProfile = async (userId: string) => {
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('profiles')
-        .select('first_name, last_name, phone')
+        .select('first_name, last_name, phone, city, address')
         .eq('id', userId)
         .single();
 
@@ -53,6 +84,9 @@ const Profile = () => {
         setFirstName(data.first_name || "");
         setLastName(data.last_name || "");
         setPhone(data.phone || "");
+        setCity(data.city || "");
+        setAddress(data.address || "");
+        calculateCompletion(data);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -64,19 +98,24 @@ const Profile = () => {
   const updateProfile = async () => {
     try {
       setUpdating(true);
+      const updates = {
+        id: session?.user.id,
+        first_name: firstName,
+        last_name: lastName,
+        phone: phone,
+        city: city,
+        address: address,
+        updated_at: new Date().toISOString(),
+      };
+
       const { error } = await supabase
         .from('profiles')
-        .upsert({
-          id: session?.user.id,
-          first_name: firstName,
-          last_name: lastName,
-          phone: phone,
-          updated_at: new Date().toISOString(),
-        });
+        .upsert(updates);
 
       if (error) throw error;
       showSuccess("Perfil actualizado correctamente");
-      setProfileData({ ...profileData, first_name: firstName, last_name: lastName, phone: phone });
+      setProfileData(updates);
+      calculateCompletion(updates);
       setView('dashboard'); // Go back to dashboard
     } catch (error: any) {
       showError(error.message);
@@ -101,12 +140,12 @@ const Profile = () => {
   // --- EDIT PROFILE VIEW ---
   if (view === 'edit') {
     return (
-      <div className="min-h-screen bg-gray-50 pb-20 pt-safe">
+      <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
         <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="hover:bg-orange-50 hover:text-[#F97316]">
             <ArrowLeft className="h-6 w-6" />
           </Button>
-          <h1 className="text-lg font-bold">Información Personal</h1>
+          <h1 className="text-lg font-bold">Editar Perfil</h1>
         </div>
         
         <div className="p-6 max-w-md mx-auto space-y-6">
@@ -129,17 +168,53 @@ const Profile = () => {
                 className="focus-visible:ring-[#F97316]"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Teléfono</Label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input 
-                  id="phone" 
-                  value={phone} 
-                  onChange={(e) => setPhone(e.target.value)} 
-                  className="pl-10 focus-visible:ring-[#F97316]"
-                />
-              </div>
+            
+            <div className="pt-2 border-t border-gray-100">
+                <h3 className="font-semibold text-gray-900 mb-3">Información de Contacto</h3>
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="phone">Teléfono / Celular</Label>
+                        <div className="relative">
+                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input 
+                            id="phone" 
+                            type="tel"
+                            placeholder="809-555-5555"
+                            value={phone} 
+                            onChange={(e) => setPhone(e.target.value)} 
+                            className="pl-10 focus-visible:ring-[#F97316]"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="city">Ciudad (Rep. Dom.)</Label>
+                        <Select value={city} onValueChange={setCity}>
+                            <SelectTrigger className="focus:ring-[#F97316]">
+                                <SelectValue placeholder="Selecciona tu ciudad" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white z-50">
+                                {DR_CITIES.map((c) => (
+                                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="address">Dirección (Sector, calle, #)</Label>
+                        <div className="relative">
+                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input 
+                            id="address" 
+                            placeholder="Ej. Naco, Calle 5, #20"
+                            value={address} 
+                            onChange={(e) => setAddress(e.target.value)} 
+                            className="pl-10 focus-visible:ring-[#F97316]"
+                            />
+                        </div>
+                    </div>
+                </div>
             </div>
           </div>
 
@@ -159,16 +234,22 @@ const Profile = () => {
   // --- DASHBOARD VIEW ---
   return (
     <div className="min-h-screen bg-gray-50 pb-24 pt-safe animate-fade-in">
-      {/* Modern Orange Header - Removed sticky to fix scrolling issues */}
+      {/* Modern Orange Header */}
       <div className="bg-white pt-4 pb-4 px-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] rounded-b-[2.5rem] relative z-10">
         <div className="flex justify-between items-center mb-6">
           <div>
             <p className="text-gray-400 text-sm font-medium">Bienvenido de nuevo,</p>
-            <h1 className="text-2xl font-bold text-[#0F172A] tracking-tight">
+            <h1 className="text-2xl font-bold text-[#0F172A] tracking-tight truncate max-w-[200px]">
               {profileData?.first_name || 'Usuario'}
             </h1>
+            {profileData?.city && (
+                <div className="flex items-center text-xs text-gray-400 mt-1">
+                    <MapPin className="h-3 w-3 mr-1" />
+                    {profileData.city}
+                </div>
+            )}
           </div>
-          <Avatar className="h-12 w-12 border-2 border-orange-100 shadow-sm cursor-pointer ring-2 ring-transparent hover:ring-[#F97316] transition-all">
+          <Avatar className="h-12 w-12 border-2 border-orange-100 shadow-sm cursor-pointer ring-2 ring-transparent hover:ring-[#F97316] transition-all" onClick={() => setView('edit')}>
             <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${session?.user.email}`} />
             <AvatarFallback className="bg-orange-100 text-[#F97316] font-bold">
               {profileData?.first_name?.[0] || 'U'}
@@ -184,33 +265,54 @@ const Profile = () => {
             onClick={() => setView('edit')} 
           />
           <QuickAction icon={Gift} label="Cupones" />
-          <QuickAction icon={MapPin} label="Dirección" />
+          <QuickAction icon={MapPin} label="Dirección" onClick={() => setView('edit')} />
           <QuickAction icon={HelpCircle} label="Ayuda" />
         </div>
       </div>
 
       <div className="px-5 space-y-6 mt-6">
 
-        {/* Profile Completion Card */}
-        <div className="bg-white rounded-2xl p-5 border border-orange-100 shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-16 h-16 bg-orange-50 rounded-bl-full -mr-2 -mt-2 z-0"></div>
-          <div className="relative z-10">
-            <div className="flex justify-between items-center mb-3">
-              <div>
-                <h3 className="font-bold text-[#0F172A]">Completa tu perfil</h3>
-                <p className="text-xs text-gray-500 font-medium">2 de 4 pasos completados</p>
-              </div>
-              <Button variant="ghost" className="text-[#F97316] hover:text-orange-700 hover:bg-orange-50 h-8 px-3 rounded-full font-bold text-xs">
-                Completar
-              </Button>
+        {/* Profile Completion Card - Logic Applied */}
+        {completionPercentage < 100 && (
+            <div className="bg-white rounded-2xl p-5 border border-orange-100 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-orange-50 rounded-bl-full -mr-2 -mt-2 z-0"></div>
+            <div className="relative z-10">
+                <div className="flex justify-between items-center mb-3">
+                <div>
+                    <h3 className="font-bold text-[#0F172A]">Completa tu perfil</h3>
+                    <p className="text-xs text-gray-500 font-medium">{completionPercentage}% completado</p>
+                </div>
+                <Button 
+                    variant="ghost" 
+                    onClick={() => setView('edit')}
+                    className="text-[#F97316] hover:text-orange-700 hover:bg-orange-50 h-8 px-3 rounded-full font-bold text-xs"
+                >
+                    Completar
+                </Button>
+                </div>
+                <Progress value={completionPercentage} className="h-2.5 bg-gray-100" indicatorClassName="bg-gradient-to-r from-[#F97316] to-orange-500 rounded-full" />
+                <div className="mt-3 flex flex-wrap gap-2">
+                    {missingFields.map(field => (
+                        <p key={field} className="text-[10px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full flex items-center inline-flex">
+                            <span className="w-1 h-1 rounded-full bg-[#F97316] mr-1.5"></span>
+                            Falta {field.toLowerCase()}
+                        </p>
+                    ))}
+                </div>
             </div>
-            <Progress value={50} className="h-2.5 bg-gray-100" indicatorClassName="bg-gradient-to-r from-[#F97316] to-orange-500 rounded-full" />
-            <p className="text-[11px] text-gray-400 mt-3 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#F97316]"></span>
-              Agrega una descripción para atraer más clientes
-            </p>
-          </div>
-        </div>
+            </div>
+        )}
+        
+        {/* Fully Completed Badge */}
+        {completionPercentage === 100 && (
+             <div className="bg-green-50 rounded-2xl p-4 border border-green-100 flex items-center gap-3">
+                <CheckCircle2 className="h-6 w-6 text-green-500" />
+                <div>
+                    <h3 className="font-bold text-green-700 text-sm">¡Perfil Completado!</h3>
+                    <p className="text-xs text-green-600">Tienes acceso total a todas las funciones.</p>
+                </div>
+             </div>
+        )}
 
         {/* Menu Sections */}
         <div className="space-y-6">
@@ -221,7 +323,7 @@ const Profile = () => {
           </MenuSection>
 
           <MenuSection title="Preferencias">
-            <MenuItem icon={Settings} label="Configuración" />
+            <MenuItem icon={Settings} label="Configuración" onClick={() => setView('edit')} />
             <MenuItem icon={Shield} label="Privacidad y Seguridad" />
             <MenuItem icon={LogOut} label="Cerrar Sesión" onClick={handleSignOut} isDestructive />
           </MenuSection>

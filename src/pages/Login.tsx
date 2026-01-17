@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { showSuccess, showError } from "@/utils/toast";
-import { Loader2, Mail, Lock, User, Phone, ArrowRight } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowRight } from "lucide-react";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -18,7 +18,6 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
-  const [phone, setPhone] = useState("");
 
   useEffect(() => {
     // Check if user is already logged in
@@ -66,7 +65,6 @@ const Login = () => {
         options: {
           data: {
             first_name: firstName,
-            phone: phone, // Optional
           },
         },
       });
@@ -74,7 +72,6 @@ const Login = () => {
       if (error) throw error;
       
       showSuccess("Cuenta creada exitosamente. ¡Bienvenido!");
-      // Redirect handled by auth state change
       
     } catch (error: any) {
       showError(error.message);
@@ -216,21 +213,6 @@ const Login = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         minLength={6}
-                        className="pl-10 h-11 bg-white border-gray-200 focus:border-[#F97316] transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="reg-phone">Teléfono <span className="text-gray-400 font-normal text-xs">(Opcional)</span></Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input 
-                        id="reg-phone" 
-                        type="tel" 
-                        placeholder="+52 555 555 5555" 
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
                         className="pl-10 h-11 bg-white border-gray-200 focus:border-[#F97316] transition-colors"
                       />
                     </div>
