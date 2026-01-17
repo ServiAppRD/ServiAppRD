@@ -159,8 +159,8 @@ const Profile = () => {
   // --- DASHBOARD VIEW ---
   return (
     <div className="min-h-screen bg-gray-50 pb-24 pt-safe animate-fade-in">
-      {/* Modern Orange Header */}
-      <div className="bg-white pt-4 pb-2 px-6 sticky top-0 z-10 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] rounded-b-[2rem]">
+      {/* Modern Orange Header - Removed sticky to fix scrolling issues */}
+      <div className="bg-white pt-4 pb-4 px-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] rounded-b-[2.5rem] relative z-10">
         <div className="flex justify-between items-center mb-6">
           <div>
             <p className="text-gray-400 text-sm font-medium">Bienvenido de nuevo,</p>
@@ -176,7 +176,7 @@ const Profile = () => {
           </Avatar>
         </div>
         
-        {/* Quick Actions inside Header for integration */}
+        {/* Quick Actions inside Header */}
         <div className="flex justify-between gap-2 pb-2">
           <QuickAction 
             icon={User} 
