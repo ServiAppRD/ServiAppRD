@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 
 export const Navbar = () => {
   return (
-    <nav className="bg-[#0F172A] text-white py-3 sticky top-0 z-50 shadow-md">
+    <nav className="bg-[#0F172A] text-white py-4 sticky top-0 z-50 shadow-md">
       <div className="container mx-auto px-4 flex items-center justify-between gap-4">
         {/* Logo area - Increased size */}
         <div className="flex items-center gap-2">
@@ -13,7 +13,7 @@ export const Navbar = () => {
             <img 
               src="/serviapp-logo.png" 
               alt="ServiAPP Logo" 
-              className="h-14 w-auto object-contain" 
+              className="h-20 md:h-24 w-auto object-contain" 
             />
           </a>
         </div>
