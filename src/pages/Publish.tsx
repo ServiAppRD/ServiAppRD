@@ -40,7 +40,7 @@ const Publish = () => {
     location: "",
     features: [] as string[],
     isPromoted: false,
-    imagePreview: "" as string | null, // Simulación de preview
+    imagePreview: "" as string | null,
     imageFile: null as File | null
   });
 
@@ -57,7 +57,6 @@ const Publish = () => {
   }, [navigate]);
 
   const handleNext = () => {
-    // Validaciones simples por paso
     if (step === 1 && !formData.category) return showError("Selecciona una categoría");
     if (step === 2 && !formData.imagePreview) return showError("Sube al menos una foto de portada");
     if (step === 3) {
@@ -101,10 +100,32 @@ const Publish = () => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      // 1. Aquí iría la lógica de subida de imagen a Supabase Storage real
-      // Por ahora usaremos una imagen de placeholder si no hay bucket configurado
-      // o la URL simulada si es local (en producción se necesita Storage)
-      const imageUrl = "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=500&auto=format&fit=crop&q=60"; 
+      let imageUrl = "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=500&auto=format&fit=crop&q=60"; // Fallback
+
+      // 1. Subir imagen si existe
+      if (formData.imageFile) {
+        const fileExt = formData.imageFile.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        // Intentamos subir al bucket 'service-images'
+        // NOTA: Debes crear este bucket en tu dashboard de Supabase y hacerlo público
+        const { error: uploadError, data } = await supabase.storage
+          .from('service-images')
+          .upload(filePath, formData.imageFile);
+
+        if (uploadError) {
+          console.error("Error subiendo imagen (probablemente falta el bucket 'service-images'):", uploadError);
+          // No detenemos el flujo, usamos el fallback o el preview local temporalmente (base64 no recomendado para DB)
+        } else {
+          // Obtener URL pública
+          const { data: { publicUrl } } = supabase.storage
+            .from('service-images')
+            .getPublicUrl(filePath);
+            
+          imageUrl = publicUrl;
+        }
+      }
 
       // 2. Insertar en base de datos
       const { error } = await supabase.from('services').insert({
@@ -114,7 +135,7 @@ const Publish = () => {
         category: formData.category,
         price: parseFloat(formData.price),
         location: formData.location,
-        image_url: imageUrl, // En una app real, aquí va la URL de Supabase Storage
+        image_url: imageUrl,
         features: formData.features,
         is_promoted: formData.isPromoted
       });
@@ -294,7 +315,6 @@ const Publish = () => {
       </div>
 
       <div className="grid gap-4 pt-4">
-        {/* Free Option */}
         <div 
           onClick={() => setFormData({ ...formData, isPromoted: false })}
           className={cn(
@@ -315,7 +335,6 @@ const Publish = () => {
           </div>
         </div>
 
-        {/* Premium Option */}
         <div 
           onClick={() => setFormData({ ...formData, isPromoted: true })}
           className={cn(
@@ -402,7 +421,6 @@ const Publish = () => {
 
   return (
     <div className="min-h-screen bg-white pb-safe">
-      {/* Top Navigation */}
       <div className="px-4 py-4 flex items-center justify-between sticky top-0 bg-white z-10">
         <Button variant="ghost" size="icon" onClick={step === 1 ? () => navigate(-1) : handleBack}>
           <ArrowLeft className="h-6 w-6 text-gray-900" />
@@ -418,10 +436,9 @@ const Publish = () => {
             />
           ))}
         </div>
-        <div className="w-10" /> {/* Spacer */}
+        <div className="w-10" />
       </div>
 
-      {/* Main Content Area */}
       <div className="px-5 pb-32 pt-2 max-w-lg mx-auto">
         {step === 1 && renderStep1()}
         {step === 2 && renderStep2()}
@@ -430,7 +447,6 @@ const Publish = () => {
         {step === 5 && renderStep5()}
       </div>
 
-      {/* Bottom Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 pb-safe z-20">
         <div className="max-w-lg mx-auto flex gap-3">
             {step === 5 ? (

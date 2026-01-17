@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Search from "./pages/Search";
 import Publish from "./pages/Publish";
+import ServiceDetail from "./pages/ServiceDetail"; // Nueva importación
 import NotFound from "./pages/NotFound";
 import { MobileNavbar } from "./components/MobileNavbar";
 
@@ -16,7 +17,8 @@ const queryClient = new QueryClient();
 // Componente Layout para manejar el padding condicionalmente
 const AppLayout = () => {
   const location = useLocation();
-  const hideNavbar = ["/publish", "/login"].includes(location.pathname);
+  // Ocultamos navbar en publicar, login y en el detalle del servicio
+  const hideNavbar = ["/publish", "/login"].includes(location.pathname) || location.pathname.startsWith("/service/");
 
   return (
     <div className={hideNavbar ? "" : "pb-24"}>
@@ -26,6 +28,7 @@ const AppLayout = () => {
         <Route path="/profile" element={<Profile />} />
         <Route path="/search" element={<Search />} />
         <Route path="/publish" element={<Publish />} />
+        <Route path="/service/:id" element={<ServiceDetail />} /> {/* Nueva ruta */}
         <Route path="*" element={<NotFound />} />
       </Routes>
       <MobileNavbar />

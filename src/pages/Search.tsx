@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import { Search as SearchIcon, MapPin, Filter, Star, X, Clock, ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ const CATEGORIES = [
 ];
 
 const SearchPage = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [isFocused, setIsFocused] = useState(false);
@@ -22,8 +24,6 @@ const SearchPage = () => {
   const { data: services, isLoading, error, refetch } = useQuery({
     queryKey: ['services'],
     queryFn: async () => {
-      console.log("Fetching services...");
-      // Obtenemos los servicios y la información básica del perfil del creador
       const { data, error } = await supabase
         .from('services')
         .select(`
@@ -35,19 +35,14 @@ const SearchPage = () => {
         `)
         .order('created_at', { ascending: false });
       
-      if (error) {
-        console.error("Error fetching services:", error);
-        throw error;
-      }
+      if (error) throw error;
       return data;
     }
   });
 
   const handleRefresh = async () => {
-    // Aquí podemos simplemente hacer refetch de los datos en lugar de recargar toda la página
-    // pero si prefieres el efecto de "reinicio" completo, usamos window.location.reload()
     await refetch();
-    await new Promise(resolve => setTimeout(resolve, 500)); // Un pequeño delay visual
+    await new Promise(resolve => setTimeout(resolve, 500));
   };
 
   // Client-side filtering
@@ -72,7 +67,6 @@ const SearchPage = () => {
         <div className="bg-white sticky top-0 z-20 shadow-sm rounded-b-[1.5rem] pb-4 px-4 pt-4">
           <h1 className="text-2xl font-bold mb-4 text-[#0F172A] px-1">Explorar Servicios</h1>
           
-          {/* Search Bar */}
           <div className="flex gap-3 items-center">
             <div className={cn(
               "relative flex-1 transition-all duration-300 transform",
@@ -104,7 +98,6 @@ const SearchPage = () => {
             </Button>
           </div>
 
-          {/* Category Pills */}
           <div className="flex gap-2 overflow-x-auto no-scrollbar mt-4 pb-1 px-1 -mx-1">
             {CATEGORIES.map((cat) => (
               <button
@@ -124,8 +117,6 @@ const SearchPage = () => {
         </div>
 
         <div className="p-5 space-y-6">
-          
-          {/* Results Count or Header */}
           <div className="flex justify-between items-center">
             <h2 className="font-bold text-gray-800 text-lg">
               {isLoading ? (
@@ -140,7 +131,6 @@ const SearchPage = () => {
             </h2>
           </div>
 
-          {/* Error State */}
           {error && (
             <div className="bg-red-50 p-4 rounded-xl border border-red-100 flex items-center gap-3 text-red-600">
               <AlertCircle className="h-5 w-5" />
@@ -148,12 +138,12 @@ const SearchPage = () => {
             </div>
           )}
 
-          {/* Results List */}
           <div className="space-y-4">
             {!isLoading && filteredServices.length > 0 ? (
               filteredServices.map((service) => (
                 <div 
                   key={service.id} 
+                  onClick={() => navigate(`/service/${service.id}`)} // NAVEGACIÓN AQUÍ
                   className="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-orange-100 transition-all cursor-pointer group flex gap-4"
                 >
                   {/* Image */}
@@ -203,7 +193,6 @@ const SearchPage = () => {
                 </div>
               ))
             ) : !isLoading ? (
-              // Empty State
               <div className="flex flex-col items-center justify-center py-12 text-center animate-fade-in">
                 <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mb-4">
                   <SearchIcon className="h-8 w-8 text-[#F97316] opacity-50" />
@@ -230,7 +219,7 @@ const SearchPage = () => {
                 ) : (
                   <Button 
                     className="bg-[#F97316] hover:bg-orange-600 text-white rounded-xl"
-                    onClick={() => window.location.href = '/publish'} // Simple redirect for now
+                    onClick={() => navigate('/publish')}
                   >
                     Publicar Servicio
                   </Button>
@@ -238,27 +227,6 @@ const SearchPage = () => {
               </div>
             ) : null}
           </div>
-
-          {/* Popular Tags (Only show if not searching deeply) */}
-          {!hasActiveFilters && !isLoading && filteredServices.length === 0 && (
-            <section className="pt-2">
-              <h3 className="font-bold text-gray-900 mb-3 text-sm">Búsquedas populares</h3>
-              <div className="flex flex-wrap gap-2">
-                {["Instalación aire", "Limpieza hogar", "Fuga de agua", "Mecánico cerca"].map((tag) => (
-                  <Badge 
-                    key={tag} 
-                    variant="outline" 
-                    onClick={() => setSearchTerm(tag)}
-                    className="px-4 py-2 text-xs font-normal bg-white border-gray-200 text-gray-600 hover:border-[#F97316] hover:text-[#F97316] cursor-pointer transition-all rounded-xl"
-                  >
-                    <Clock className="h-3 w-3 mr-1.5 text-gray-400" />
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            </section>
-          )}
-
         </div>
       </div>
     </PullToRefresh>
