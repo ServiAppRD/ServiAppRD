@@ -339,25 +339,16 @@ const Profile = () => {
 
       <div className="px-5 space-y-6 mt-6">
 
-        {/* Profile Completion Card (Steps Logic) */}
+        {/* Profile Completion Card (Steps Logic) - SIMPLIFIED */}
         {completedSteps < totalSteps && (
             <div className="bg-white rounded-2xl p-5 border border-orange-100 shadow-sm relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-24 h-24 bg-orange-50/50 rounded-bl-full -mr-4 -mt-4 z-0 transition-transform group-hover:scale-110"></div>
               <div className="relative z-10">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                        <h3 className="font-bold text-[#0F172A] text-lg">Completa tu perfil</h3>
-                        <p className="text-sm text-gray-500 font-medium">
-                          <span className="text-[#F97316] font-bold">{completedSteps}</span> de {totalSteps} pasos completados
-                        </p>
-                    </div>
-                    <Button 
-                        size="sm"
-                        onClick={() => setView('edit')}
-                        className="bg-[#F97316] hover:bg-orange-600 text-white rounded-full px-4 h-8 text-xs font-bold shadow-sm shadow-orange-200"
-                    >
-                        Continuar
-                    </Button>
+                  <div className="mb-3">
+                      <h3 className="font-bold text-[#0F172A] text-lg">Completa tu perfil</h3>
+                      <p className="text-sm text-gray-500 font-medium">
+                        <span className="text-[#F97316] font-bold">{completedSteps}</span> de {totalSteps} pasos completados
+                      </p>
                   </div>
                   
                   {/* Progress Bar */}
@@ -368,23 +359,12 @@ const Profile = () => {
                     />
                   </div>
 
-                  {/* Missing Fields List */}
-                  <div className="space-y-2">
-                      <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Falta completar:</p>
-                      <div className="flex flex-col gap-2">
-                          {missingFields.slice(0, 3).map((field, i) => (
-                              <div key={i} className="flex items-center text-sm text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-100">
-                                  <div className="h-5 w-5 rounded-full border-2 border-gray-300 mr-3 flex items-center justify-center flex-shrink-0">
-                                    <div className="h-1.5 w-1.5 rounded-full bg-transparent" />
-                                  </div>
-                                  {field}
-                              </div>
-                          ))}
-                          {missingFields.length > 3 && (
-                            <p className="text-xs text-gray-400 pl-1">+ {missingFields.length - 3} más...</p>
-                          )}
-                      </div>
-                  </div>
+                  <Button 
+                    onClick={() => setView('edit')}
+                    className="w-full bg-[#F97316] hover:bg-orange-600 text-white rounded-xl h-10 text-sm font-bold shadow-sm shadow-orange-200"
+                  >
+                    Terminar de configurar
+                  </Button>
               </div>
             </div>
         )}
