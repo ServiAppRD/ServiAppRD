@@ -1,72 +1,15 @@
-import { useState, useMemo } from "react";
-import { Search as SearchIcon, MapPin, Filter, Star, X, Clock, ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Search as SearchIcon, MapPin, Filter, Star, X, Clock, ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-// --- Mock Data for Real Logic ---
 const CATEGORIES = [
   "Todos", "Plomería", "Electricidad", "Limpieza", "Mecánica", 
-  "Carpintería", "Jardinería", "Tecnología", "Belleza"
-];
-
-const MOCK_SERVICES = [
-  {
-    id: 1,
-    title: "Servicio de Plomería Express",
-    category: "Plomería",
-    rating: 4.8,
-    reviews: 124,
-    price: "$350/hr",
-    distance: "2.5 km",
-    image: "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-    description: "Reparación de fugas, instalación de grifos y mantenimiento general. Disponibilidad inmediata."
-  },
-  {
-    id: 2,
-    title: "Limpieza Profunda de Hogar",
-    category: "Limpieza",
-    rating: 4.9,
-    reviews: 89,
-    price: "$500/visita",
-    distance: "1.2 km",
-    image: "https://images.unsplash.com/photo-1581578731117-104f2a417954?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-    description: "Servicio completo de limpieza. Incluye cocina, baños y aspirado de alfombras."
-  },
-  {
-    id: 3,
-    title: "Electricista Certificado",
-    category: "Electricidad",
-    rating: 4.7,
-    reviews: 56,
-    price: "$400/hr",
-    distance: "5.0 km",
-    image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-    description: "Instalaciones eléctricas, reparación de cortos y mantenimiento preventivo."
-  },
-  {
-    id: 4,
-    title: "Mecánica Automotriz a Domicilio",
-    category: "Mecánica",
-    rating: 4.5,
-    reviews: 34,
-    price: "Cotizar",
-    distance: "8.5 km",
-    image: "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-    description: "Diagnóstico por computadora, cambio de batería y servicios menores en tu ubicación."
-  },
-  {
-    id: 5,
-    title: "Jardinería y Paisajismo",
-    category: "Jardinería",
-    rating: 5.0,
-    reviews: 12,
-    price: "$300/hr",
-    distance: "3.0 km",
-    image: "https://images.unsplash.com/photo-1558904541-efa843a96f01?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-    description: "Poda de césped, diseño de jardines y mantenimiento de áreas verdes."
-  }
+  "Carpintería", "Jardinería", "Tecnología", "Belleza", "Otros"
 ];
 
 const SearchPage = () => {
@@ -74,19 +17,42 @@ const SearchPage = () => {
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [isFocused, setIsFocused] = useState(false);
 
-  // --- Filtering Logic ---
-  const filteredServices = useMemo(() => {
-    return MOCK_SERVICES.filter((service) => {
-      const matchesSearch = 
-        service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.description.toLowerCase().includes(searchTerm.toLowerCase());
+  // Fetch services from Supabase
+  const { data: services, isLoading, error } = useQuery({
+    queryKey: ['services'],
+    queryFn: async () => {
+      console.log("Fetching services...");
+      // Obtenemos los servicios y la información básica del perfil del creador
+      const { data, error } = await supabase
+        .from('services')
+        .select(`
+          *,
+          profiles (
+            first_name,
+            last_name
+          )
+        `)
+        .order('created_at', { ascending: false });
       
-      const matchesCategory = 
-        activeCategory === "Todos" || service.category === activeCategory;
+      if (error) {
+        console.error("Error fetching services:", error);
+        throw error;
+      }
+      return data;
+    }
+  });
 
-      return matchesSearch && matchesCategory;
-    });
-  }, [searchTerm, activeCategory]);
+  // Client-side filtering
+  const filteredServices = services?.filter((service) => {
+    const matchesSearch = 
+      (service.title?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (service.description?.toLowerCase() || "").includes(searchTerm.toLowerCase());
+    
+    const matchesCategory = 
+      activeCategory === "Todos" || service.category === activeCategory;
+
+    return matchesSearch && matchesCategory;
+  }) || [];
 
   const hasActiveFilters = searchTerm !== "" || activeCategory !== "Todos";
 
@@ -150,20 +116,32 @@ const SearchPage = () => {
 
       <div className="p-5 space-y-6">
         
-        {/* Results Count or Popular Header */}
+        {/* Results Count or Header */}
         <div className="flex justify-between items-center">
           <h2 className="font-bold text-gray-800 text-lg">
-            {hasActiveFilters ? (
+            {isLoading ? (
+              <span className="flex items-center gap-2 text-gray-400">
+                <Loader2 className="h-4 w-4 animate-spin" /> Cargando...
+              </span>
+            ) : hasActiveFilters ? (
               <span>Resultados <span className="text-gray-400 text-sm font-normal">({filteredServices.length})</span></span>
             ) : (
-              "Tendencias esta semana"
+              "Nuevos Servicios"
             )}
           </h2>
         </div>
 
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-50 p-4 rounded-xl border border-red-100 flex items-center gap-3 text-red-600">
+            <AlertCircle className="h-5 w-5" />
+            <p className="text-sm">No pudimos cargar los servicios. Intenta recargar.</p>
+          </div>
+        )}
+
         {/* Results List */}
         <div className="space-y-4">
-          {filteredServices.length > 0 ? (
+          {!isLoading && filteredServices.length > 0 ? (
             filteredServices.map((service) => (
               <div 
                 key={service.id} 
@@ -171,68 +149,89 @@ const SearchPage = () => {
               >
                 {/* Image */}
                 <div className="h-28 w-28 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 relative">
-                   <img src={service.image} alt={service.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  {service.image_url ? (
+                    <img src={service.image_url} alt={service.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  ) : (
+                    <div className="h-full w-full bg-orange-50 flex items-center justify-center">
+                      <SearchIcon className="h-8 w-8 text-orange-200" />
+                    </div>
+                  )}
                    <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-sm">
                       <Star className="h-3 w-3 fill-orange-400 text-orange-400" />
-                      <span className="text-[10px] font-bold text-gray-800">{service.rating}</span>
+                      <span className="text-[10px] font-bold text-gray-800">New</span>
                    </div>
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 py-1 min-w-0 flex flex-col justify-between">
                   <div>
-                    <div className="flex justify-between items-start mb-1">
-                      <Badge variant="secondary" className="bg-orange-50 text-[#F97316] hover:bg-orange-100 border-0 text-[10px] px-2 h-5">
+                    <div className="flex justify-between items-start mb-1 gap-2">
+                      <Badge variant="secondary" className="bg-orange-50 text-[#F97316] hover:bg-orange-100 border-0 text-[10px] px-2 h-5 truncate max-w-[50%]">
                         {service.category}
                       </Badge>
-                      <span className="text-[#F97316] font-bold text-sm whitespace-nowrap">{service.price}</span>
+                      <span className="text-[#F97316] font-bold text-sm whitespace-nowrap">
+                        ${service.price} <span className="text-[10px] text-gray-400 font-normal">/{service.price_unit || 'servicio'}</span>
+                      </span>
                     </div>
                     <h3 className="font-bold text-gray-900 leading-tight mb-1 group-hover:text-[#F97316] transition-colors truncate">
                       {service.title}
                     </h3>
                     <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
-                      {service.description}
+                      {service.description || "Sin descripción disponible."}
                     </p>
                   </div>
 
                   <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-50">
-                    <div className="flex items-center text-xs text-gray-400 font-medium">
-                      <MapPin className="h-3 w-3 mr-1" />
-                      {service.distance}
+                    <div className="flex items-center text-xs text-gray-400 font-medium truncate max-w-[60%]">
+                      <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                      {service.location || "Ubicación remota"}
                     </div>
-                    <div className="flex items-center text-xs text-[#F97316] font-semibold group-hover:translate-x-1 transition-transform">
+                    <div className="flex items-center text-xs text-[#F97316] font-semibold group-hover:translate-x-1 transition-transform whitespace-nowrap">
                       Ver detalles <ArrowRight className="h-3 w-3 ml-1" />
                     </div>
                   </div>
                 </div>
               </div>
             ))
-          ) : (
+          ) : !isLoading ? (
             // Empty State
             <div className="flex flex-col items-center justify-center py-12 text-center animate-fade-in">
               <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mb-4">
                 <SearchIcon className="h-8 w-8 text-[#F97316] opacity-50" />
               </div>
-              <h3 className="font-bold text-gray-900 text-lg mb-2">No encontramos resultados</h3>
-              <p className="text-gray-500 text-sm max-w-[200px]">
-                Intenta buscar con otras palabras o cambia la categoría seleccionada.
+              <h3 className="font-bold text-gray-900 text-lg mb-2">
+                {hasActiveFilters ? "No encontramos resultados" : "Aún no hay servicios"}
+              </h3>
+              <p className="text-gray-500 text-sm max-w-[200px] mb-4">
+                {hasActiveFilters 
+                  ? "Intenta buscar con otras palabras o cambia la categoría seleccionada." 
+                  : "Sé el primero en publicar un servicio en esta categoría."}
               </p>
-              <Button 
-                variant="link" 
-                className="text-[#F97316] mt-2"
-                onClick={() => {
-                  setSearchTerm("");
-                  setActiveCategory("Todos");
-                }}
-              >
-                Limpiar filtros
-              </Button>
+              {hasActiveFilters ? (
+                <Button 
+                  variant="link" 
+                  className="text-[#F97316]"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setActiveCategory("Todos");
+                  }}
+                >
+                  Limpiar filtros
+                </Button>
+              ) : (
+                <Button 
+                  className="bg-[#F97316] hover:bg-orange-600 text-white rounded-xl"
+                  onClick={() => window.location.href = '/publish'} // Simple redirect for now
+                >
+                  Publicar Servicio
+                </Button>
+              )}
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Popular Tags (Only show if not searching deeply) */}
-        {!hasActiveFilters && (
+        {!hasActiveFilters && !isLoading && filteredServices.length === 0 && (
           <section className="pt-2">
             <h3 className="font-bold text-gray-900 mb-3 text-sm">Búsquedas populares</h3>
             <div className="flex flex-wrap gap-2">
