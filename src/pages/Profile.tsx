@@ -9,11 +9,13 @@ import { showSuccess, showError } from "@/utils/toast";
 import { 
   Loader2, LogOut, User, Phone, MapPin, Heart, 
   HelpCircle, ChevronRight, CreditCard, Gift, 
-  ArrowLeft, Bell, Shield, Settings, Edit2, Mail, CheckCircle2, AlertCircle
+  ArrowLeft, Bell, Shield, Settings, Edit2, Mail, CheckCircle2, AlertCircle,
+  Briefcase, Trash2, Eye
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const DR_CITIES = [
   "Santo Domingo", "Santiago de los Caballeros", "San Francisco de Macorís", 
@@ -24,7 +26,7 @@ const DR_CITIES = [
 const Profile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'dashboard' | 'edit' | 'preview'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'edit' | 'preview' | 'my-services'>('dashboard');
   const [session, setSession] = useState<any>(null);
   
   // Profile Data
@@ -35,6 +37,10 @@ const Profile = () => {
   const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
   const [updating, setUpdating] = useState(false);
+
+  // My Services Data
+  const [myServices, setMyServices] = useState<any[]>([]);
+  const [loadingServices, setLoadingServices] = useState(false);
 
   // Completion Logic (Steps)
   const [completedSteps, setCompletedSteps] = useState(0);
@@ -132,15 +138,147 @@ const Profile = () => {
     }
   };
 
+  const fetchMyServices = async () => {
+    if (!session?.user?.id) return;
+    setLoadingServices(true);
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      showError("Error al cargar publicaciones");
+    } else {
+      setMyServices(data || []);
+    }
+    setLoadingServices(false);
+  };
+
+  const handleDeleteService = async (serviceId: string) => {
+    const { error } = await supabase
+      .from('services')
+      .delete()
+      .eq('id', serviceId);
+
+    if (error) {
+      showError("Error al eliminar el servicio");
+    } else {
+      showSuccess("Publicación eliminada correctamente");
+      setMyServices(prev => prev.filter(s => s.id !== serviceId));
+    }
+  };
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/");
+  };
+
+  const handleOpenMyServices = () => {
+    setView('my-services');
+    fetchMyServices();
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-[#F97316]" />
+      </div>
+    );
+  }
+
+  // --- MY SERVICES VIEW ---
+  if (view === 'my-services') {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
+        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="hover:bg-orange-50 hover:text-[#F97316]">
+              <ArrowLeft className="h-6 w-6" />
+            </Button>
+            <h1 className="text-lg font-bold">Mis Publicaciones</h1>
+          </div>
+          <Button size="sm" variant="outline" className="text-[#F97316] border-orange-200" onClick={() => navigate('/publish')}>
+            + Nueva
+          </Button>
+        </div>
+
+        <div className="p-4 space-y-4">
+          {loadingServices ? (
+            <div className="flex justify-center py-10">
+              <Loader2 className="h-8 w-8 animate-spin text-gray-300" />
+            </div>
+          ) : myServices.length === 0 ? (
+            <div className="text-center py-12 space-y-4">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
+                <Briefcase className="h-8 w-8 text-gray-400" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">Aún no tienes publicaciones</h3>
+                <p className="text-sm text-gray-500">Ofrece tus servicios para comenzar a ganar clientes.</p>
+              </div>
+              <Button onClick={() => navigate('/publish')} className="bg-[#F97316] hover:bg-orange-600">
+                Crear mi primera publicación
+              </Button>
+            </div>
+          ) : (
+            myServices.map((service) => (
+              <div key={service.id} className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm flex gap-3">
+                <div className="h-20 w-20 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden">
+                  {service.image_url ? (
+                    <img src={service.image_url} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-gray-300">
+                      <Briefcase className="h-6 w-6" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0 flex flex-col justify-between">
+                  <div>
+                    <h3 className="font-bold text-gray-900 truncate">{service.title}</h3>
+                    <p className="text-[#F97316] font-bold text-sm">${service.price}</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 mt-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="h-8 text-xs flex-1"
+                      onClick={() => navigate(`/service/${service.id}`)}
+                    >
+                      <Eye className="h-3 w-3 mr-1" /> Ver
+                    </Button>
+                    
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="icon" variant="destructive" className="h-8 w-8 bg-red-50 text-red-500 hover:bg-red-100 border-0 shadow-none">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="w-[90%] rounded-2xl">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>¿Eliminar publicación?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Esta acción no se puede deshacer. El servicio dejará de ser visible para los clientes.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter className="flex-row gap-2 justify-end">
+                          <AlertDialogCancel className="mt-0">Cancelar</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => handleDeleteService(service.id)}
+                            className="bg-red-500 hover:bg-red-600"
+                          >
+                            Eliminar
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     );
   }
@@ -371,8 +509,16 @@ const Profile = () => {
 
         {/* Menu Sections */}
         <div className="space-y-6">
-          <MenuSection title="Mi Cuenta">
+          <MenuSection title="Mis Servicios">
+            <MenuItem 
+              icon={Briefcase} 
+              label="Mis Publicaciones" 
+              onClick={handleOpenMyServices}
+            />
             <MenuItem icon={Heart} label="Mis Favoritos" badge="3" />
+          </MenuSection>
+
+          <MenuSection title="Cuenta">
             <MenuItem icon={CreditCard} label="Métodos de Pago" />
             <MenuItem icon={Bell} label="Notificaciones" />
           </MenuSection>
