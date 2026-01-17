@@ -15,7 +15,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <div className="pb-20 md:pb-0"> {/* Padding bottom for mobile nav */}
+        <div className="pb-24"> {/* Global padding for bottom navbar */}
           <Routes>
             <Route path="/" element={<Index />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
