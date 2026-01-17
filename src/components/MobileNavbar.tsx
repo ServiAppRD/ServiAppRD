@@ -5,9 +5,15 @@ export const MobileNavbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Ocultar la barra de navegación en rutas específicas donde hay botones de acción inferiores
-  // o donde se requiere pantalla completa (como Login y Publish)
-  if (["/publish", "/login"].includes(location.pathname)) {
+  // Ocultar la barra de navegación en rutas específicas:
+  // - /publish (Crear servicio)
+  // - /login (Inicio de sesión)
+  // - /service/... (Ver detalle de publicación)
+  const shouldHideNavbar = 
+    ["/publish", "/login"].includes(location.pathname) || 
+    location.pathname.startsWith("/service/");
+
+  if (shouldHideNavbar) {
     return null;
   }
 
