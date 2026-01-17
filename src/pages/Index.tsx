@@ -44,14 +44,7 @@ const Index = () => {
           
           {/* Sidebar Area */}
           <div className="hidden md:block md:col-span-3 space-y-4">
-            <div className="bg-white p-6 rounded-lg shadow-sm border text-center">
-              <h3 className="font-bold text-lg mb-2 text-[#0F172A]">Mejora tu experiencia</h3>
-              <p className="text-sm text-gray-500 mb-4">Inicia sesión para gestionar tus servicios y mensajes.</p>
-              <div className="space-y-2">
-                <Button className="w-full bg-[#0F172A] hover:bg-gray-800">Iniciar sesión</Button>
-                <Button variant="outline" className="w-full border-[#F97316] text-[#0F172A] hover:bg-orange-50">Crear cuenta</Button>
-              </div>
-            </div>
+            {/* "Mejora tu experiencia" section removed */}
             
             <div className="bg-[#F97316]/20 p-4 rounded-lg border border-[#F97316] text-center">
               <p className="text-sm font-medium text-[#0F172A]">¿Necesitas ayuda?</p>
