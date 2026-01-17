@@ -28,7 +28,8 @@ export const Navbar = () => {
         {/* Logo Section - Collapses on scroll */}
         <div className={cn(
           "flex items-center gap-2 overflow-hidden transition-all duration-300 ease-in-out",
-          isScrolled ? "h-0 opacity-0 mb-0" : "h-auto opacity-100 pt-4 mb-3"
+          // Cambiado pt-4 mb-3 -> pt-2 mb-0 para reducir espacio
+          isScrolled ? "h-0 opacity-0 mb-0" : "h-auto opacity-100 pt-2 mb-0"
         )}>
           <a href="/" className="flex-shrink-0 mr-2">
             <img src="/logo.png" alt="ServiAPP" className="h-24 object-contain" />
