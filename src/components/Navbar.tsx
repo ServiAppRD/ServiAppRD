@@ -6,14 +6,14 @@ export const Navbar = () => {
   return (
     <nav className="bg-[#0F172A] text-white py-3 sticky top-0 z-50 shadow-md">
       <div className="container mx-auto px-4 flex items-center justify-between gap-4">
-        {/* Logo area */}
+        {/* Logo area - Increased size */}
         <div className="flex items-center gap-2">
           <Menu className="h-6 w-6 md:hidden" />
           <a href="/" className="flex-shrink-0">
             <img 
               src="/serviapp-logo.png" 
               alt="ServiAPP Logo" 
-              className="h-10 w-auto object-contain" 
+              className="h-14 w-auto object-contain" 
             />
           </a>
         </div>
@@ -24,18 +24,18 @@ export const Navbar = () => {
             placeholder="¿Qué servicio buscas? (ej. Plomero, Limpieza...)" 
             className="w-full bg-white text-black pl-4 pr-10 rounded-r-none border-0 focus-visible:ring-offset-0"
           />
-          <Button className="rounded-l-none bg-[#FDBA74] hover:bg-orange-400 text-[#0F172A]">
+          <Button className="rounded-l-none bg-[#F97316] hover:bg-orange-600 text-white">
             <Search className="h-5 w-5" />
           </Button>
         </div>
 
         {/* Actions */}
         <div className="flex items-center gap-4">
-          <Button variant="ghost" className="hidden md:flex text-white hover:text-[#FDBA74] hover:bg-transparent">
+          <Button variant="ghost" className="hidden md:flex text-white hover:text-[#F97316] hover:bg-transparent">
             <User className="mr-2 h-4 w-4" />
             Iniciar sesión
           </Button>
-          <Button className="bg-[#FDBA74] hover:bg-orange-400 text-[#0F172A] font-bold">
+          <Button className="bg-[#F97316] hover:bg-orange-600 text-white font-bold">
             <PlusCircle className="mr-2 h-4 w-4" />
             Publicar
           </Button>

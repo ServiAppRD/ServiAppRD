@@ -26,7 +26,7 @@ const Index = () => {
       {/* Categories Bar */}
       <div className="bg-[#0F172A] text-gray-300 py-2 border-t border-gray-800 text-sm hidden md:block">
         <div className="container mx-auto px-4 flex justify-between">
-          <span className="hover:text-[#FDBA74] cursor-pointer">Categorías y más</span>
+          <span className="hover:text-[#F97316] cursor-pointer">Categorías y más</span>
           <div className="flex gap-6">
             <span className="hover:text-white cursor-pointer">Hogar</span>
             <span className="hover:text-white cursor-pointer">Vehículos</span>
@@ -49,11 +49,11 @@ const Index = () => {
               <p className="text-sm text-gray-500 mb-4">Inicia sesión para gestionar tus servicios y mensajes.</p>
               <div className="space-y-2">
                 <Button className="w-full bg-[#0F172A] hover:bg-gray-800">Iniciar sesión</Button>
-                <Button variant="outline" className="w-full border-[#FDBA74] text-[#0F172A] hover:bg-orange-50">Crear cuenta</Button>
+                <Button variant="outline" className="w-full border-[#F97316] text-[#0F172A] hover:bg-orange-50">Crear cuenta</Button>
               </div>
             </div>
             
-            <div className="bg-[#FDBA74]/20 p-4 rounded-lg border border-[#FDBA74] text-center">
+            <div className="bg-[#F97316]/20 p-4 rounded-lg border border-[#F97316] text-center">
               <p className="text-sm font-medium text-[#0F172A]">¿Necesitas ayuda?</p>
               <p className="text-xs text-gray-600 mt-1">Contacta soporte 24/7</p>
             </div>
@@ -67,10 +67,10 @@ const Index = () => {
               <div className="relative z-10 max-w-lg">
                 <h2 className="text-3xl font-bold mb-2">¡Encuentra al experto ideal!</h2>
                 <p className="mb-6 text-gray-300">Desde reparaciones rápidas hasta proyectos grandes. Todo lo que necesitas en un solo lugar.</p>
-                <Button className="bg-[#FDBA74] text-[#0F172A] hover:bg-white font-bold">Ver ofertas del día</Button>
+                <Button className="bg-[#F97316] text-white hover:bg-orange-600 font-bold">Ver ofertas del día</Button>
               </div>
               <div className="absolute right-0 bottom-0 opacity-20 transform translate-x-10 translate-y-10">
-                <Wrench className="w-64 h-64 text-[#FDBA74]" />
+                <Wrench className="w-64 h-64 text-[#F97316]" />
               </div>
             </div>
 
@@ -89,7 +89,7 @@ const Index = () => {
               ) : (
                 <div className="text-center py-10 bg-white rounded-lg border border-dashed border-gray-200">
                   <p className="text-gray-500">No hay servicios destacados en este momento.</p>
-                  <Button variant="link" className="text-[#FDBA74]">¡Sé el primero en publicar!</Button>
+                  <Button variant="link" className="text-[#F97316]">¡Sé el primero en publicar!</Button>
                 </div>
               )}
             </div>

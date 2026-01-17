@@ -13,9 +13,9 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Soft Orange #FDBA74 -> HSL roughly 30 96% 72% */
-    --primary: 30 96% 72%;
-    --primary-foreground: 222 47% 11%;
+    /* Updated Orange #F97316 -> HSL 25 95% 53% */
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%; /* White text looks better on darker orange */
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -31,7 +31,7 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 30 96% 72%; /* Orange ring */
+    --ring: 25 95% 53%; /* Orange ring */
 
     --radius: 0.5rem;
   }
@@ -39,13 +39,13 @@
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-    /* ... keeping dark mode standard for now, but focus is on light mode request ... */
+    /* ... keeping dark mode standard for now ... */
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 30 96% 72%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
@@ -56,7 +56,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 30 96% 72%;
+    --ring: 25 95% 53%;
   }
 }
 

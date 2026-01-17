@@ -21,11 +21,11 @@ export const ServiceCard = ({ title, price, location, image, isFeatured, categor
           className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
         />
         {isFeatured && (
-          <Badge className="absolute top-2 left-2 bg-[#FDBA74] text-[#0F172A] hover:bg-[#FDBA74]">
+          <Badge className="absolute top-2 left-2 bg-[#F97316] text-white hover:bg-orange-600">
             Destacado
           </Badge>
         )}
-        <button className="absolute bottom-2 right-2 p-1.5 bg-black/50 rounded-full text-white hover:bg-[#FDBA74] hover:text-[#0F172A] transition-colors">
+        <button className="absolute bottom-2 right-2 p-1.5 bg-black/50 rounded-full text-white hover:bg-[#F97316] hover:text-white transition-colors">
           <Heart className="h-4 w-4" />
         </button>
       </div>
@@ -35,7 +35,7 @@ export const ServiceCard = ({ title, price, location, image, isFeatured, categor
           {title}
         </h3>
         <div className="flex items-center justify-between mt-auto">
-          <p className="font-bold text-[#FDBA74] text-lg">{price}</p>
+          <p className="font-bold text-[#F97316] text-lg">{price}</p>
         </div>
         <div className="flex items-center text-gray-400 text-xs mt-2">
           <MapPin className="h-3 w-3 mr-1" />
