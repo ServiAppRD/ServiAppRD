@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -87,9 +86,8 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <Navbar />
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50 pb-20 pt-8">
+      <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-sm border p-6">
           <div className="flex items-center gap-4 mb-8">
             <div className="h-16 w-16 bg-orange-100 rounded-full flex items-center justify-center">
@@ -126,7 +124,7 @@ const Profile = () => {
             <Button 
               onClick={updateProfile} 
               disabled={updating}
-              className="bg-[#F97316] hover:bg-orange-600 text-white"
+              className="bg-[#F97316] hover:bg-orange-600 text-white w-full md:w-auto"
             >
               {updating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Guardar Cambios
