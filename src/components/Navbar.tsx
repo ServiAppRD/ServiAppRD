@@ -10,8 +10,8 @@ export const Navbar = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Detectar si se ha hecho scroll más de 20px
-      setIsScrolled(window.scrollY > 20);
+      // Detectar scroll con un umbral bajo para respuesta rápida
+      setIsScrolled(window.scrollY > 10);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -20,27 +20,26 @@ export const Navbar = () => {
 
   return (
     <div className={cn(
-      "bg-white sticky top-0 z-50 shadow-sm transition-all duration-300",
+      "bg-white sticky top-0 z-50 shadow-sm transition-all duration-500 ease-in-out",
       isScrolled ? "py-2" : "py-0"
     )}>
       <div className="container mx-auto px-4">
         
-        {/* Logo Section - Collapses on scroll */}
+        {/* Logo Section - Collapses smoothly */}
         <div className={cn(
-          "flex items-center gap-2 overflow-hidden transition-all duration-300 ease-in-out",
-          // Cambiado pt-4 mb-3 -> pt-2 mb-0 para reducir espacio
-          isScrolled ? "h-0 opacity-0 mb-0" : "h-auto opacity-100 pt-2 mb-0"
+          "flex items-center gap-2 overflow-hidden transition-all duration-500 ease-in-out origin-top",
+          // Usamos max-h específico para permitir la animación CSS (h-auto no anima bien)
+          isScrolled 
+            ? "max-h-0 opacity-0 mb-0 translate-y-[-10px]" 
+            : "max-h-32 opacity-100 pt-2 mb-0 translate-y-0"
         )}>
           <a href="/" className="flex-shrink-0 mr-2">
             <img src="/logo.png" alt="ServiAPP" className="h-24 object-contain" />
           </a>
         </div>
 
-        {/* Search Bar Row - Always visible but adjusts padding */}
-        <div className={cn(
-          "flex gap-2 items-center transition-all duration-300",
-          isScrolled ? "pt-0" : "pt-0" 
-        )}>
+        {/* Search Bar Row - Always visible */}
+        <div className="flex gap-2 items-center transition-all duration-500 pt-0">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <Input 
@@ -53,10 +52,12 @@ export const Navbar = () => {
           </Button>
         </div>
 
-        {/* Categories / Tags Scroll - Collapses on scroll */}
+        {/* Categories / Tags Scroll - Collapses smoothly */}
         <div className={cn(
-          "flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 transition-all duration-300 ease-in-out",
-          isScrolled ? "h-0 opacity-0 py-0" : "h-auto opacity-100 pb-2 pt-3"
+          "flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 transition-all duration-500 ease-in-out origin-top",
+          isScrolled 
+            ? "max-h-0 opacity-0 py-0 translate-y-[-10px]" 
+            : "max-h-20 opacity-100 pb-2 pt-3 translate-y-0"
         )}>
           {tags.map((tag, i) => (
             <button 
