@@ -150,22 +150,23 @@ const Profile = () => {
     return (
       <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in relative">
         {/* Background Decoration */}
-        <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-br from-[#F97316] to-orange-600 rounded-b-[2.5rem] z-0" />
+        <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-br from-[#F97316] to-orange-600 rounded-b-[3rem] z-0 shadow-lg" />
         
         <div className="relative z-10 px-4 pt-4">
-          <div className="flex justify-between items-center text-white mb-6">
-            <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="text-white hover:bg-white/20 hover:text-white">
+          <div className="flex justify-between items-center text-white mb-2">
+            <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="text-white hover:bg-white/20 hover:text-white rounded-full">
               <ArrowLeft className="h-6 w-6" />
             </Button>
-            <h1 className="text-lg font-bold">Mi Perfil</h1>
-            <Button variant="ghost" size="icon" onClick={() => setView('edit')} className="text-white hover:bg-white/20 hover:text-white">
+            <h1 className="text-lg font-bold tracking-wide">Mi Perfil</h1>
+            <Button variant="ghost" size="icon" onClick={() => setView('edit')} className="text-white hover:bg-white/20 hover:text-white rounded-full">
               <Edit2 className="h-5 w-5" />
             </Button>
           </div>
 
-          <div className="bg-white rounded-3xl shadow-xl p-6 text-center mt-8 space-y-4 border border-gray-100">
-            <div className="relative -mt-20 mb-4 flex justify-center">
-               <div className="p-1.5 bg-white rounded-full">
+          {/* Added mt-24 to push card down and prevent overlap */}
+          <div className="bg-white rounded-3xl shadow-xl p-6 text-center mt-24 space-y-4 border border-gray-100 relative">
+            <div className="absolute -top-14 left-0 right-0 flex justify-center">
+               <div className="p-1.5 bg-white rounded-full shadow-md">
                   <Avatar className="h-28 w-28 border-4 border-orange-50">
                     <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${session?.user.email}`} />
                     <AvatarFallback className="bg-orange-100 text-[#F97316] text-4xl font-bold">
@@ -174,31 +175,30 @@ const Profile = () => {
                   </Avatar>
                </div>
                {completedSteps === totalSteps && (
-                 <div className="absolute bottom-2 right-[calc(50%-2.5rem)] bg-green-500 text-white p-1.5 rounded-full border-2 border-white" title="Verificado">
+                 <div className="absolute bottom-1 right-[calc(50%-2.5rem)] bg-green-500 text-white p-1.5 rounded-full border-4 border-white shadow-sm" title="Verificado">
                    <CheckCircle2 className="h-4 w-4" />
                  </div>
                )}
             </div>
 
-            <div>
+            <div className="pt-12">
               <h2 className="text-2xl font-bold text-gray-900">{firstName} {lastName}</h2>
               <p className="text-gray-500 text-sm font-medium">{session?.user.email}</p>
             </div>
 
-            <div className="flex justify-center gap-2 pt-2">
+            <div className="flex justify-center gap-2 pt-1 pb-2">
                <Badge className="bg-orange-50 text-[#F97316] hover:bg-orange-100 border-0 px-3 py-1">Cliente</Badge>
                {city && <Badge variant="outline" className="text-gray-500 border-gray-200">{city}</Badge>}
             </div>
 
-            <div className="grid grid-cols-1 gap-4 pt-6 text-left">
+            <div className="grid grid-cols-1 gap-4 pt-4 text-left border-t border-gray-50">
                <InfoItem icon={Phone} label="Teléfono" value={phone || "No agregado"} isMissing={!phone} />
-               <InfoItem icon={Mail} label="Correo" value={session?.user.email} />
                <InfoItem icon={MapPin} label="Dirección" value={address || "No agregada"} isMissing={!address} />
                <InfoItem icon={MapPin} label="Ciudad" value={city || "No seleccionada"} isMissing={!city} />
             </div>
 
             {completedSteps < totalSteps && (
-              <Button onClick={() => setView('edit')} className="w-full mt-4 bg-orange-50 text-[#F97316] hover:bg-orange-100 border-0 font-bold">
+              <Button onClick={() => setView('edit')} className="w-full mt-4 bg-orange-50 text-[#F97316] hover:bg-orange-100 border-0 font-bold h-12 rounded-xl">
                 Completar información faltante
               </Button>
             )}
