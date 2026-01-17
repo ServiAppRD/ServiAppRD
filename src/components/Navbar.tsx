@@ -6,14 +6,14 @@ export const Navbar = () => {
   return (
     <nav className="bg-[#0F172A] text-white py-4 sticky top-0 z-50 shadow-md">
       <div className="container mx-auto px-4 flex items-center justify-between gap-4">
-        {/* Logo area - Increased size */}
+        {/* Logo area - Increased size significantly */}
         <div className="flex items-center gap-2">
           <Menu className="h-6 w-6 md:hidden" />
           <a href="/" className="flex-shrink-0">
             <img 
               src="/serviapp-logo.png" 
               alt="ServiAPP Logo" 
-              className="h-20 md:h-24 w-auto object-contain" 
+              className="h-28 md:h-32 w-auto object-contain" 
             />
           </a>
         </div>
