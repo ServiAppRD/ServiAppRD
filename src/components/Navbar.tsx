@@ -1,57 +1,53 @@
-import { Search, PlusCircle, Menu, User } from "lucide-react";
+import { Search, SlidersHorizontal, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export const Navbar = () => {
+  const tags = ["Tienda Samsung", "Subastas", "Inmuebles", "Vehículos", "Empleos", "Servicios"];
+
   return (
-    <nav className="bg-white text-[#0F172A] py-4 sticky top-0 z-50 shadow-sm border-b border-gray-100">
-      <div className="container mx-auto px-4 flex items-center justify-between gap-4">
-        {/* Logo area */}
-        <div className="flex items-center gap-2">
-          <Menu className="h-6 w-6 md:hidden text-[#0F172A]" />
-          <a href="/" className="flex-shrink-0">
-            <img 
-              src="/serviapp-logo.png" 
-              alt="ServiAPP Logo" 
-              className="h-28 md:h-32 w-auto object-contain" 
-            />
+    <div className="bg-white sticky top-0 z-50 shadow-sm">
+      {/* Top Header */}
+      <div className="container mx-auto px-4 pt-4 pb-2">
+        <div className="flex items-center gap-2 mb-3">
+          {/* Logo */}
+          <a href="/" className="flex-shrink-0 mr-2">
+            <h1 className="text-2xl font-bold text-[#0058ab] tracking-tight">ServiAPP</h1>
           </a>
         </div>
 
-        {/* Search Bar */}
-        <div className="hidden md:flex flex-1 max-w-2xl mx-4 relative">
-          <Input 
-            placeholder="¿Qué servicio buscas? (ej. Plomero, Limpieza...)" 
-            className="w-full bg-gray-50 text-[#0F172A] pl-4 pr-10 rounded-r-none border-gray-200 focus-visible:ring-[#F97316] focus-visible:ring-offset-0"
-          />
-          <Button className="rounded-l-none bg-[#F97316] hover:bg-orange-600 text-white border border-[#F97316]">
-            <Search className="h-5 w-5" />
+        {/* Search Bar Row */}
+        <div className="flex gap-2 items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Input 
+              placeholder="Busca entre miles de anuncios" 
+              className="w-full bg-white pl-10 pr-4 py-2 h-11 rounded-full border-gray-300 focus-visible:ring-[#0058ab] text-base"
+            />
+          </div>
+          <Button variant="ghost" size="icon" className="text-[#0058ab] hover:bg-blue-50">
+            <SlidersHorizontal className="h-6 w-6" />
           </Button>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" className="hidden md:flex text-[#0F172A] hover:text-[#F97316] hover:bg-orange-50 font-medium">
-            <User className="mr-2 h-4 w-4" />
-            Iniciar sesión
-          </Button>
-          <Button className="bg-[#F97316] hover:bg-orange-600 text-white font-bold shadow-sm hover:shadow-md transition-all">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Publicar
-          </Button>
+        {/* Categories / Tags Scroll */}
+        <div className="flex gap-2 overflow-x-auto pb-2 pt-3 no-scrollbar -mx-4 px-4">
+          {tags.map((tag, i) => (
+            <button 
+              key={i}
+              className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-semibold border ${
+                i === 0 
+                  ? "bg-yellow-100 border-yellow-200 text-yellow-800" 
+                  : i === 1
+                  ? "bg-blue-50 border-blue-100 text-blue-700"
+                  : "bg-gray-100 border-gray-200 text-gray-700"
+              }`}
+            >
+              {tag}
+            </button>
+          ))}
         </div>
       </div>
-      
-      {/* Mobile Search - only visible on small screens */}
-      <div className="md:hidden px-4 mt-3 pb-1">
-        <div className="flex relative">
-          <Input 
-            placeholder="Buscar servicios..." 
-            className="w-full bg-gray-50 text-[#0F172A] pl-4 pr-10 rounded-md border-gray-200"
-          />
-          <Search className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
-        </div>
-      </div>
-    </nav>
+    </div>
   );
 };

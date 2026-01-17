@@ -1,123 +1,90 @@
 import { Navbar } from "@/components/Navbar";
 import { ServiceCard } from "@/components/ServiceCard";
-import { CategoryIcon } from "@/components/CategoryIcon";
-import { Button } from "@/components/ui/button";
-import { Wrench, Zap, Paintbrush, Truck, Monitor, Scissors } from "lucide-react";
 
-// Empty Data as requested
-const featuredServices: any[] = [];
-const recentServices: any[] = [];
-
-// Categories are structural navigation
-const categories = [
-  { icon: Wrench, label: "Plomería", count: "0" },
-  { icon: Zap, label: "Electricidad", count: "0" },
-  { icon: Paintbrush, label: "Limpieza", count: "0" },
-  { icon: Truck, label: "Mudanzas", count: "0" },
-  { icon: Monitor, label: "Tecnología", count: "0" },
-  { icon: Scissors, label: "Belleza", count: "0" },
+// Mock Data matching the style
+const recommendedItems = [
+  {
+    id: 1,
+    title: "Venta de Motor Kove 500x (2023)",
+    price: "USD$7,000",
+    image: "https://images.unsplash.com/photo-1558981806-ec527fa84f3d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    badge: { text: "Dealer", color: "blue" } as const
+  },
+  {
+    id: 2,
+    title: "Harley Davidson Sporster XL1200",
+    price: "USD$6,500",
+    image: "https://images.unsplash.com/photo-1591637333184-19aa84b3e01f?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+  },
+  {
+    id: 3,
+    title: "Yamaha MT-09 2024 Cero Kilometros",
+    price: "USD$12,900",
+    image: "https://images.unsplash.com/photo-1615172282427-9a5752d6486d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    badge: { text: "Nuevo", color: "gray" } as const
+  }
 ];
+
+const featuredItems = [
+  {
+    id: 4,
+    title: "Juego de Habitación Moderno King Size",
+    price: "$24,000",
+    image: "https://images.unsplash.com/photo-1505693416388-b0346ef41492?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    badge: { text: "Tienda", color: "yellow" } as const
+  },
+  {
+    id: 5,
+    title: "Toyota Hilux 2023 Full Extras",
+    price: "$24,000",
+    image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    badge: { text: "Dealer", color: "blue" } as const
+  },
+  {
+    id: 6,
+    title: "Apartamento en el centro de la ciudad",
+    price: "$150,000",
+    image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+    badge: { text: "Inmobiliaria", color: "blue" } as const
+  }
+];
+
+const SectionHeader = ({ title }: { title: string }) => (
+  <div className="flex justify-between items-end mb-4 px-4">
+    <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+    <a href="#" className="text-[#0058ab] font-semibold text-sm">Ver más</a>
+  </div>
+);
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col pb-20">
       <Navbar />
 
-      {/* Categories Bar - White theme */}
-      <div className="bg-white text-gray-600 py-3 border-b border-gray-200 text-sm hidden md:block shadow-sm">
-        <div className="container mx-auto px-4 flex justify-between font-medium">
-          <span className="hover:text-[#F97316] cursor-pointer transition-colors">Categorías y más</span>
-          <div className="flex gap-6">
-            <span className="hover:text-[#F97316] cursor-pointer transition-colors">Hogar</span>
-            <span className="hover:text-[#F97316] cursor-pointer transition-colors">Vehículos</span>
-            <span className="hover:text-[#F97316] cursor-pointer transition-colors">Tecnología</span>
-            <span className="hover:text-[#F97316] cursor-pointer transition-colors">Eventos</span>
-            <span className="hover:text-[#F97316] cursor-pointer transition-colors">Salud</span>
-          </div>
-        </div>
-      </div>
-
-      <main className="container mx-auto px-4 py-6 space-y-8">
+      <main className="flex-1 space-y-8 py-6">
         
-        {/* Top Section */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-          
-          {/* Sidebar Area */}
-          <div className="hidden md:block md:col-span-3 space-y-4">
-            <div className="bg-[#F97316]/20 p-4 rounded-lg border border-[#F97316] text-center">
-              <p className="text-sm font-medium text-[#0F172A]">¿Necesitas ayuda?</p>
-              <p className="text-xs text-gray-600 mt-1">Contacta soporte 24/7</p>
-            </div>
-          </div>
-
-          {/* Main Content Area */}
-          <div className="md:col-span-9 space-y-6">
-            
-            {/* Featured Banner */}
-            <div className="bg-gradient-to-r from-[#0F172A] to-[#1e293b] rounded-xl p-8 text-white relative overflow-hidden">
-              <div className="relative z-10 max-w-lg">
-                <h2 className="text-3xl font-bold mb-2">¡Encuentra al experto ideal!</h2>
-                <p className="mb-6 text-gray-300">Desde reparaciones rápidas hasta proyectos grandes. Todo lo que necesitas en un solo lugar.</p>
-                <Button className="bg-[#F97316] text-white hover:bg-orange-600 font-bold">Ver ofertas del día</Button>
-              </div>
-              <div className="absolute right-0 bottom-0 opacity-20 transform translate-x-10 translate-y-10">
-                <Wrench className="w-64 h-64 text-[#F97316]" />
-              </div>
-            </div>
-
-            {/* Featured Grid */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
-                <h2 className="text-xl font-bold text-[#0F172A]">Publicaciones Destacadas</h2>
-              </div>
-              
-              {featuredServices.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {featuredServices.map((service) => (
-                    <ServiceCard key={service.id} {...service} />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-10 bg-white rounded-lg border border-dashed border-gray-200">
-                  <p className="text-gray-500">No hay servicios destacados en este momento.</p>
-                  <Button variant="link" className="text-[#F97316]">¡Sé el primero en publicar!</Button>
-                </div>
-              )}
-            </div>
-
-          </div>
-        </div>
-
-        {/* Popular Categories */}
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold text-[#0F172A]">Categorías Populares</h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {categories.map((cat, idx) => (
-              <CategoryIcon key={idx} {...cat} />
+        {/* Recommended Section */}
+        <section>
+          <SectionHeader title="Recomendados para tí" />
+          <div className="flex overflow-x-auto gap-4 px-4 pb-4 no-scrollbar">
+            {recommendedItems.map((item) => (
+              <ServiceCard key={item.id} {...item} />
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* Recent Publications */}
-        <div className="space-y-4 pb-10">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold text-[#0F172A]">Publicaciones Recientes</h2>
+        {/* Separator */}
+        <div className="h-2 bg-gray-100" />
+
+        {/* Featured Section */}
+        <section className="pt-6">
+          <SectionHeader title="Publicaciones Destacadas" />
+          <div className="flex overflow-x-auto gap-4 px-4 pb-4 no-scrollbar">
+            {featuredItems.map((item) => (
+              <ServiceCard key={item.id} {...item} />
+            ))}
           </div>
-          
-          {recentServices.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              {recentServices.map((service) => (
-                <ServiceCard key={service.id} {...service} />
-              ))}
-            </div>
-          ) : (
-             <div className="text-center py-12 bg-gray-50 rounded-lg">
-                <p className="text-gray-400">Aún no hay publicaciones recientes.</p>
-             </div>
-          )}
-        </div>
+        </section>
 
       </main>
     </div>

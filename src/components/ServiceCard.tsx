@@ -1,47 +1,51 @@
-import { Heart, MapPin } from "lucide-react";
+import { Heart } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 interface ServiceCardProps {
   title: string;
   price: string;
-  location: string;
   image: string;
-  isFeatured?: boolean;
-  category: string;
+  badge?: { text: string; color: "yellow" | "blue" | "gray" };
 }
 
-export const ServiceCard = ({ title, price, location, image, isFeatured, category }: ServiceCardProps) => {
+export const ServiceCard = ({ title, price, image, badge }: ServiceCardProps) => {
   return (
-    <Card className="overflow-hidden group cursor-pointer hover:shadow-lg transition-all duration-300 border-gray-100">
-      <div className="relative aspect-[4/3] overflow-hidden">
+    <div className="flex flex-col w-[160px] md:w-[200px] flex-shrink-0">
+      <div className="relative aspect-square rounded-xl overflow-hidden mb-2 bg-gray-100">
         <img 
           src={image} 
           alt={title} 
-          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+          className="object-cover w-full h-full"
         />
-        {isFeatured && (
-          <Badge className="absolute top-2 left-2 bg-[#F97316] text-white hover:bg-orange-600">
-            Destacado
+        
+        {/* Badge Overlay */}
+        {badge && (
+          <Badge 
+            className={`absolute top-2 left-2 border-0 px-2 py-0.5 text-xs font-bold rounded-md ${
+              badge.color === "yellow" 
+                ? "bg-[#fbce07] text-black hover:bg-[#fbce07]" 
+                : badge.color === "blue"
+                ? "bg-[#0058ab] text-white hover:bg-[#0058ab]"
+                : "bg-gray-200 text-gray-800"
+            }`}
+          >
+            {badge.text}
           </Badge>
         )}
-        <button className="absolute bottom-2 right-2 p-1.5 bg-black/50 rounded-full text-white hover:bg-[#F97316] hover:text-white transition-colors">
-          <Heart className="h-4 w-4" />
+
+        {/* Favorite Heart */}
+        <button className="absolute bottom-2 right-2 p-1.5 bg-black/40 rounded-full text-white hover:bg-red-500 transition-colors backdrop-blur-sm">
+          <Heart className="h-5 w-5" />
         </button>
       </div>
-      <CardContent className="p-3">
-        <p className="text-xs text-gray-500 mb-1">{category}</p>
-        <h3 className="font-semibold text-[#0F172A] line-clamp-2 min-h-[3rem] mb-2 text-sm leading-tight">
+
+      <div className="px-1">
+        <h3 className="font-semibold text-gray-900 line-clamp-2 text-sm leading-tight h-9 mb-1">
           {title}
         </h3>
-        <div className="flex items-center justify-between mt-auto">
-          <p className="font-bold text-[#F97316] text-lg">{price}</p>
-        </div>
-        <div className="flex items-center text-gray-400 text-xs mt-2">
-          <MapPin className="h-3 w-3 mr-1" />
-          <span className="truncate">{location}</span>
-        </div>
-      </CardContent>
-    </Card>
+        <p className="font-bold text-lg text-gray-900">{price}</p>
+      </div>
+    </div>
   );
 };
