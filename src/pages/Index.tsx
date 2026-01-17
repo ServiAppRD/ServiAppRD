@@ -4,78 +4,18 @@ import { CategoryIcon } from "@/components/CategoryIcon";
 import { Button } from "@/components/ui/button";
 import { Wrench, Zap, Paintbrush, Truck, Monitor, Scissors } from "lucide-react";
 
-// Mock Data
-const featuredServices = [
-  {
-    id: 1,
-    title: "Servicio de Plomería Residencial 24/7",
-    price: "RD$ 1,500",
-    location: "Distrito Nacional",
-    category: "Plomería",
-    image: "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=800",
-    isFeatured: true
-  },
-  {
-    id: 2,
-    title: "Instalación de Aires Acondicionados Inverter",
-    price: "RD$ 2,500",
-    location: "Santo Domingo Este",
-    category: "Climatización",
-    image: "https://images.unsplash.com/photo-1621905476059-08b537fba6b3?auto=format&fit=crop&q=80&w=800",
-    isFeatured: true
-  }
-];
+// Empty Data as requested
+const featuredServices: any[] = [];
+const recentServices: any[] = [];
 
-const recentServices = [
-  {
-    id: 3,
-    title: "Limpieza Profunda de Sofás y Alfombras",
-    price: "RD$ 800",
-    location: "Santiago",
-    category: "Limpieza",
-    image: "https://images.unsplash.com/photo-1581578731117-104f2a921a29?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: 4,
-    title: "Mecánico a Domicilio - Diagnóstico Computarizado",
-    price: "RD$ 1,200",
-    location: "Santo Domingo Norte",
-    category: "Mecánica",
-    image: "https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: 5,
-    title: "Clases de Matemáticas y Física",
-    price: "RD$ 500/hr",
-    location: "Distrito Nacional",
-    category: "Tutorías",
-    image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: 6,
-    title: "Mudanzas Pequeñas y Medianas",
-    price: "A convenir",
-    location: "Bavaro",
-    category: "Transporte",
-    image: "https://images.unsplash.com/photo-1600518464441-9154a4dea21b?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: 7,
-    title: "Reparación de Celulares y Tablets",
-    price: "RD$ 800",
-    location: "La Vega",
-    category: "Tecnología",
-    image: "https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?auto=format&fit=crop&q=80&w=800"
-  }
-];
-
+// Categories are structural navigation, so we keep them, but they don't represent specific fake products.
 const categories = [
-  { icon: Wrench, label: "Plomería", count: "1,203" },
-  { icon: Zap, label: "Electricidad", count: "892" },
-  { icon: Paintbrush, label: "Limpieza", count: "2,341" },
-  { icon: Truck, label: "Mudanzas", count: "543" },
-  { icon: Monitor, label: "Tecnología", count: "765" },
-  { icon: Scissors, label: "Belleza", count: "1,890" },
+  { icon: Wrench, label: "Plomería", count: "0" },
+  { icon: Zap, label: "Electricidad", count: "0" },
+  { icon: Paintbrush, label: "Limpieza", count: "0" },
+  { icon: Truck, label: "Mudanzas", count: "0" },
+  { icon: Monitor, label: "Tecnología", count: "0" },
+  { icon: Scissors, label: "Belleza", count: "0" },
 ];
 
 const Index = () => {
@@ -99,10 +39,10 @@ const Index = () => {
 
       <main className="container mx-auto px-4 py-6 space-y-8">
         
-        {/* Top Section with Sidebar like Reference */}
+        {/* Top Section */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           
-          {/* Sidebar Area (Left in reference) */}
+          {/* Sidebar Area */}
           <div className="hidden md:block md:col-span-3 space-y-4">
             <div className="bg-white p-6 rounded-lg shadow-sm border text-center">
               <h3 className="font-bold text-lg mb-2 text-[#0F172A]">Mejora tu experiencia</h3>
@@ -119,7 +59,7 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Main Content Area (Right in reference) */}
+          {/* Main Content Area */}
           <div className="md:col-span-9 space-y-6">
             
             {/* Featured Banner */}
@@ -138,20 +78,20 @@ const Index = () => {
             <div className="space-y-4">
               <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
                 <h2 className="text-xl font-bold text-[#0F172A]">Publicaciones Destacadas</h2>
-                <a href="#" className="text-[#FDBA74] text-sm hover:underline font-medium">Ver más &gt;</a>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {featuredServices.map((service) => (
-                  <ServiceCard key={service.id} {...service} />
-                ))}
-                {/* Adding a placeholder card to fill space visually if needed */}
-                <div className="hidden lg:flex items-center justify-center bg-white border-2 border-dashed border-gray-200 rounded-lg p-6 text-center cursor-pointer hover:border-[#FDBA74]">
-                  <div>
-                    <p className="font-semibold text-gray-500">¿Quieres ver tu anuncio aquí?</p>
-                    <Button variant="link" className="text-[#FDBA74]">Publicar ahora</Button>
-                  </div>
+              
+              {featuredServices.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {featuredServices.map((service) => (
+                    <ServiceCard key={service.id} {...service} />
+                  ))}
                 </div>
-              </div>
+              ) : (
+                <div className="text-center py-10 bg-white rounded-lg border border-dashed border-gray-200">
+                  <p className="text-gray-500">No hay servicios destacados en este momento.</p>
+                  <Button variant="link" className="text-[#FDBA74]">¡Sé el primero en publicar!</Button>
+                </div>
+              )}
             </div>
 
           </div>
@@ -161,7 +101,6 @@ const Index = () => {
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold text-[#0F172A]">Categorías Populares</h2>
-            <a href="#" className="text-sm text-blue-600 hover:underline">Ver más categorías &gt;</a>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {categories.map((cat, idx) => (
@@ -174,13 +113,19 @@ const Index = () => {
         <div className="space-y-4 pb-10">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold text-[#0F172A]">Publicaciones Recientes</h2>
-            <a href="#" className="text-sm text-blue-600 hover:underline">Explorar más &gt;</a>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {recentServices.map((service) => (
-              <ServiceCard key={service.id} {...service} />
-            ))}
-          </div>
+          
+          {recentServices.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {recentServices.map((service) => (
+                <ServiceCard key={service.id} {...service} />
+              ))}
+            </div>
+          ) : (
+             <div className="text-center py-12 bg-gray-50 rounded-lg">
+                <p className="text-gray-400">Aún no hay publicaciones recientes.</p>
+             </div>
+          )}
         </div>
 
       </main>
