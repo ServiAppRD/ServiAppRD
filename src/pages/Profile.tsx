@@ -8,7 +8,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { 
   Loader2, LogOut, User, Phone, MapPin, Heart, 
   HelpCircle, ChevronRight, CreditCard, Gift, 
-  ShieldCheck, ArrowLeft, Star 
+  ArrowLeft
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -172,22 +172,6 @@ const Profile = () => {
 
       <div className="px-4 space-y-6">
         
-        {/* Banner Premium */}
-        <div className="bg-gradient-to-r from-[#1e293b] to-[#0F172A] rounded-2xl p-5 text-white shadow-lg relative overflow-hidden">
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="bg-white text-[#0F172A] text-xs font-bold px-2 py-0.5 rounded">
-                PRO
-              </div>
-              <span className="font-bold text-lg">¡Conviértete en Pro!</span>
-            </div>
-            <p className="text-gray-300 text-sm mb-0 max-w-[85%] leading-snug">
-              Obtén comisiones reducidas y destaca tus servicios.
-            </p>
-          </div>
-          <Star className="absolute -right-4 -bottom-4 h-24 w-24 text-white opacity-10 rotate-12" />
-        </div>
-
         {/* Quick Actions Grid */}
         <div className="grid grid-cols-4 gap-3">
           <QuickAction 
@@ -197,7 +181,7 @@ const Profile = () => {
             onClick={() => setView('edit')} 
           />
           <QuickAction icon={Gift} label="Mis" subLabel="Cupones" />
-          <QuickAction icon={ShieldCheck} label="ServiAPP" subLabel="Pro" />
+          <QuickAction icon={MapPin} label="Mis" subLabel="Direcciones" />
           <QuickAction icon={HelpCircle} label="Ayuda" subLabel="Soporte" />
         </div>
 
@@ -222,7 +206,6 @@ const Profile = () => {
         <div>
           <h3 className="font-bold text-lg mb-2 text-[#0F172A]">Perfil</h3>
           <div className="space-y-1">
-            <MenuItem icon={MapPin} label="Direcciones" />
             <MenuItem icon={Heart} label="Favoritos" />
             <MenuItem icon={CreditCard} label="Métodos de pago" />
           </div>
