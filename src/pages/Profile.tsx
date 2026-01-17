@@ -9,10 +9,11 @@ import { showSuccess, showError } from "@/utils/toast";
 import { 
   Loader2, LogOut, User, Phone, MapPin, Heart, 
   HelpCircle, ChevronRight, CreditCard, Gift, 
-  ArrowLeft, Bell, Shield, Settings
+  ArrowLeft, Bell, Shield, Settings, Edit2, Mail, CheckCircle2, AlertCircle
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 const DR_CITIES = [
   "Santo Domingo", "Santiago de los Caballeros", "San Francisco de Macorís", 
@@ -23,7 +24,7 @@ const DR_CITIES = [
 const Profile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'dashboard' | 'edit'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'edit' | 'preview'>('dashboard');
   const [session, setSession] = useState<any>(null);
   
   // Profile Data
@@ -35,8 +36,9 @@ const Profile = () => {
   const [address, setAddress] = useState("");
   const [updating, setUpdating] = useState(false);
 
-  // Completion Logic
-  const [completionPercentage, setCompletionPercentage] = useState(0);
+  // Completion Logic (Steps)
+  const [completedSteps, setCompletedSteps] = useState(0);
+  const [totalSteps, setTotalSteps] = useState(0);
   const [missingFields, setMissingFields] = useState<string[]>([]);
 
   useEffect(() => {
@@ -51,7 +53,6 @@ const Profile = () => {
   }, [navigate]);
 
   const calculateCompletion = (data: any) => {
-    // Ahora incluimos todos los campos requeridos, incluyendo la dirección
     const fields = [
       { key: 'first_name', label: 'Nombre' },
       { key: 'last_name', label: 'Apellido' },
@@ -60,16 +61,13 @@ const Profile = () => {
       { key: 'address', label: 'Dirección' }
     ];
     
-    // Verificación robusta de que el campo existe y no está vacío o solo con espacios
     const completed = fields.filter(f => {
       const value = data[f.key];
       return value && String(value).trim() !== '';
     }).length;
 
-    const total = fields.length;
-    const percent = Math.round((completed / total) * 100);
-    
-    setCompletionPercentage(percent);
+    setTotalSteps(fields.length);
+    setCompletedSteps(completed);
 
     const missing = fields
       .filter(f => !data[f.key] || String(data[f.key]).trim() === '')
@@ -108,8 +106,6 @@ const Profile = () => {
   const updateProfile = async () => {
     try {
       setUpdating(true);
-      // Validar campos obligatorios antes de guardar si el usuario intenta guardar vacíos
-      
       const updates = {
         id: session?.user.id,
         first_name: firstName,
@@ -128,7 +124,7 @@ const Profile = () => {
       showSuccess("Perfil actualizado correctamente");
       setProfileData(updates);
       calculateCompletion(updates);
-      setView('dashboard'); // Go back to dashboard
+      setView('preview'); // Ir a vista previa al guardar
     } catch (error: any) {
       showError(error.message);
     } finally {
@@ -149,61 +145,127 @@ const Profile = () => {
     );
   }
 
+  // --- PREVIEW PROFILE VIEW (Modern Card) ---
+  if (view === 'preview') {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in relative">
+        {/* Background Decoration */}
+        <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-br from-[#F97316] to-orange-600 rounded-b-[2.5rem] z-0" />
+        
+        <div className="relative z-10 px-4 pt-4">
+          <div className="flex justify-between items-center text-white mb-6">
+            <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="text-white hover:bg-white/20 hover:text-white">
+              <ArrowLeft className="h-6 w-6" />
+            </Button>
+            <h1 className="text-lg font-bold">Mi Perfil</h1>
+            <Button variant="ghost" size="icon" onClick={() => setView('edit')} className="text-white hover:bg-white/20 hover:text-white">
+              <Edit2 className="h-5 w-5" />
+            </Button>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-xl p-6 text-center mt-8 space-y-4 border border-gray-100">
+            <div className="relative -mt-20 mb-4 flex justify-center">
+               <div className="p-1.5 bg-white rounded-full">
+                  <Avatar className="h-28 w-28 border-4 border-orange-50">
+                    <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${session?.user.email}`} />
+                    <AvatarFallback className="bg-orange-100 text-[#F97316] text-4xl font-bold">
+                      {firstName?.[0] || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+               </div>
+               {completedSteps === totalSteps && (
+                 <div className="absolute bottom-2 right-[calc(50%-2.5rem)] bg-green-500 text-white p-1.5 rounded-full border-2 border-white" title="Verificado">
+                   <CheckCircle2 className="h-4 w-4" />
+                 </div>
+               )}
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">{firstName} {lastName}</h2>
+              <p className="text-gray-500 text-sm font-medium">{session?.user.email}</p>
+            </div>
+
+            <div className="flex justify-center gap-2 pt-2">
+               <Badge className="bg-orange-50 text-[#F97316] hover:bg-orange-100 border-0 px-3 py-1">Cliente</Badge>
+               {city && <Badge variant="outline" className="text-gray-500 border-gray-200">{city}</Badge>}
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 pt-6 text-left">
+               <InfoItem icon={Phone} label="Teléfono" value={phone || "No agregado"} isMissing={!phone} />
+               <InfoItem icon={Mail} label="Correo" value={session?.user.email} />
+               <InfoItem icon={MapPin} label="Dirección" value={address || "No agregada"} isMissing={!address} />
+               <InfoItem icon={MapPin} label="Ciudad" value={city || "No seleccionada"} isMissing={!city} />
+            </div>
+
+            {completedSteps < totalSteps && (
+              <Button onClick={() => setView('edit')} className="w-full mt-4 bg-orange-50 text-[#F97316] hover:bg-orange-100 border-0 font-bold">
+                Completar información faltante
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // --- EDIT PROFILE VIEW ---
   if (view === 'edit') {
     return (
       <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
-        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="hover:bg-orange-50 hover:text-[#F97316]">
-            <ArrowLeft className="h-6 w-6" />
-          </Button>
-          <h1 className="text-lg font-bold">Editar Perfil</h1>
+        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="hover:bg-orange-50 hover:text-[#F97316]">
+              <ArrowLeft className="h-6 w-6" />
+            </Button>
+            <h1 className="text-lg font-bold">Editar Información</h1>
+          </div>
         </div>
         
         <div className="p-6 max-w-md mx-auto space-y-6">
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">Nombre</Label>
-              <Input 
-                id="firstName" 
-                value={firstName} 
-                onChange={(e) => setFirstName(e.target.value)} 
-                className="focus-visible:ring-[#F97316]"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Apellido</Label>
-              <Input 
-                id="lastName" 
-                value={lastName} 
-                onChange={(e) => setLastName(e.target.value)} 
-                className="focus-visible:ring-[#F97316]"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">Nombre</Label>
+                <Input 
+                  id="firstName" 
+                  value={firstName} 
+                  onChange={(e) => setFirstName(e.target.value)} 
+                  className="focus-visible:ring-[#F97316]"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Apellido</Label>
+                <Input 
+                  id="lastName" 
+                  value={lastName} 
+                  onChange={(e) => setLastName(e.target.value)} 
+                  className="focus-visible:ring-[#F97316]"
+                />
+              </div>
             </div>
             
-            <div className="pt-2 border-t border-gray-100">
-                <h3 className="font-semibold text-gray-900 mb-3">Información de Contacto</h3>
+            <div className="pt-4 border-t border-gray-100">
+                <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-[#F97316]" /> Contacto
+                </h3>
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="phone">Teléfono / Celular</Label>
-                        <div className="relative">
-                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <Input 
-                            id="phone" 
-                            type="tel"
-                            placeholder="809-555-5555"
-                            value={phone} 
-                            onChange={(e) => setPhone(e.target.value)} 
-                            className="pl-10 focus-visible:ring-[#F97316]"
-                            />
-                        </div>
+                        <Input 
+                          id="phone" 
+                          type="tel"
+                          placeholder="809-555-5555"
+                          value={phone} 
+                          onChange={(e) => setPhone(e.target.value)} 
+                          className="focus-visible:ring-[#F97316]"
+                        />
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="city">Ciudad (Rep. Dom.)</Label>
+                        <Label htmlFor="city">Ciudad</Label>
                         <Select value={city} onValueChange={setCity}>
                             <SelectTrigger className="focus:ring-[#F97316]">
-                                <SelectValue placeholder="Selecciona tu ciudad" />
+                                <SelectValue placeholder="Selecciona..." />
                             </SelectTrigger>
                             <SelectContent className="bg-white z-50">
                                 {DR_CITIES.map((c) => (
@@ -214,17 +276,14 @@ const Profile = () => {
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="address">Dirección (Sector, calle, #)</Label>
-                        <div className="relative">
-                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <Input 
-                            id="address" 
-                            placeholder="Ej. Naco, Calle 5, #20"
-                            value={address} 
-                            onChange={(e) => setAddress(e.target.value)} 
-                            className="pl-10 focus-visible:ring-[#F97316]"
-                            />
-                        </div>
+                        <Label htmlFor="address">Dirección</Label>
+                        <Input 
+                          id="address" 
+                          placeholder="Ej. Sector, Calle, #"
+                          value={address} 
+                          onChange={(e) => setAddress(e.target.value)} 
+                          className="focus-visible:ring-[#F97316]"
+                        />
                     </div>
                 </div>
             </div>
@@ -246,22 +305,16 @@ const Profile = () => {
   // --- DASHBOARD VIEW ---
   return (
     <div className="min-h-screen bg-gray-50 pb-24 pt-safe animate-fade-in">
-      {/* Modern Orange Header */}
+      {/* Header */}
       <div className="bg-white pt-4 pb-4 px-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] rounded-b-[2.5rem] relative z-10">
         <div className="flex justify-between items-center mb-6">
-          <div>
-            <p className="text-gray-400 text-sm font-medium">Bienvenido de nuevo,</p>
-            <h1 className="text-2xl font-bold text-[#0F172A] tracking-tight truncate max-w-[200px]">
+          <div className="flex-1 min-w-0 pr-4">
+            <p className="text-gray-400 text-sm font-medium">Bienvenido,</p>
+            <h1 className="text-2xl font-bold text-[#0F172A] tracking-tight truncate">
               {profileData?.first_name || 'Usuario'}
             </h1>
-            {profileData?.city && (
-                <div className="flex items-center text-xs text-gray-400 mt-1">
-                    <MapPin className="h-3 w-3 mr-1" />
-                    {profileData.city}
-                </div>
-            )}
           </div>
-          <Avatar className="h-12 w-12 border-2 border-orange-100 shadow-sm cursor-pointer ring-2 ring-transparent hover:ring-[#F97316] transition-all" onClick={() => setView('edit')}>
+          <Avatar className="h-12 w-12 border-2 border-orange-100 shadow-sm cursor-pointer hover:scale-105 transition-transform" onClick={() => setView('preview')}>
             <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${session?.user.email}`} />
             <AvatarFallback className="bg-orange-100 text-[#F97316] font-bold">
               {profileData?.first_name?.[0] || 'U'}
@@ -269,12 +322,12 @@ const Profile = () => {
           </Avatar>
         </div>
         
-        {/* Quick Actions inside Header */}
+        {/* Quick Actions */}
         <div className="flex justify-between gap-2 pb-2">
           <QuickAction 
             icon={User} 
             label="Perfil" 
-            onClick={() => setView('edit')} 
+            onClick={() => setView('preview')} 
           />
           <QuickAction icon={Gift} label="Cupones" />
           <QuickAction icon={MapPin} label="Dirección" onClick={() => setView('edit')} />
@@ -284,38 +337,55 @@ const Profile = () => {
 
       <div className="px-5 space-y-6 mt-6">
 
-        {/* Profile Completion Card - Logic Applied */}
-        {completionPercentage < 100 && (
-            <div className="bg-white rounded-2xl p-5 border border-orange-100 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-orange-50 rounded-bl-full -mr-2 -mt-2 z-0"></div>
-            <div className="relative z-10">
-                <div className="flex justify-between items-center mb-3">
-                <div>
-                    <h3 className="font-bold text-[#0F172A]">Completa tu perfil</h3>
-                    <p className="text-xs text-gray-500 font-medium">{completionPercentage}% completado</p>
-                </div>
-                <Button 
-                    variant="ghost" 
-                    onClick={() => setView('edit')}
-                    className="text-[#F97316] hover:text-orange-700 hover:bg-orange-50 h-8 px-3 rounded-full font-bold text-xs"
-                >
-                    Completar
-                </Button>
-                </div>
-                <Progress value={completionPercentage} className="h-2.5 bg-gray-100" indicatorClassName="bg-gradient-to-r from-[#F97316] to-orange-500 rounded-full" />
-                <div className="mt-3 flex flex-wrap gap-2">
-                    {missingFields.map(field => (
-                        <p key={field} className="text-[10px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full flex items-center inline-flex">
-                            <span className="w-1 h-1 rounded-full bg-[#F97316] mr-1.5"></span>
-                            Falta {field.toLowerCase()}
+        {/* Profile Completion Card (Steps Logic) */}
+        {completedSteps < totalSteps && (
+            <div className="bg-white rounded-2xl p-5 border border-orange-100 shadow-sm relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-orange-50/50 rounded-bl-full -mr-4 -mt-4 z-0 transition-transform group-hover:scale-110"></div>
+              <div className="relative z-10">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                        <h3 className="font-bold text-[#0F172A] text-lg">Completa tu perfil</h3>
+                        <p className="text-sm text-gray-500 font-medium">
+                          <span className="text-[#F97316] font-bold">{completedSteps}</span> de {totalSteps} pasos completados
                         </p>
-                    ))}
-                </div>
-            </div>
+                    </div>
+                    <Button 
+                        size="sm"
+                        onClick={() => setView('edit')}
+                        className="bg-[#F97316] hover:bg-orange-600 text-white rounded-full px-4 h-8 text-xs font-bold shadow-sm shadow-orange-200"
+                    >
+                        Continuar
+                    </Button>
+                  </div>
+                  
+                  {/* Progress Bar */}
+                  <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden mb-4">
+                    <div 
+                      className="h-full bg-gradient-to-r from-[#F97316] to-orange-500 transition-all duration-1000 ease-out rounded-full"
+                      style={{ width: `${(completedSteps / totalSteps) * 100}%` }}
+                    />
+                  </div>
+
+                  {/* Missing Fields List */}
+                  <div className="space-y-2">
+                      <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Falta completar:</p>
+                      <div className="flex flex-col gap-2">
+                          {missingFields.slice(0, 3).map((field, i) => (
+                              <div key={i} className="flex items-center text-sm text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-100">
+                                  <div className="h-5 w-5 rounded-full border-2 border-gray-300 mr-3 flex items-center justify-center flex-shrink-0">
+                                    <div className="h-1.5 w-1.5 rounded-full bg-transparent" />
+                                  </div>
+                                  {field}
+                              </div>
+                          ))}
+                          {missingFields.length > 3 && (
+                            <p className="text-xs text-gray-400 pl-1">+ {missingFields.length - 3} más...</p>
+                          )}
+                      </div>
+                  </div>
+              </div>
             </div>
         )}
-        
-        {/* Success badge removed as requested - Interface is cleaner when complete */}
 
         {/* Menu Sections */}
         <div className="space-y-6">
@@ -338,6 +408,21 @@ const Profile = () => {
 };
 
 // --- Components ---
+
+const InfoItem = ({ icon: Icon, label, value, isMissing }: any) => (
+  <div className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 border border-gray-100">
+    <div className={`p-2 rounded-full ${isMissing ? 'bg-red-100 text-red-500' : 'bg-white text-orange-500'} shadow-sm`}>
+      <Icon className="h-4 w-4" />
+    </div>
+    <div className="flex-1">
+      <p className="text-xs text-gray-400 font-medium">{label}</p>
+      <p className={`text-sm font-semibold ${isMissing ? 'text-red-500' : 'text-gray-900'}`}>
+        {value}
+      </p>
+    </div>
+    {isMissing && <AlertCircle className="h-4 w-4 text-red-400" />}
+  </div>
+);
 
 const MenuSection = ({ title, children }: any) => (
   <div>
