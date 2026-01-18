@@ -183,7 +183,7 @@ const ServiceDetail = () => {
                    <span className="text-gray-400 text-xs">({reputation.count} reseñas)</span>
                  </div>
                ) : (
-                 <p className="text-xs text-blue-500 font-medium bg-blue-50 inline-block px-2 py-0.5 rounded-full">
+                 <p className="text-xs text-gray-500 font-medium bg-gray-100 inline-block px-2 py-0.5 rounded-full">
                    Es nuevo en la app y no tiene reseñas
                  </p>
                )}

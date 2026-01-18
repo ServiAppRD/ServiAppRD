@@ -1,4 +1,4 @@
-import { Home, PlusCircle, MessageSquare, Menu, Search } from "lucide-react";
+import { Home, PlusCircle, Heart, Menu, Search } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 export const MobileNavbar = () => {
@@ -17,7 +17,12 @@ export const MobileNavbar = () => {
     return null;
   }
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => {
+    if (path === "/profile?view=favorites") {
+        return location.pathname === "/profile" && location.search.includes("view=favorites");
+    }
+    return location.pathname === path && !location.search;
+  };
 
   const NavItem = ({ icon: Icon, label, path, action }: any) => (
     <button 
@@ -36,7 +41,7 @@ export const MobileNavbar = () => {
       <NavItem icon={Home} label="Inicio" path="/" />
       <NavItem icon={Search} label="Buscar" path="/search" />
       <NavItem icon={PlusCircle} label="Publicar" path="/publish" />
-      <NavItem icon={MessageSquare} label="Mensajes" path="/messages" />
+      <NavItem icon={Heart} label="Favoritos" path="/profile?view=favorites" />
       <NavItem icon={Menu} label="Cuenta" path="/profile" />
     </div>
   );

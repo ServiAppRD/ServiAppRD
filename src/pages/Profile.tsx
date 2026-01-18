@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,7 @@ const DR_CITIES = [
 
 const Profile = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'dashboard' | 'edit' | 'preview' | 'my-services' | 'reputation' | 'favorites'>('dashboard');
   const [session, setSession] = useState<any>(null);
@@ -64,9 +65,15 @@ const Profile = () => {
         navigate("/login");
       } else {
         getProfile(session.user.id);
+        
+        // Check for view param
+        const viewParam = searchParams.get('view');
+        if (viewParam === 'favorites') {
+          handleOpenFavorites(session.user.id);
+        }
       }
     });
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
   const calculateCompletion = (data: any) => {
     const fields = [
@@ -165,8 +172,10 @@ const Profile = () => {
     setLoadingServices(false);
   };
 
-  const fetchFavorites = async () => {
-    if (!session?.user?.id) return;
+  const fetchFavorites = async (userId?: string) => {
+    const uid = userId || session?.user?.id;
+    if (!uid) return;
+    
     setLoadingFavorites(true);
     // Hacemos un join manual porque la relacion user->favorites->services es M-to-M
     const { data, error } = await supabase
@@ -177,7 +186,7 @@ const Profile = () => {
           *
         )
       `)
-      .eq('user_id', session.user.id);
+      .eq('user_id', uid);
 
     if (error) {
       console.error(error);
@@ -237,14 +246,24 @@ const Profile = () => {
     fetchMyServices();
   };
   
-  const handleOpenFavorites = () => {
+  const handleOpenFavorites = (uid?: string) => {
     setView('favorites');
-    fetchFavorites();
+    fetchFavorites(uid);
   };
 
   const handleOpenReputation = () => {
     setView('reputation');
     fetchReputation();
+  };
+
+  // Helper to go back: if we are in "favorites" view and came from param, maybe go home?
+  // But for simplicity, we just set view to dashboard.
+  const handleBackToDashboard = () => {
+    // Clean URL params if they exist
+    if (searchParams.get('view')) {
+       navigate('/profile', { replace: true });
+    }
+    setView('dashboard');
   };
 
   if (loading) {
@@ -261,7 +280,7 @@ const Profile = () => {
       <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
         <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="hover:bg-orange-50 hover:text-[#F97316]">
+            <Button variant="ghost" size="icon" onClick={handleBackToDashboard} className="hover:bg-orange-50 hover:text-[#F97316]">
               <ArrowLeft className="h-6 w-6" />
             </Button>
             <h1 className="text-lg font-bold">Mis Favoritos</h1>
@@ -720,7 +739,7 @@ const Profile = () => {
                 icon={Heart} 
                 label="Mis Favoritos" 
                 badge={myFavorites.length > 0 ? String(myFavorites.length) : undefined}
-                onClick={handleOpenFavorites} // Acción para abrir favoritos
+                onClick={() => handleOpenFavorites()} // Acción para abrir favoritos
             />
           </MenuSection>
 
