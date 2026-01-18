@@ -1,16 +1,88 @@
 import { Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
+import { showSuccess, showError } from "@/utils/toast";
 
 interface ServiceCardProps {
+  id?: string; // ID es opcional para previsualizaciones (ej. Publish.tsx)
   title: string;
   price: string;
   image: string;
   badge?: { text: string; color: "yellow" | "blue" | "orange" | "gray" };
 }
 
-export const ServiceCard = ({ title, price, image, badge }: ServiceCardProps) => {
+export const ServiceCard = ({ id, title, price, image, badge }: ServiceCardProps) => {
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Verificar si ya es favorito al cargar
+  useEffect(() => {
+    if (!id) return;
+
+    const checkFavorite = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { data } = await supabase
+        .from('favorites')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .eq('service_id', id)
+        .maybeSingle();
+
+      if (data) setIsFavorite(true);
+    };
+
+    checkFavorite();
+  }, [id]);
+
+  const toggleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Evitar navegar al detalle
+    if (!id) return;
+
+    setLoading(true);
+    
+    // Verificar sesión
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      showError("Debes iniciar sesión para guardar favoritos");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      if (isFavorite) {
+        // Eliminar
+        const { error } = await supabase
+          .from('favorites')
+          .delete()
+          .eq('user_id', session.user.id)
+          .eq('service_id', id);
+        
+        if (error) throw error;
+        setIsFavorite(false);
+      } else {
+        // Agregar
+        const { error } = await supabase
+          .from('favorites')
+          .insert({ user_id: session.user.id, service_id: id });
+
+        if (error) throw error;
+        setIsFavorite(true);
+        showSuccess("Guardado en favoritos");
+      }
+    } catch (error) {
+      console.error(error);
+      showError("Error al actualizar favoritos");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col w-[160px] md:w-[200px] flex-shrink-0 group cursor-pointer">
+    <div className="flex flex-col w-[160px] md:w-[200px] flex-shrink-0 group cursor-pointer relative">
       <div className="relative aspect-square rounded-xl overflow-hidden mb-2 bg-gray-100 border border-gray-100">
         <img 
           src={image} 
@@ -36,8 +108,17 @@ export const ServiceCard = ({ title, price, image, badge }: ServiceCardProps) =>
         )}
 
         {/* Favorite Heart */}
-        <button className="absolute bottom-2 right-2 p-2 bg-white/90 rounded-full text-gray-500 hover:text-red-500 hover:bg-white transition-all shadow-sm">
-          <Heart className="h-4 w-4" />
+        <button 
+          onClick={toggleFavorite}
+          disabled={loading}
+          className="absolute bottom-2 right-2 p-2 bg-white/90 rounded-full text-gray-500 hover:text-red-500 hover:bg-white transition-all shadow-sm z-10 disabled:opacity-50"
+        >
+          <Heart 
+            className={cn(
+              "h-4 w-4 transition-all", 
+              isFavorite ? "fill-red-500 text-red-500" : "text-gray-500"
+            )} 
+          />
         </button>
       </div>
 

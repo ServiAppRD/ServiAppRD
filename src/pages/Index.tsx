@@ -116,9 +116,9 @@ const Index = () => {
               </div>
           </div>
 
-          {/* New Section: Recently Published */}
+          {/* New Section: Recently Published & Recommended (Unified) */}
           <section>
-            <SectionHeader title="Publicados Recientemente" />
+            <SectionHeader title="Explora Servicios" />
             <div className="flex overflow-x-auto gap-4 px-4 pb-4 no-scrollbar min-h-[100px]">
               {isLoading ? (
                 <div className="w-full flex justify-center py-8">
@@ -128,6 +128,7 @@ const Index = () => {
                 recentServices.map((item) => (
                   <div key={item.id} onClick={() => navigate(`/service/${item.id}`)}>
                     <ServiceCard 
+                      id={item.id}
                       title={item.title} 
                       price={`RD$ ${item.price}`} 
                       image={item.image_url || "/placeholder.svg"} 
@@ -140,22 +141,11 @@ const Index = () => {
                   No hay servicios recientes.
                 </div>
               )}
-            </div>
-          </section>
-
-          {/* Recommended Section (Joined with previous section) */}
-          <section className="pt-2">
-            <SectionHeader title="Servicios Recomendados" />
-            <div className="flex overflow-x-auto gap-4 px-4 pb-4 no-scrollbar min-h-[100px]">
-              {recommendedServices.length > 0 ? (
-                recommendedServices.map((item) => (
-                  <ServiceCard key={item.id} {...item} />
-                ))
-              ) : (
-                <div className="w-full text-center py-8 text-gray-400 bg-gray-50 rounded-lg mx-4 border border-dashed">
-                  Pronto veremos recomendaciones para ti.
-                </div>
-              )}
+              
+              {/* Recommended Items (Placeholder logic) */}
+              {recommendedServices.map((item) => (
+                  <ServiceCard key={item.id} id={item.id} {...item} />
+              ))}
             </div>
           </section>
 
@@ -165,7 +155,7 @@ const Index = () => {
             <div className="flex overflow-x-auto gap-4 px-4 pb-4 no-scrollbar min-h-[100px]">
               {featuredServices.length > 0 ? (
                 featuredServices.map((item) => (
-                  <ServiceCard key={item.id} {...item} />
+                  <ServiceCard key={item.id} id={item.id} {...item} />
                 ))
               ) : (
                  <div className="w-full text-center py-8 text-gray-400 bg-gray-50 rounded-lg mx-4 border border-dashed">

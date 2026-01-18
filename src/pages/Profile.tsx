@@ -16,6 +16,7 @@ import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { ServiceCard } from "@/components/ServiceCard"; // Importamos ServiceCard
 
 const DR_CITIES = [
   "Santo Domingo", "Santiago de los Caballeros", "San Francisco de Macorís", 
@@ -26,7 +27,7 @@ const DR_CITIES = [
 const Profile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'dashboard' | 'edit' | 'preview' | 'my-services' | 'reputation'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'edit' | 'preview' | 'my-services' | 'reputation' | 'favorites'>('dashboard');
   const [session, setSession] = useState<any>(null);
   
   // Profile Data
@@ -41,6 +42,10 @@ const Profile = () => {
   // My Services Data
   const [myServices, setMyServices] = useState<any[]>([]);
   const [loadingServices, setLoadingServices] = useState(false);
+
+  // Favorites Data
+  const [myFavorites, setMyFavorites] = useState<any[]>([]);
+  const [loadingFavorites, setLoadingFavorites] = useState(false);
 
   // Reputation Data
   const [reviews, setReviews] = useState<any[]>([]);
@@ -135,7 +140,7 @@ const Profile = () => {
       showSuccess("Perfil actualizado correctamente");
       setProfileData(updates);
       calculateCompletion(updates);
-      setView('preview'); // Ir a vista previa al guardar
+      setView('preview');
     } catch (error: any) {
       showError(error.message);
     } finally {
@@ -160,11 +165,34 @@ const Profile = () => {
     setLoadingServices(false);
   };
 
+  const fetchFavorites = async () => {
+    if (!session?.user?.id) return;
+    setLoadingFavorites(true);
+    // Hacemos un join manual porque la relacion user->favorites->services es M-to-M
+    const { data, error } = await supabase
+      .from('favorites')
+      .select(`
+        service_id,
+        services:service_id (
+          *
+        )
+      `)
+      .eq('user_id', session.user.id);
+
+    if (error) {
+      console.error(error);
+      showError("Error al cargar favoritos");
+    } else {
+      // Mapeamos para obtener solo el objeto service limpio
+      const cleanList = data.map((item: any) => item.services).filter(Boolean);
+      setMyFavorites(cleanList);
+    }
+    setLoadingFavorites(false);
+  };
+
   const fetchReputation = async () => {
     if (!session?.user?.id) return;
     setLoadingReputation(true);
-    
-    // Fetch reviews where I am the reviewee
     const { data, error } = await supabase
       .from('reviews')
       .select('*')
@@ -208,6 +236,11 @@ const Profile = () => {
     setView('my-services');
     fetchMyServices();
   };
+  
+  const handleOpenFavorites = () => {
+    setView('favorites');
+    fetchFavorites();
+  };
 
   const handleOpenReputation = () => {
     setView('reputation');
@@ -218,6 +251,59 @@ const Profile = () => {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-[#F97316]" />
+      </div>
+    );
+  }
+
+  // --- FAVORITES VIEW ---
+  if (view === 'favorites') {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
+        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="hover:bg-orange-50 hover:text-[#F97316]">
+              <ArrowLeft className="h-6 w-6" />
+            </Button>
+            <h1 className="text-lg font-bold">Mis Favoritos</h1>
+          </div>
+        </div>
+
+        <div className="p-4">
+          {loadingFavorites ? (
+            <div className="flex justify-center py-10">
+              <Loader2 className="h-8 w-8 animate-spin text-gray-300" />
+            </div>
+          ) : myFavorites.length === 0 ? (
+            <div className="text-center py-12 space-y-4">
+              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto">
+                <Heart className="h-8 w-8 text-red-300" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">Sin favoritos aún</h3>
+                <p className="text-sm text-gray-500 max-w-[200px] mx-auto">
+                  Guarda los servicios que te interesen tocando el corazón.
+                </p>
+              </div>
+              <Button onClick={() => navigate('/search')} variant="outline" className="border-orange-200 text-[#F97316]">
+                Explorar servicios
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              {myFavorites.map((service) => (
+                <div key={service.id} onClick={() => navigate(`/service/${service.id}`)}>
+                    <ServiceCard
+                        id={service.id}
+                        title={service.title}
+                        price={`RD$ ${service.price}`}
+                        image={service.image_url || "/placeholder.svg"}
+                        badge={service.is_promoted ? { text: "Top", color: "blue" } : undefined}
+                    />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -630,7 +716,12 @@ const Profile = () => {
               label="Mis Publicaciones" 
               onClick={handleOpenMyServices}
             />
-            <MenuItem icon={Heart} label="Mis Favoritos" badge="3" />
+            <MenuItem 
+                icon={Heart} 
+                label="Mis Favoritos" 
+                badge={myFavorites.length > 0 ? String(myFavorites.length) : undefined}
+                onClick={handleOpenFavorites} // Acción para abrir favoritos
+            />
           </MenuSection>
 
           <MenuSection title="Cuenta">
