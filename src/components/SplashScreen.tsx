@@ -30,8 +30,8 @@ export const SplashScreen = ({ onFinish }: { onFinish: () => void }) => {
     >
       <div 
         className={cn(
-          "w-32 h-32 transition-transform duration-700 ease-[cubic-bezier(0.87, 0, 0.13, 1)]",
-          startExit ? "scale-[50] opacity-0" : "scale-100 animate-pulse"
+          "w-48 h-48 transition-transform duration-700 ease-[cubic-bezier(0.87, 0, 0.13, 1)]",
+          startExit ? "scale-[50] opacity-0" : "scale-100"
         )}
       >
         <img 
