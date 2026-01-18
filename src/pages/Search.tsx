@@ -26,11 +26,15 @@ const SearchPage = () => {
   const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [isFocused, setIsFocused] = useState(false);
 
-  // Actualizar URL cuando cambian los filtros (opcional, para mantener estado al recargar)
+  // Actualizar URL y guardar preferencia para recomendaciones
   useEffect(() => {
     const params = new URLSearchParams();
     if (searchTerm) params.set("q", searchTerm);
-    if (activeCategory && activeCategory !== "Todos") params.set("category", activeCategory);
+    if (activeCategory && activeCategory !== "Todos") {
+      params.set("category", activeCategory);
+      // Guardar interés para la Home
+      localStorage.setItem("lastSearchCategory", activeCategory);
+    }
     setSearchParams(params, { replace: true });
   }, [searchTerm, activeCategory, setSearchParams]);
 
@@ -157,7 +161,7 @@ const SearchPage = () => {
               filteredServices.map((service) => (
                 <div 
                   key={service.id} 
-                  onClick={() => navigate(`/service/${service.id}`)} // NAVEGACIÓN AQUÍ
+                  onClick={() => navigate(`/service/${service.id}`)}
                   className="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-orange-100 transition-all cursor-pointer group flex gap-4"
                 >
                   {/* Image */}
@@ -169,10 +173,12 @@ const SearchPage = () => {
                         <SearchIcon className="h-8 w-8 text-orange-200" />
                       </div>
                     )}
-                     <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-sm">
-                        <Star className="h-3 w-3 fill-orange-400 text-orange-400" />
-                        <span className="text-[10px] font-bold text-gray-800">New</span>
-                     </div>
+                     {(service.is_promoted && (!service.promoted_until || new Date(service.promoted_until) > new Date())) && (
+                       <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-sm z-10">
+                          <Star className="h-3 w-3 fill-orange-400 text-orange-400" />
+                          <span className="text-[10px] font-bold text-gray-800">Top</span>
+                       </div>
+                     )}
                   </div>
 
                   {/* Content */}

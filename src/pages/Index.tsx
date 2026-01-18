@@ -1,7 +1,7 @@
 import { Navbar } from "@/components/Navbar";
 import { ServiceCard } from "@/components/ServiceCard";
 import { Button } from "@/components/ui/button";
-import { Wrench, Loader2, Info } from "lucide-react";
+import { Wrench, Loader2, Info, Crown, Sparkles, Clock } from "lucide-react";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -17,25 +17,32 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const SectionHeader = ({ title }: { title: string }) => (
-  <div className="flex justify-between items-end mb-4 px-4">
-    <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-    <a href="/search" className="text-[#F97316] font-semibold text-sm hover:underline">Ver todo</a>
+const SectionHeader = ({ title, icon: Icon }: { title: string, icon?: any }) => (
+  <div className="flex justify-between items-center mb-4 px-4">
+    <div className="flex items-center gap-2">
+       {Icon && <Icon className="h-5 w-5 text-[#F97316]" />}
+       <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+    </div>
+    <a href="/search" className="text-[#F97316] font-semibold text-xs hover:underline bg-orange-50 px-2 py-1 rounded-md">Ver todo</a>
   </div>
 );
 
 const Index = () => {
   const navigate = useNavigate();
   const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
+  const [recommendedCategory, setRecommendedCategory] = useState<string | null>(null);
 
   useEffect(() => {
     // Verificar si el usuario ya vio el mensaje de bienvenida
     const hasSeenWelcome = localStorage.getItem("hasSeenAppWelcome");
     if (!hasSeenWelcome) {
-      // Pequeño delay para que no sea intrusivo inmediatamente
       const timer = setTimeout(() => setShowWelcomeDialog(true), 1500);
       return () => clearTimeout(timer);
     }
+
+    // Cargar categoría recomendada
+    const lastCategory = localStorage.getItem("lastSearchCategory");
+    if (lastCategory) setRecommendedCategory(lastCategory);
   }, []);
 
   const handleCloseWelcome = () => {
@@ -43,14 +50,19 @@ const Index = () => {
     localStorage.setItem("hasSeenAppWelcome", "true");
   };
 
-  // Fetch recent services from Supabase
-  const { data: recentServices, isLoading, refetch } = useQuery({
-    queryKey: ['recentServices'],
+  // --- QUERIES ---
+
+  // 1. Featured Services (Boosted & Active)
+  const { data: featuredServices, isLoading: loadingFeatured, refetch: refetchFeatured } = useQuery({
+    queryKey: ['featuredServices'],
     queryFn: async () => {
+      const now = new Date().toISOString();
       const { data, error } = await supabase
         .from('services')
         .select('*')
-        .order('created_at', { ascending: false })
+        .eq('is_promoted', true)
+        .gt('promoted_until', now) // Solo boosts activos
+        .order('promoted_until', { ascending: true }) // Los que vencen antes (o después) según preferencia
         .limit(10);
       
       if (error) throw error;
@@ -58,12 +70,44 @@ const Index = () => {
     }
   });
 
-  // Placeholder for other sections (could be filtered queries later)
-  const recommendedServices: any[] = [];
-  const featuredServices: any[] = [];
+  // 2. Recent Services (Last 24 Hours)
+  const { data: recentServices, isLoading: loadingRecent, refetch: refetchRecent } = useQuery({
+    queryKey: ['recentServices'],
+    queryFn: async () => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1); // Restar 1 día
+
+      const { data, error } = await supabase
+        .from('services')
+        .select('*')
+        .gt('created_at', yesterday.toISOString()) // Solo creados en las últimas 24h
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // 3. Recommended Services (Based on history)
+  const { data: recommendedServices, isLoading: loadingRecommended, refetch: refetchRecommended } = useQuery({
+    queryKey: ['recommendedServices', recommendedCategory],
+    queryFn: async () => {
+      if (!recommendedCategory) return [];
+      
+      const { data, error } = await supabase
+        .from('services')
+        .select('*')
+        .eq('category', recommendedCategory)
+        .limit(10);
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!recommendedCategory // Solo ejecutar si hay categoría
+  });
 
   const handleRefresh = async () => {
-    await refetch();
+    await Promise.all([refetchFeatured(), refetchRecent(), refetchRecommended()]);
   };
 
   return (
@@ -94,9 +138,9 @@ const Index = () => {
           </AlertDialogContent>
         </AlertDialog>
 
-        <main className="flex-1 space-y-6 py-6">
+        <main className="flex-1 space-y-8 py-6">
           
-          {/* Banner Promocional - Más Compacto */}
+          {/* Banner Promocional */}
           <div className="px-4">
               <div className="bg-gradient-to-r from-[#0F172A] to-[#1e293b] rounded-xl p-5 text-white relative overflow-hidden shadow-lg">
                 <div className="relative z-10 max-w-lg">
@@ -110,21 +154,46 @@ const Index = () => {
                       Publicar Servicio
                   </Button>
                 </div>
-                {/* Decorative Big Wrench - Smaller */}
                 <div className="absolute -right-4 -bottom-8 opacity-20 transform rotate-[-15deg]">
                   <Wrench className="w-32 h-32 text-[#F97316]" />
                 </div>
               </div>
           </div>
 
-          {/* New Section: Recently Published */}
+          {/* 1. Profesionales Destacados (Boosted) - Ahora ARRIBA */}
           <section>
-            <SectionHeader title="Publicados Recientemente" />
+            <SectionHeader title="Profesionales Destacados" icon={Crown} />
             <div className="flex overflow-x-auto gap-4 px-4 pb-4 no-scrollbar min-h-[100px]">
-              {isLoading ? (
-                <div className="w-full flex justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-gray-300" />
+              {loadingFeatured ? (
+                <div className="w-full flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-gray-300" /></div>
+              ) : featuredServices && featuredServices.length > 0 ? (
+                featuredServices.map((item) => (
+                  <div key={item.id} onClick={() => navigate(`/service/${item.id}`)}>
+                    <ServiceCard 
+                      id={item.id}
+                      title={item.title} 
+                      price={`RD$ ${item.price}`} 
+                      image={item.image_url || "/placeholder.svg"} 
+                      badge={{ text: "Top", color: "orange" }}
+                    />
+                  </div>
+                ))
+              ) : (
+                <div className="w-full text-center py-6 text-gray-400 bg-orange-50/50 rounded-xl mx-4 border border-orange-100 border-dashed flex flex-col items-center">
+                  <Crown className="h-8 w-8 text-orange-200 mb-2" />
+                  <p className="text-sm font-medium">Espacio disponible para destacar</p>
+                  <Button variant="link" className="text-[#F97316] h-auto p-0 text-xs" onClick={() => navigate('/publish')}>¡Destácate aquí!</Button>
                 </div>
+              )}
+            </div>
+          </section>
+
+          {/* 2. Publicados Recientemente (Últimas 24h) */}
+          <section className="-mt-2">
+            <SectionHeader title="Recién Publicados (24h)" icon={Clock} />
+            <div className="flex overflow-x-auto gap-4 px-4 pb-4 no-scrollbar min-h-[100px]">
+              {loadingRecent ? (
+                <div className="w-full flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-gray-300" /></div>
               ) : recentServices && recentServices.length > 0 ? (
                 recentServices.map((item) => (
                   <div key={item.id} onClick={() => navigate(`/service/${item.id}`)}>
@@ -133,45 +202,38 @@ const Index = () => {
                       title={item.title} 
                       price={`RD$ ${item.price}`} 
                       image={item.image_url || "/placeholder.svg"} 
-                      badge={item.is_promoted ? { text: "Nuevo", color: "blue" } : undefined}
+                      badge={{ text: "Nuevo", color: "blue" }}
                     />
                   </div>
                 ))
               ) : (
-                <div className="w-full text-center py-8 text-gray-400 bg-gray-50 rounded-lg mx-4 border border-dashed">
-                  No hay servicios recientes.
+                <div className="w-full text-center py-8 text-gray-400 bg-gray-50 rounded-lg mx-4 border border-dashed text-sm">
+                  No hay publicaciones nuevas en las últimas 24h.
                 </div>
               )}
             </div>
           </section>
 
-          {/* Recommended Section - Close to previous one */}
+          {/* 3. Recomendados (Basado en historial) */}
           <section className="-mt-2">
-            <SectionHeader title="Servicios Recomendados" />
+            <SectionHeader title={recommendedCategory ? `Porque buscaste: ${recommendedCategory}` : "Recomendados para ti"} icon={Sparkles} />
             <div className="flex overflow-x-auto gap-4 px-4 pb-4 no-scrollbar min-h-[100px]">
-              {recommendedServices.length > 0 ? (
+              {loadingRecommended ? (
+                <div className="w-full flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-gray-300" /></div>
+              ) : recommendedServices && recommendedServices.length > 0 ? (
                 recommendedServices.map((item) => (
-                  <ServiceCard key={item.id} {...item} />
+                  <div key={item.id} onClick={() => navigate(`/service/${item.id}`)}>
+                    <ServiceCard 
+                       id={item.id}
+                       title={item.title}
+                       price={`RD$ ${item.price}`}
+                       image={item.image_url}
+                    />
+                  </div>
                 ))
               ) : (
-                <div className="w-full text-center py-8 text-gray-400 bg-gray-50 rounded-lg mx-4 border border-dashed">
-                  Pronto veremos recomendaciones para ti.
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* Featured Section */}
-          <section>
-            <SectionHeader title="Profesionales Destacados" />
-            <div className="flex overflow-x-auto gap-4 px-4 pb-4 no-scrollbar min-h-[100px]">
-              {featuredServices.length > 0 ? (
-                featuredServices.map((item) => (
-                  <ServiceCard key={item.id} id={item.id} {...item} />
-                ))
-              ) : (
-                 <div className="w-full text-center py-8 text-gray-400 bg-gray-50 rounded-lg mx-4 border border-dashed">
-                  Sé el primero en destacar tu servicio.
+                <div className="w-full text-center py-8 text-gray-400 bg-gray-50 rounded-lg mx-4 border border-dashed text-sm">
+                  {recommendedCategory ? "No encontramos más servicios de esta categoría por ahora." : "Explora categorías para recibir recomendaciones personalizadas."}
                 </div>
               )}
             </div>
