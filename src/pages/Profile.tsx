@@ -10,7 +10,7 @@ import {
   Loader2, LogOut, User, Phone, MapPin, Heart, 
   HelpCircle, ChevronRight, Star, 
   ArrowLeft, Bell, Settings, Edit2, Briefcase, Trash2, Camera, Gift, Zap, Palette, Check,
-  Clock, TrendingUp, CreditCard, Sparkles, MoreVertical, Calendar
+  Clock, TrendingUp, CreditCard, Sparkles, MoreVertical, Calendar, Crown
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -50,11 +50,11 @@ const PROFILE_COLORS = [
 
 const REWARD_TARGET_SECONDS = 5 * 60 * 60; // 5 Horas
 
+// Nuevas opciones de Boost mejoradas
 const BOOST_OPTIONS = [
-  { label: "1 Hora", duration: 1, price: 50 },
-  { label: "6 Horas", duration: 6, price: 200 },
-  { label: "12 Horas", duration: 12, price: 350 },
-  { label: "24 Horas", duration: 24, price: 600 },
+  { label: "1 Día", duration: 24, price: 299, popular: false },
+  { label: "3 Días", duration: 72, price: 499, popular: true },
+  { label: "7 Días", duration: 168, price: 999, popular: false },
 ];
 
 const Profile = () => {
@@ -272,7 +272,7 @@ const Profile = () => {
         
         if (error) throw error;
 
-        showSuccess(`¡Boost activado por ${option.duration} horas!`);
+        showSuccess(`¡Boost activado por ${option.label}!`);
         setBoostModalOpen(false);
         fetchMyServices(); // Recargar lista
     } catch (error: any) {
@@ -457,27 +457,42 @@ const Profile = () => {
                     </div>
                     <DialogTitle className="text-center text-xl font-bold">Impulsa tu publicación</DialogTitle>
                     <DialogDescription className="text-center text-gray-500">
-                        Tu servicio "{selectedServiceToBoost?.title}" aparecerá en los primeros lugares.
+                        Elige un plan para destacar tu servicio.
                     </DialogDescription>
                 </DialogHeader>
                 
-                <div className="grid grid-cols-2 gap-3 py-4">
+                <div className="flex flex-col gap-3 py-4">
                     {BOOST_OPTIONS.map((opt) => (
                         <div 
                             key={opt.duration}
                             onClick={() => setSelectedBoostOption(opt.duration)}
                             className={cn(
-                                "cursor-pointer rounded-2xl border-2 p-4 text-center transition-all relative overflow-hidden",
+                                "cursor-pointer rounded-2xl border-2 p-4 flex items-center justify-between transition-all relative overflow-hidden group",
                                 selectedBoostOption === opt.duration 
-                                    ? "border-[#F97316] bg-orange-50 shadow-md" 
+                                    ? "border-[#F97316] bg-orange-50/50 shadow-md" 
                                     : "border-gray-100 bg-white hover:border-orange-100"
                             )}
                         >
-                            <h3 className="font-bold text-gray-900">{opt.label}</h3>
-                            <p className="text-[#F97316] font-bold text-sm mt-1">RD$ {opt.price}</p>
-                            {selectedBoostOption === opt.duration && (
-                                <div className="absolute top-2 right-2 h-2 w-2 bg-[#F97316] rounded-full animate-pulse" />
+                            {opt.popular && (
+                                <div className="absolute top-0 right-0 bg-[#F97316] text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">
+                                    MEJOR VALOR
+                                </div>
                             )}
+                            <div className="flex items-center gap-3">
+                                <div className={cn(
+                                    "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                                    selectedBoostOption === opt.duration ? "border-[#F97316]" : "border-gray-300"
+                                )}>
+                                    {selectedBoostOption === opt.duration && <div className="w-2.5 h-2.5 rounded-full bg-[#F97316]" />}
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-gray-900">{opt.label}</h3>
+                                    <p className="text-xs text-gray-400">Visibilidad Premium</p>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[#F97316] font-black text-lg">RD$ {opt.price}</p>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -510,11 +525,25 @@ const Profile = () => {
            ) : (
              myServices.map(s => {
                 const isPromoted = s.is_promoted && (!s.promoted_until || new Date(s.promoted_until) > new Date());
+                
+                // Calculate remaining time for promoted service
+                let remainingLabel = "";
+                if (isPromoted && s.promoted_until) {
+                    const now = new Date();
+                    const end = new Date(s.promoted_until);
+                    const diffMs = end.getTime() - now.getTime();
+                    const diffHrs = Math.ceil(diffMs / (1000 * 60 * 60));
+                    const diffDays = Math.ceil(diffHrs / 24);
+                    
+                    if (diffDays > 1) remainingLabel = `${diffDays} días restantes`;
+                    else remainingLabel = `${diffHrs}h restantes`;
+                }
+
                 return (
                  <div key={s.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 relative group overflow-hidden">
                    {isPromoted && (
                        <div className="absolute top-0 right-0 bg-[#F97316] text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl z-10 flex items-center gap-1">
-                           <Sparkles className="h-3 w-3" /> DESTACADO
+                           <Crown className="h-3 w-3 fill-white" /> DESTACADO
                        </div>
                    )}
                    
@@ -553,7 +582,7 @@ const Profile = () => {
                                       size="sm" 
                                       onClick={() => {
                                           setSelectedServiceToBoost(s);
-                                          setSelectedBoostOption(null);
+                                          setSelectedBoostOption(72); // Default to 3 days
                                           setBoostModalOpen(true);
                                       }}
                                       className="flex-1 bg-gray-900 text-white hover:bg-gray-800 h-8 rounded-lg text-xs font-bold shadow-sm"
@@ -562,7 +591,7 @@ const Profile = () => {
                                    </Button>
                                ) : (
                                    <div className="flex-1 bg-orange-50 border border-orange-100 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-[#F97316]">
-                                       <Clock className="h-3 w-3 mr-1.5" /> Activo
+                                       <Clock className="h-3 w-3 mr-1.5" /> {remainingLabel || "Activo"}
                                    </div>
                                )}
                            </div>
