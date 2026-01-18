@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   AlertDialog,
   AlertDialogAction,
+  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -18,7 +19,7 @@ import {
 import { showSuccess, showError } from "@/utils/toast";
 import { 
   ArrowLeft, ArrowRight, Camera, Check, ChevronRight, 
-  DollarSign, MapPin, Tag, Sparkles, UploadCloud, X, Loader2, Rocket
+  DollarSign, MapPin, Tag, Sparkles, UploadCloud, X, Loader2, Rocket, User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ServiceCard } from "@/components/ServiceCard";
@@ -45,7 +46,10 @@ const Publish = () => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [session, setSession] = useState<any>(null);
+  
+  // Dialogs State
   const [showPublishWelcome, setShowPublishWelcome] = useState(false);
+  const [showIncompleteProfileDialog, setShowIncompleteProfileDialog] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -63,7 +67,7 @@ const Publish = () => {
   const [featureInput, setFeatureInput] = useState("");
 
   useEffect(() => {
-    const checkAuthAndProfile = async () => {
+    const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
@@ -73,32 +77,14 @@ const Publish = () => {
       }
       setSession(session);
 
-      // Verificar si el perfil está completo
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('first_name, last_name, phone, city')
-        .eq('id', session.user.id)
-        .single();
-
-      if (profile) {
-        const isComplete = profile.first_name && profile.last_name && profile.phone && profile.city;
-        
-        if (!isComplete) {
-          showError("Para publicar, primero completa tu información de contacto (Teléfono, Ciudad).");
-          // Pequeño delay para que se lea el toast
-          setTimeout(() => navigate("/profile"), 100);
-          return;
-        }
-      }
-
-      // Check for first time publisher message only if profile is OK
+      // Check for first time publisher message
       const hasSeenPublishMsg = localStorage.getItem("hasSeenPublishWelcome");
       if (!hasSeenPublishMsg) {
         setTimeout(() => setShowPublishWelcome(true), 500);
       }
     };
 
-    checkAuthAndProfile();
+    checkAuth();
   }, [navigate]);
 
   const handleClosePublishWelcome = () => {
@@ -147,42 +133,63 @@ const Publish = () => {
     });
   };
 
+  const checkProfileCompleteness = async () => {
+    if (!session?.user?.id) return false;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('first_name, last_name, phone, city')
+      .eq('id', session.user.id)
+      .single();
+
+    if (profile) {
+      const isComplete = profile.first_name && profile.last_name && profile.phone && profile.city;
+      if (!isComplete) {
+        setShowIncompleteProfileDialog(true);
+        return false;
+      }
+      return true;
+    }
+    return false;
+  };
+
   const handleSubmit = async () => {
+    // 1. Verificar perfil completo ANTES de cualquier cosa
     setLoading(true);
+    const isProfileComplete = await checkProfileCompleteness();
+    
+    if (!isProfileComplete) {
+      setLoading(false);
+      return; // Detener ejecución si no está completo
+    }
+
     try {
       let imageUrl = null;
 
-      // 1. Subir imagen (Requerido)
+      // 2. Subir imagen (Requerido)
       if (formData.imageFile) {
-        // Limpiar nombre de archivo para evitar caracteres extraños
         const fileExt = formData.imageFile.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
         
-        // Subir al bucket
-        const { error: uploadError, data } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('service-images')
           .upload(fileName, formData.imageFile, {
             cacheControl: '3600',
             upsert: false
           });
 
-        if (uploadError) {
-          console.error("Error upload:", uploadError);
-          throw new Error("Error al subir la imagen. Intenta de nuevo.");
-        }
+        if (uploadError) throw new Error("Error al subir la imagen.");
 
-        // Obtener URL pública
         const { data: { publicUrl } } = supabase.storage
           .from('service-images')
           .getPublicUrl(fileName);
           
         imageUrl = publicUrl;
       } else {
-        // Si no hay archivo (pero pasó la validación de preview), es un error raro
         throw new Error("No se ha seleccionado ninguna imagen.");
       }
 
-      // 2. Insertar en base de datos
+      // 3. Insertar en base de datos
       const { error } = await supabase.from('services').insert({
         user_id: session.user.id,
         title: formData.title,
@@ -486,7 +493,7 @@ const Publish = () => {
   return (
     <div className="min-h-screen bg-white pb-safe">
 
-      {/* Welcome/Warning Dialog */}
+      {/* Welcome/First Time Dialog */}
       <AlertDialog open={showPublishWelcome} onOpenChange={setShowPublishWelcome}>
         <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto">
           <AlertDialogHeader className="text-center">
@@ -506,6 +513,33 @@ const Publish = () => {
             <AlertDialogAction onClick={handleClosePublishWelcome} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl">
               ¡Entendido, vamos a publicar!
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Incomplete Profile Dialog */}
+      <AlertDialog open={showIncompleteProfileDialog} onOpenChange={setShowIncompleteProfileDialog}>
+        <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto">
+          <AlertDialogHeader className="text-center">
+            <div className="mx-auto bg-red-100 w-12 h-12 rounded-full flex items-center justify-center mb-2">
+              <User className="h-6 w-6 text-red-500" />
+            </div>
+            <AlertDialogTitle className="text-xl font-bold text-center">Perfil incompleto</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-gray-600 mt-2">
+              <p>Para garantizar la seguridad de nuestros usuarios, necesitamos que completes tu perfil antes de publicar un servicio.</p>
+              <p className="mt-2 text-sm font-medium">Te falta: Teléfono o Ciudad.</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 space-y-2">
+            <AlertDialogAction 
+              onClick={() => navigate('/profile')} 
+              className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl"
+            >
+              Ir a completar perfil
+            </AlertDialogAction>
+            <AlertDialogCancel className="w-full mt-2 rounded-xl border-gray-200">
+              Cancelar
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
