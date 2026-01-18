@@ -11,7 +11,7 @@ import {
   HelpCircle, ChevronRight, Star, 
   ArrowLeft, Settings, Edit2, Briefcase, Trash2, Camera, Gift, Zap, Check,
   Clock, TrendingUp, Crown, BarChart3, ShieldCheck, Eye, MousePointerClick, CalendarRange,
-  UploadCloud, AlertTriangle, FileCheck
+  UploadCloud, AlertTriangle, FileCheck, Hammer
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -99,10 +99,7 @@ const Profile = () => {
   const [totalClicks, setTotalClicks] = useState(0);
   const [loadingMetrics, setLoadingMetrics] = useState(false);
 
-  // Verification State
-  const [frontId, setFrontId] = useState<File | null>(null);
-  const [backId, setBackId] = useState<File | null>(null);
-  const [selfieId, setSelfieId] = useState<File | null>(null);
+  // Verification State (Placeholder removed logic)
   const [verifying, setVerifying] = useState(false);
 
   // Boost Logic
@@ -366,59 +363,6 @@ const Profile = () => {
     }
   };
 
-  // --- IDENTITY VERIFICATION LOGIC ---
-  const handleVerificationSubmit = async () => {
-     if (!frontId || !backId || !selfieId) {
-        showError("Debes subir las 3 fotos requeridas");
-        return;
-     }
-
-     setVerifying(true);
-     try {
-        // 1. Upload Images
-        const uploadFile = async (file: File, prefix: string) => {
-           const ext = file.name.split('.').pop();
-           const path = `${session.user.id}/${prefix}_${Date.now()}.${ext}`;
-           
-           const { error } = await supabase.storage.from('verification-docs').upload(path, file);
-           if (error) throw error;
-           
-           // Retornamos el path para que el backend genere URLs seguras
-           return path;
-        };
-
-        const frontPath = await uploadFile(frontId, 'front');
-        const backPath = await uploadFile(backId, 'back');
-        const selfiePath = await uploadFile(selfieId, 'selfie');
-
-        // 2. Call Edge Function (AI Analysis)
-        const { data, error } = await supabase.functions.invoke('verify-identity', {
-           body: {
-              frontPath,
-              backPath,
-              selfiePath,
-              userId: session.user.id
-           }
-        });
-
-        if (error) throw error;
-
-        if (data.success) {
-           showSuccess("¡Identidad verificada exitosamente!");
-           setProfileData({ ...profileData, is_verified: true, verification_status: 'verified' });
-        } else {
-           showError("Verificación en revisión manual.");
-           setProfileData({ ...profileData, verification_status: 'manual_review' });
-        }
-
-     } catch (error: any) {
-        console.error(error);
-        showError("Error en el proceso de verificación. Intenta nuevamente.");
-     } finally {
-        setVerifying(false);
-     }
-  };
-
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
@@ -465,106 +409,46 @@ const Profile = () => {
     );
   };
 
-  const VerificationUploadBox = ({ label, file, setFile }: any) => (
-      <div className="space-y-2">
-          <Label className="text-gray-600 text-xs font-bold uppercase">{label}</Label>
-          <div 
-            onClick={() => document.getElementById(`file-${label}`)?.click()}
-            className={cn(
-                "border-2 border-dashed rounded-xl h-28 flex flex-col items-center justify-center cursor-pointer transition-all",
-                file ? "border-[#F97316] bg-orange-50" : "border-gray-200 hover:border-gray-300"
-            )}
-          >
-              {file ? (
-                  <div className="text-center">
-                      <FileCheck className="h-8 w-8 text-[#F97316] mx-auto mb-1" />
-                      <p className="text-xs text-[#F97316] font-medium truncate max-w-[150px] px-2">{file.name}</p>
-                  </div>
-              ) : (
-                  <div className="text-center text-gray-400">
-                      <UploadCloud className="h-8 w-8 mx-auto mb-1" />
-                      <p className="text-xs">Toca para subir</p>
-                  </div>
-              )}
-              <input 
-                  id={`file-${label}`} 
-                  type="file" 
-                  accept="image/*" 
-                  className="hidden" 
-                  onChange={(e) => e.target.files?.[0] && setFile(e.target.files[0])} 
-              />
-          </div>
-      </div>
-  );
-
   if (loading) return <div className="min-h-screen bg-white flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[#F97316]" /></div>;
 
-  // --- VERIFICATION VIEW ---
+  // --- VERIFICATION VIEW (COMING SOON) ---
   if (view === 'verification') {
-    const status = profileData?.verification_status || 'unverified';
-    
     return (
         <div className="min-h-screen bg-white pb-20 pt-safe animate-fade-in">
            <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
               <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Verificación</h1></div>
            </div>
            
-           <div className="p-6 flex flex-col items-center">
+           <div className="p-6 flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
+               <div className="w-24 h-24 bg-orange-50 rounded-full flex items-center justify-center mb-4 border-2 border-orange-100 relative">
+                   <ShieldCheck className="h-10 w-10 text-[#F97316]" />
+                   <div className="absolute -bottom-1 -right-1 bg-[#F97316] text-white p-1.5 rounded-full border-2 border-white">
+                     <Hammer className="h-4 w-4" />
+                   </div>
+               </div>
                
-               {status === 'verified' ? (
-                   <div className="text-center space-y-4 mt-10">
-                       <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto animate-pulse">
-                           <ShieldCheck className="h-12 w-12 text-green-600" />
-                       </div>
-                       <h2 className="text-2xl font-bold text-gray-900">¡Estás verificado!</h2>
-                       <p className="text-gray-500">Tu perfil ahora muestra la insignia de confianza.</p>
-                       <Button onClick={() => setView('dashboard')} className="mt-4 bg-[#F97316]">Volver al Perfil</Button>
-                   </div>
-               ) : status === 'manual_review' ? (
-                   <div className="text-center space-y-4 mt-10">
-                       <div className="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mx-auto">
-                           <Clock className="h-12 w-12 text-yellow-600" />
-                       </div>
-                       <h2 className="text-2xl font-bold text-gray-900">En Revisión</h2>
-                       <p className="text-gray-500 max-w-xs mx-auto">
-                           La IA no pudo verificar automáticamente tus documentos. Nuestro equipo (rodrigopepe281@gmail.com) ha recibido tu caso y lo revisará manualmente.
-                       </p>
-                       <Button variant="outline" onClick={() => setView('dashboard')} className="mt-4">Entendido</Button>
-                   </div>
-               ) : (
-                   <>
-                       <div className="text-center space-y-4 mb-8">
-                           <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto border-2 border-[#F97316]/20">
-                               <ShieldCheck className="h-10 w-10 text-[#F97316]" />
-                           </div>
-                           <h2 className="text-xl font-bold text-gray-900">Validación de Identidad</h2>
-                           <p className="text-sm text-gray-500 max-w-xs mx-auto">
-                               Sube fotos claras de tu Cédula Dominicana y una selfie actual.
-                           </p>
-                       </div>
+               <div className="space-y-2 max-w-xs mx-auto">
+                   <h2 className="text-2xl font-bold text-gray-900">¡Próximamente!</h2>
+                   <p className="text-gray-500 text-sm leading-relaxed">
+                       Estamos finalizando los detalles de nuestro sistema de verificación segura con IA para garantizar la confianza en la comunidad.
+                   </p>
+               </div>
 
-                       <div className="w-full max-w-md space-y-4">
-                           <div className="grid grid-cols-2 gap-4">
-                               <VerificationUploadBox label="Cédula Frontal" file={frontId} setFile={setFrontId} />
-                               <VerificationUploadBox label="Cédula Trasera" file={backId} setFile={setBackId} />
-                           </div>
-                           <VerificationUploadBox label="Selfie con Cédula" file={selfieId} setFile={setSelfieId} />
-                           
-                           <div className="bg-yellow-50 p-3 rounded-lg flex gap-2 items-start text-yellow-800 text-xs mt-2 border border-yellow-200">
-                               <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-                               <p>Asegúrate de que el texto sea legible y no haya reflejos. La IA analizará los datos automáticamente.</p>
-                           </div>
+               <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 w-full max-w-sm">
+                   <div className="flex items-center gap-3 mb-2">
+                       <Zap className="h-5 w-5 text-yellow-500" />
+                       <span className="font-bold text-sm text-gray-700">Beneficios futuros</span>
+                   </div>
+                   <ul className="text-left text-xs text-gray-500 space-y-2 pl-1">
+                       <li className="flex gap-2"><Check className="h-3 w-3 text-green-500" /> Insignia de "Verificado"</li>
+                       <li className="flex gap-2"><Check className="h-3 w-3 text-green-500" /> Mayor visibilidad en búsquedas</li>
+                       <li className="flex gap-2"><Check className="h-3 w-3 text-green-500" /> Más confianza de los clientes</li>
+                   </ul>
+               </div>
 
-                           <Button 
-                               onClick={handleVerificationSubmit} 
-                               disabled={verifying || !frontId || !backId || !selfieId}
-                               className="w-full h-12 rounded-xl text-lg font-bold bg-[#F97316] hover:bg-orange-600 shadow-lg shadow-orange-200 mt-4"
-                           >
-                               {verifying ? <Loader2 className="animate-spin mr-2" /> : "Verificar Ahora"}
-                           </Button>
-                       </div>
-                   </>
-               )}
+               <Button onClick={() => setView('dashboard')} className="w-full max-w-sm bg-[#F97316] hover:bg-orange-600 rounded-xl h-12 shadow-lg shadow-orange-100">
+                   Entendido
+               </Button>
            </div>
         </div>
     );
