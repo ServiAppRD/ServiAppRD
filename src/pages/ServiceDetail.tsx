@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, ArrowLeft, MapPin, Share2, Heart, Check, Phone, ShieldCheck, Calendar, Star } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { showError } from "@/utils/toast";
 
 const ServiceDetail = () => {
   const { id } = useParams();
@@ -53,6 +54,14 @@ const ServiceDetail = () => {
       return { avg, count };
     }
   });
+
+  const handleCall = () => {
+    if (service?.profiles?.phone) {
+      window.location.href = `tel:${service.profiles.phone}`;
+    } else {
+      showError("Este usuario no tiene un teléfono público registrado.");
+    }
+  };
 
   if (isLoadingService) {
     return (
@@ -177,7 +186,11 @@ const ServiceDetail = () => {
                )}
             </div>
           </div>
-          <Button size="icon" className="rounded-full bg-green-50 text-green-600 hover:bg-green-100 h-12 w-12 shadow-sm">
+          <Button 
+            size="icon" 
+            className="rounded-full bg-green-50 text-green-600 hover:bg-green-100 h-12 w-12 shadow-sm"
+            onClick={handleCall}
+          >
             <Phone className="h-5 w-5" />
           </Button>
         </div>
@@ -212,8 +225,12 @@ const ServiceDetail = () => {
       {/* Fixed Bottom Action */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 pb-safe z-20">
         <div className="max-w-lg mx-auto flex gap-3">
-          <Button variant="outline" className="flex-1 h-12 rounded-xl font-bold border-gray-200">
-            Mensaje
+          <Button 
+            variant="outline" 
+            className="flex-1 h-12 rounded-xl font-bold border-gray-200 text-gray-700 hover:bg-gray-50"
+            onClick={handleCall}
+          >
+            <Phone className="mr-2 h-5 w-5" /> Llamar
           </Button>
           <Button className="flex-[2] bg-[#F97316] hover:bg-orange-600 text-white h-12 rounded-xl font-bold shadow-lg shadow-orange-200">
             Contratar Ahora

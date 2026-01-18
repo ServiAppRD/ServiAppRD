@@ -63,19 +63,42 @@ const Publish = () => {
   const [featureInput, setFeatureInput] = useState("");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkAuthAndProfile = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
       if (!session) {
         showError("Debes iniciar sesión para publicar");
         navigate("/login");
+        return;
       }
       setSession(session);
-    });
 
-    // Check for first time publisher message
-    const hasSeenPublishMsg = localStorage.getItem("hasSeenPublishWelcome");
-    if (!hasSeenPublishMsg) {
-      setTimeout(() => setShowPublishWelcome(true), 500);
-    }
+      // Verificar si el perfil está completo
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, phone, city')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profile) {
+        const isComplete = profile.first_name && profile.last_name && profile.phone && profile.city;
+        
+        if (!isComplete) {
+          showError("Para publicar, primero completa tu información de contacto (Teléfono, Ciudad).");
+          // Pequeño delay para que se lea el toast
+          setTimeout(() => navigate("/profile"), 100);
+          return;
+        }
+      }
+
+      // Check for first time publisher message only if profile is OK
+      const hasSeenPublishMsg = localStorage.getItem("hasSeenPublishWelcome");
+      if (!hasSeenPublishMsg) {
+        setTimeout(() => setShowPublishWelcome(true), 500);
+      }
+    };
+
+    checkAuthAndProfile();
   }, [navigate]);
 
   const handleClosePublishWelcome = () => {
