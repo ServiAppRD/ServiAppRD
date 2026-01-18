@@ -62,6 +62,7 @@ const Index = () => {
         .select('*')
         .eq('is_promoted', true)
         .gt('promoted_until', now) // Solo boosts activos
+        .is('deleted_at', null) // No borrados
         .order('promoted_until', { ascending: true }) // Los que vencen antes (o después) según preferencia
         .limit(10);
       
@@ -81,6 +82,7 @@ const Index = () => {
         .from('services')
         .select('*')
         .gt('created_at', yesterday.toISOString()) // Solo creados en las últimas 24h
+        .is('deleted_at', null) // No borrados
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -98,6 +100,7 @@ const Index = () => {
         .from('services')
         .select('*')
         .eq('category', recommendedCategory)
+        .is('deleted_at', null) // No borrados
         .limit(10);
       
       if (error) throw error;

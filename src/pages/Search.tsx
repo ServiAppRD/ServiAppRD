@@ -16,7 +16,7 @@ const CATEGORIES = [
 
 const SearchPage = () => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   
   // Inicializar estado basado en URL params
   const initialSearch = searchParams.get("q") || "";
@@ -51,6 +51,7 @@ const SearchPage = () => {
             last_name
           )
         `)
+        .is('deleted_at', null) // Filtrar borrados
         .order('created_at', { ascending: false });
       
       if (error) throw error;

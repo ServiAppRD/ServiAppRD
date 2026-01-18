@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, ArrowLeft, MapPin, Check, Phone, Calendar, Star, MessageCircle, Send, Facebook, Instagram, Globe } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { showSuccess, showError } from "@/utils/toast";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -26,6 +26,36 @@ const ServiceDetail = () => {
   const [newRating, setNewRating] = useState(0);
   const [newComment, setNewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const viewTracked = useRef(false);
+
+  // --- TRACKING ---
+  const trackEvent = async (type: 'view' | 'click') => {
+    if (!service) return;
+    
+    // 1. Insertar en historial detallado
+    await supabase.from('service_analytics').insert({
+      service_id: id,
+      owner_id: service.user_id, // Importante para las métricas del dueño
+      event_type: type
+    });
+
+    // 2. Incrementar contador rápido en la tabla services (para mostrar en cards)
+    if (type === 'view') {
+       await supabase.rpc('increment_view', { row_id: id });
+    } else {
+       await supabase.rpc('increment_click', { row_id: id });
+    }
+  };
+
+  // Crear funciones RPC si no existen (fallback manual si falla RPC)
+  // Nota: Para simplificar en este entorno, hacemos update directo si el RPC no existe,
+  // pero lo ideal es el RPC para concurrencia. Aquí usaremos un update simple como fallback.
+  const incrementCounterManual = async (field: 'views' | 'clicks') => {
+      const { data } = await supabase.from('services').select(field).eq('id', id).single();
+      if (data) {
+          await supabase.from('services').update({ [field]: (data as any)[field] + 1 }).eq('id', id);
+      }
+  };
 
   // --- QUERIES ---
 
@@ -45,12 +75,24 @@ const ServiceDetail = () => {
           )
         `)
         .eq('id', id)
+        .is('deleted_at', null) // No mostrar si fue borrado
         .single();
       
       if (error) throw error;
       return data;
     }
   });
+
+  // Track View on Mount (Once)
+  useEffect(() => {
+    if (service && !viewTracked.current) {
+        viewTracked.current = true;
+        // Esperar un poco para no contar rebotes inmediatos
+        setTimeout(() => {
+            trackEvent('view').catch(() => incrementCounterManual('views'));
+        }, 2000);
+    }
+  }, [service]);
 
   const { data: reviews, isLoading: isLoadingReviews } = useQuery({
     queryKey: ['reviews', id],
@@ -81,6 +123,7 @@ const ServiceDetail = () => {
   // --- ACTIONS ---
 
   const handleCall = () => {
+    trackEvent('click').catch(() => incrementCounterManual('clicks'));
     if (service?.profiles?.phone) {
       window.location.href = `tel:${service.profiles.phone}`;
     } else {
@@ -89,6 +132,7 @@ const ServiceDetail = () => {
   };
 
   const handleWhatsApp = () => {
+    trackEvent('click').catch(() => incrementCounterManual('clicks'));
     if (service?.profiles?.phone) {
       let cleanPhone = service.profiles.phone.replace(/\D/g, '');
       if (cleanPhone.length === 10) cleanPhone = '1' + cleanPhone;
@@ -153,7 +197,8 @@ const ServiceDetail = () => {
   if (!service) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        <h2 className="text-xl font-bold mb-2">Servicio no encontrado</h2>
+        <h2 className="text-xl font-bold mb-2">Servicio no disponible</h2>
+        <p className="text-gray-500 mb-4 text-center">Es posible que haya sido eliminado o no exista.</p>
         <Button onClick={() => navigate(-1)}>Volver</Button>
       </div>
     );

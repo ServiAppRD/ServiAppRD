@@ -38,6 +38,7 @@ const PublicProfile = () => {
           .from('services')
           .select('*')
           .eq('user_id', id)
+          .is('deleted_at', null) // Filtrar borrados
           .order('created_at', { ascending: false });
         
         setServices(servicesData || []);

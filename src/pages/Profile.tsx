@@ -9,8 +9,9 @@ import { showSuccess, showError } from "@/utils/toast";
 import { 
   Loader2, LogOut, User, Phone, MapPin, Heart, 
   HelpCircle, ChevronRight, Star, 
-  ArrowLeft, Settings, Edit2, Briefcase, Trash2, Camera, Gift, Zap, Check,
-  Clock, TrendingUp, Crown, BarChart3, ShieldCheck, Eye, MousePointerClick, CalendarRange
+  ArrowLeft, Bell, Settings, Edit2, Briefcase, Trash2, Camera, Gift, Zap, Palette, Check,
+  Clock, TrendingUp, CreditCard, Sparkles, MoreVertical, Calendar, Crown,
+  BarChart3, ShieldCheck, Eye, MousePointerClick, CalendarRange
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -30,7 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { 
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 
 const DR_CITIES = [
@@ -91,10 +92,12 @@ const Profile = () => {
   const [completedSteps, setCompletedSteps] = useState(0);
   const [totalSteps, setTotalSteps] = useState(0);
 
-  // Metrics Data
+  // Metrics Data Real
   const [metricsTimeRange, setMetricsTimeRange] = useState('7d');
+  const [metricsData, setMetricsData] = useState<any[]>([]);
   const [totalViews, setTotalViews] = useState(0);
   const [totalClicks, setTotalClicks] = useState(0);
+  const [loadingMetrics, setLoadingMetrics] = useState(false);
 
   // Boost Logic
   const [boostModalOpen, setBoostModalOpen] = useState(false);
@@ -110,7 +113,7 @@ const Profile = () => {
       } else {
         getProfile(session.user.id);
         fetchUserStats(session.user.id);
-        fetchMyServices(session.user.id); // Load services for metrics calculation
+        fetchMyServices(session.user.id);
         
         const viewParam = searchParams.get('view');
         if (viewParam === 'favorites') handleOpenFavorites(session.user.id);
@@ -128,15 +131,88 @@ const Profile = () => {
     return () => clearInterval(interval);
   }, [session, view]);
 
-  // Calcular métricas cuando cargan los servicios
+  // Cargar métricas REALES cuando cambia la vista o el rango
   useEffect(() => {
-    if (myServices.length > 0) {
-        const views = myServices.reduce((acc, curr) => acc + (curr.views || 0), 0);
-        const clicks = myServices.reduce((acc, curr) => acc + (curr.clicks || 0), 0);
-        setTotalViews(views);
-        setTotalClicks(clicks);
+    if (view === 'metrics' && session?.user?.id) {
+        fetchRealMetrics();
     }
-  }, [myServices]);
+  }, [view, metricsTimeRange, session]);
+
+  const fetchRealMetrics = async () => {
+    setLoadingMetrics(true);
+    try {
+        const now = new Date();
+        let startDate = new Date();
+
+        if (metricsTimeRange === '24h') startDate.setHours(now.getHours() - 24);
+        else if (metricsTimeRange === '7d') startDate.setDate(now.getDate() - 7);
+        else if (metricsTimeRange === '30d') startDate.setDate(now.getDate() - 30);
+        else if (metricsTimeRange === '1y') startDate.setFullYear(now.getFullYear() - 1);
+        else startDate = new Date(0); // Todo
+
+        // Traer eventos crudos de la tabla de analíticas
+        const { data: events, error } = await supabase
+            .from('service_analytics')
+            .select('event_type, created_at')
+            .eq('owner_id', session.user.id)
+            .gte('created_at', startDate.toISOString())
+            .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        // Procesar datos para gráfica y totales
+        const viewsCount = events?.filter(e => e.event_type === 'view').length || 0;
+        const clicksCount = events?.filter(e => e.event_type === 'click').length || 0;
+        setTotalViews(viewsCount);
+        setTotalClicks(clicksCount);
+
+        // Agrupar para la gráfica
+        const groupedData = new Map();
+        
+        // Inicializar puntos vacíos para que la gráfica se vea bien
+        const points = metricsTimeRange === '24h' ? 24 : metricsTimeRange === '7d' ? 7 : metricsTimeRange === '30d' ? 30 : 12;
+        
+        for (let i = 0; i < points; i++) {
+            let key = "";
+            let dateRef = new Date();
+            
+            if (metricsTimeRange === '24h') {
+                dateRef.setHours(now.getHours() - (points - 1 - i));
+                key = `${dateRef.getHours()}:00`;
+            } else if (metricsTimeRange === '7d' || metricsTimeRange === '30d') {
+                dateRef.setDate(now.getDate() - (points - 1 - i));
+                key = `${dateRef.getDate()}/${dateRef.getMonth() + 1}`;
+            } else { // 1y
+                dateRef.setMonth(now.getMonth() - (points - 1 - i));
+                key = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][dateRef.getMonth()];
+            }
+            groupedData.set(key, { name: key, views: 0, clicks: 0 });
+        }
+
+        // Rellenar con datos reales
+        events?.forEach(e => {
+            const date = new Date(e.created_at);
+            let key = "";
+            
+            if (metricsTimeRange === '24h') key = `${date.getHours()}:00`;
+            else if (metricsTimeRange === '7d' || metricsTimeRange === '30d') key = `${date.getDate()}/${date.getMonth() + 1}`;
+            else key = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][date.getMonth()];
+
+            if (groupedData.has(key)) {
+                const item = groupedData.get(key);
+                if (e.event_type === 'view') item.views++;
+                else if (e.event_type === 'click') item.clicks++;
+            }
+        });
+
+        setMetricsData(Array.from(groupedData.values()));
+
+    } catch (err) {
+        console.error("Error fetching metrics:", err);
+    } finally {
+        setLoadingMetrics(false);
+    }
+  };
 
   const calculateCompletion = (data: any) => {
     const fields = [
@@ -300,55 +376,44 @@ const Profile = () => {
   const getRemainingTime = () => formatTime(Math.max(0, REWARD_TARGET_SECONDS - activeSeconds));
 
   const fetchMyServices = async (uid: string) => {
-    const { data } = await supabase.from('services').select('*').eq('user_id', uid).order('created_at', {ascending: false});
+    // IMPORTANTE: Aquí solo mostramos los NO eliminados
+    const { data } = await supabase.from('services')
+        .select('*')
+        .eq('user_id', uid)
+        .is('deleted_at', null) // Filtrar borrados lógicos
+        .order('created_at', {ascending: false});
     setMyServices(data || []);
   };
   const fetchFavorites = async (uid?: string) => {
     const { data } = await supabase.from('favorites').select(`service_id, services:service_id(*)`).eq('user_id', uid || session.user.id);
-    setMyFavorites(data?.map((i:any) => i.services).filter(Boolean) || []);
+    setMyFavorites(data?.map((i:any) => i.services).filter((s:any) => s && !s.deleted_at) || []); // Filtrar también si el servicio fue borrado
   };
   const fetchReputation = async () => {
     const { data } = await supabase.from('reviews').select('*').eq('reviewee_id', session.user.id);
     setReviews(data || []);
     setAverageRating(data && data.length > 0 ? data.reduce((a:any,b:any)=>a+b.rating,0)/data.length : 0);
   };
+  
+  // SOFT DELETE
   const handleDeleteService = async (id: string) => {
-    if (!confirm("¿Estás seguro de eliminar este servicio?")) return;
-    await supabase.from('services').delete().eq('id', id);
-    setMyServices(prev => prev.filter(s => s.id !== id));
-    showSuccess("Eliminado");
+    if (!confirm("¿Estás seguro de eliminar este servicio? Desaparecerá de las búsquedas, pero mantendrás tus métricas históricas.")) return;
+    
+    // Soft Delete: Actualizar fecha de borrado en vez de borrar fila
+    const { error } = await supabase.from('services').update({ deleted_at: new Date().toISOString() }).eq('id', id);
+    
+    if (error) {
+        showError("Error al eliminar");
+    } else {
+        setMyServices(prev => prev.filter(s => s.id !== id));
+        showSuccess("Servicio eliminado");
+    }
   };
+
   const handleSignOut = async () => { await supabase.auth.signOut(); navigate("/"); };
   const handleOpenMyServices = () => { setView('my-services'); fetchMyServices(session.user.id); };
   const handleOpenFavorites = (uid?: string) => { setView('favorites'); fetchFavorites(uid); };
   const handleOpenReputation = () => { setView('reputation'); fetchReputation(); };
   const handleBackToDashboard = () => { if(searchParams.get('view')) navigate('/profile', {replace:true}); setView('dashboard'); };
-
-  // --- MOCK DATA GENERATOR FOR CHARTS ---
-  const generateChartData = (range: string) => {
-     // Simulación de datos basada en los totales para la gráfica
-     // En un caso real, esto vendría de una tabla de analytics_history
-     const data = [];
-     const points = range === '24h' ? 24 : range === '7d' ? 7 : range === '30d' ? 15 : 12;
-     const multiplier = totalViews > 0 ? totalViews / points : 5; // Base mock
-     
-     for (let i = 0; i < points; i++) {
-        let label = "";
-        if (range === '24h') label = `${i}h`;
-        else if (range === '7d') label = ['L', 'M', 'X', 'J', 'V', 'S', 'D'][i % 7];
-        else if (range === '30d') label = `Día ${i * 2 + 1}`;
-        else label = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][i];
-
-        data.push({
-           name: label,
-           views: Math.floor(Math.random() * multiplier * 1.5),
-           clicks: Math.floor(Math.random() * (multiplier / 5)),
-        });
-     }
-     return data;
-  };
-
-  const chartData = generateChartData(metricsTimeRange);
 
   const ProfileAvatar = ({ size = "md", className = "" }: { size?: "sm" | "md" | "lg" | "xl", className?: string }) => {
     const sizeClasses = { sm: "h-8 w-8 text-xs", md: "h-12 w-12 text-lg", lg: "h-24 w-24 text-3xl", xl: "h-28 w-28 text-4xl" };
@@ -397,7 +462,7 @@ const Profile = () => {
     );
   }
 
-  // --- METRICS VIEW ---
+  // --- METRICS VIEW (REAL DATA) ---
   if (view === 'metrics') {
     return (
         <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
@@ -427,75 +492,75 @@ const Profile = () => {
            </div>
 
            <div className="p-4 space-y-6">
-               {/* Summary Cards */}
-               <div className="grid grid-cols-2 gap-4">
-                   <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-1">
-                       <div className="flex items-center gap-2 text-gray-400 text-xs font-medium uppercase tracking-wider">
-                           <Eye className="h-3 w-3" /> Vistas Totales
+               {loadingMetrics ? (
+                   <div className="flex justify-center py-20"><Loader2 className="animate-spin h-10 w-10 text-gray-300" /></div>
+               ) : (
+                   <>
+                       {/* Summary Cards */}
+                       <div className="grid grid-cols-2 gap-4">
+                           <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-1">
+                               <div className="flex items-center gap-2 text-gray-400 text-xs font-medium uppercase tracking-wider">
+                                   <Eye className="h-3 w-3" /> Vistas Totales
+                               </div>
+                               <p className="text-2xl font-black text-gray-900">{totalViews}</p>
+                           </div>
+                           <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-1">
+                               <div className="flex items-center gap-2 text-gray-400 text-xs font-medium uppercase tracking-wider">
+                                   <MousePointerClick className="h-3 w-3" /> Contactos
+                               </div>
+                               <p className="text-2xl font-black text-gray-900">{totalClicks}</p>
+                           </div>
                        </div>
-                       <p className="text-2xl font-black text-gray-900">{totalViews}</p>
-                       <span className="text-xs text-green-500 font-bold">+12% vs periodo anterior</span>
-                   </div>
-                   <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-1">
-                       <div className="flex items-center gap-2 text-gray-400 text-xs font-medium uppercase tracking-wider">
-                           <MousePointerClick className="h-3 w-3" /> Contactos
-                       </div>
-                       <p className="text-2xl font-black text-gray-900">{totalClicks}</p>
-                       <span className="text-xs text-green-500 font-bold">+5% vs periodo anterior</span>
-                   </div>
-               </div>
 
-               {/* Chart */}
-               <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
-                   <div className="flex justify-between items-center mb-6">
-                       <h3 className="font-bold text-gray-900">Actividad</h3>
-                       <div className="flex gap-4 text-xs">
-                           <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#F97316]"/> Vistas</div>
-                           <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-blue-500"/> Clicks</div>
+                       {/* Chart */}
+                       <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+                           <div className="flex justify-between items-center mb-6">
+                               <h3 className="font-bold text-gray-900">Actividad</h3>
+                               <div className="flex gap-4 text-xs">
+                                   <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#F97316]"/> Vistas</div>
+                                   <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-blue-500"/> Clicks</div>
+                               </div>
+                           </div>
+                           <div className="h-64 w-full">
+                               {totalViews === 0 && totalClicks === 0 ? (
+                                   <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                                       No hay actividad en este periodo
+                                   </div>
+                               ) : (
+                                   <ResponsiveContainer width="100%" height="100%">
+                                       <AreaChart data={metricsData}>
+                                           <defs>
+                                               <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                                                   <stop offset="5%" stopColor="#F97316" stopOpacity={0.2}/>
+                                                   <stop offset="95%" stopColor="#F97316" stopOpacity={0}/>
+                                               </linearGradient>
+                                               <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
+                                                   <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.2}/>
+                                                   <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                                               </linearGradient>
+                                           </defs>
+                                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                                           <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#9CA3AF'}} dy={10} />
+                                           <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#9CA3AF'}} />
+                                           <Tooltip 
+                                               contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px -4px rgba(0,0,0,0.1)'}} 
+                                               itemStyle={{fontSize: '12px', fontWeight: 'bold'}}
+                                           />
+                                           <Area type="monotone" dataKey="views" stroke="#F97316" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
+                                           <Area type="monotone" dataKey="clicks" stroke="#3B82F6" strokeWidth={3} fillOpacity={1} fill="url(#colorClicks)" />
+                                       </AreaChart>
+                                   </ResponsiveContainer>
+                               )}
+                           </div>
                        </div>
-                   </div>
-                   <div className="h-64 w-full">
-                       <ResponsiveContainer width="100%" height="100%">
-                           <AreaChart data={chartData}>
-                               <defs>
-                                   <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                                       <stop offset="5%" stopColor="#F97316" stopOpacity={0.2}/>
-                                       <stop offset="95%" stopColor="#F97316" stopOpacity={0}/>
-                                   </linearGradient>
-                                   <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
-                                       <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.2}/>
-                                       <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
-                                   </linearGradient>
-                               </defs>
-                               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                               <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#9CA3AF'}} dy={10} />
-                               <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#9CA3AF'}} />
-                               <Tooltip 
-                                   contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px -4px rgba(0,0,0,0.1)'}} 
-                                   itemStyle={{fontSize: '12px', fontWeight: 'bold'}}
-                               />
-                               <Area type="monotone" dataKey="views" stroke="#F97316" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
-                               <Area type="monotone" dataKey="clicks" stroke="#3B82F6" strokeWidth={3} fillOpacity={1} fill="url(#colorClicks)" />
-                           </AreaChart>
-                       </ResponsiveContainer>
-                   </div>
-               </div>
-               
-               {/* Call to Action for more stats */}
-               <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-5 text-white flex justify-between items-center shadow-lg">
-                   <div>
-                       <p className="font-bold text-sm mb-1">¿Quieres más detalles?</p>
-                       <p className="text-xs text-gray-400">Obtén reportes semanales en tu correo.</p>
-                   </div>
-                   <Button size="sm" className="bg-white text-gray-900 hover:bg-gray-100 font-bold rounded-lg text-xs">Activar</Button>
-               </div>
+                   </>
+               )}
            </div>
         </div>
     );
   }
 
   // --- REPUTATION VIEW, MY SERVICES VIEW, FAVORITES VIEW, REWARDS VIEW, EDIT VIEW, PREVIEW VIEW... 
-  // (Mantengo estas vistas igual que antes, solo las colapso para ahorrar espacio en la respuesta si es posible, pero las incluyo completas)
   
   // --- REPUTATION VIEW ---
   if (view === 'reputation') {
