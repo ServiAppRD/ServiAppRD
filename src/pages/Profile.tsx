@@ -9,13 +9,10 @@ import { showSuccess, showError } from "@/utils/toast";
 import { 
   Loader2, LogOut, User, Phone, MapPin, Heart, 
   HelpCircle, ChevronRight, Star, 
-  ArrowLeft, Bell, Shield, Settings, Edit2, Mail, CheckCircle2, AlertCircle,
-  Briefcase, Trash2, Eye, Award, Gift, Zap, Clock, Hourglass
+  ArrowLeft, Bell, Settings, Edit2, Briefcase, Trash2, Camera, Gift, Zap, Clock, Hourglass
 } from "lucide-react";
-import { Progress } from "@/components/ui/progress"; // Asegúrate de importar esto si no está
+import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ServiceCard } from "@/components/ServiceCard";
 
 const DR_CITIES = [
@@ -24,8 +21,7 @@ const DR_CITIES = [
   "La Vega", "Puerto Plata", "Barahona", "Punta Cana", "Bávaro"
 ];
 
-// 5 Horas en segundos
-const REWARD_TARGET_SECONDS = 5 * 60 * 60; // 18000 segundos
+const REWARD_TARGET_SECONDS = 5 * 60 * 60; // 5 Horas
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -41,28 +37,20 @@ const Profile = () => {
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
   const [address, setAddress] = useState(""); 
+  const [avatarUrl, setAvatarUrl] = useState("");
+  
   const [updating, setUpdating] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
-  // Rewards Data
+  // Rewards & Other Data
   const [userStats, setUserStats] = useState<any>(null);
   const [activeSeconds, setActiveSeconds] = useState(0);
   const [canClaim, setCanClaim] = useState(false);
   const [claiming, setClaiming] = useState(false);
-
-  // My Services Data
   const [myServices, setMyServices] = useState<any[]>([]);
-  const [loadingServices, setLoadingServices] = useState(false);
-
-  // Favorites Data
   const [myFavorites, setMyFavorites] = useState<any[]>([]);
-  const [loadingFavorites, setLoadingFavorites] = useState(false);
-
-  // Reputation Data
   const [reviews, setReviews] = useState<any[]>([]);
   const [averageRating, setAverageRating] = useState(0);
-  const [loadingReputation, setLoadingReputation] = useState(false);
-
-  // Completion Logic
   const [completedSteps, setCompletedSteps] = useState(0);
   const [totalSteps, setTotalSteps] = useState(0);
 
@@ -83,11 +71,9 @@ const Profile = () => {
     });
   }, [navigate, searchParams]);
 
-  // Polling para actualizar stats en tiempo real (mientras estás en la pantalla)
   useEffect(() => {
     let interval: any;
     if (session?.user?.id && view === 'rewards') {
-        // Actualizar datos cada 10 segundos para ver el progreso en vivo
         interval = setInterval(() => {
             fetchUserStats(session.user.id);
         }, 10000);
@@ -109,7 +95,7 @@ const Profile = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('profiles')
-        .select('first_name, last_name, phone, city, address')
+        .select('first_name, last_name, phone, city, address, avatar_url')
         .eq('id', userId)
         .single();
 
@@ -120,6 +106,7 @@ const Profile = () => {
         setPhone(data.phone || "");
         setCity(data.city || "");
         setAddress(data.address || "");
+        setAvatarUrl(data.avatar_url || "");
         calculateCompletion(data);
       }
     } catch (error) {
@@ -130,14 +117,8 @@ const Profile = () => {
   };
 
   const fetchUserStats = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('user_stats')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
-
+    const { data, error } = await supabase.from('user_stats').select('*').eq('user_id', userId).maybeSingle();
     if (!data && !error) {
-      // Init stats
       await supabase.from('user_stats').insert({ user_id: userId, boosts: 0, active_seconds: 0 });
     } else if (data) {
       setUserStats(data);
@@ -150,19 +131,50 @@ const Profile = () => {
     if (!canClaim) return;
     setClaiming(true);
     try {
-      // Usar la función RPC para reclamar
       const { error } = await supabase.rpc('claim_reward_boost');
-
       if (error) throw error;
-      
       showSuccess("¡Felicidades! Has ganado 1 Boost.");
-      // Refrescar stats inmediatamente
       fetchUserStats(session.user.id);
       setCanClaim(false);
     } catch (error: any) {
       showError(error.message || "Error al reclamar recompensa");
     } finally {
       setClaiming(false);
+    }
+  };
+
+  const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploadingAvatar(true);
+
+      if (!event.target.files || event.target.files.length === 0) {
+        throw new Error('Debes seleccionar una imagen.');
+      }
+
+      const file = event.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${session.user.id}/${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      setAvatarUrl(data.publicUrl);
+      
+      // Auto-guardar la URL en el perfil
+      await supabase.from('profiles').update({ avatar_url: data.publicUrl }).eq('id', session.user.id);
+      showSuccess("Foto actualizada");
+
+    } catch (error: any) {
+      showError(error.message);
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
@@ -176,6 +188,7 @@ const Profile = () => {
         phone: phone,
         city: city,
         address: address,
+        avatar_url: avatarUrl,
         updated_at: new Date().toISOString(),
       };
 
@@ -192,44 +205,29 @@ const Profile = () => {
     }
   };
 
-  // Helper Functions
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
-    // const s = seconds % 60; // Omitimos segundos para ser más limpios
     return `${h}h ${m}m`;
   };
-
-  const getProgressPercentage = () => {
-     const p = (activeSeconds / REWARD_TARGET_SECONDS) * 100;
-     return Math.min(p, 100);
-  };
-
+  const getProgressPercentage = () => Math.min((activeSeconds / REWARD_TARGET_SECONDS) * 100, 100);
   const getRemainingTime = () => {
       const remaining = Math.max(0, REWARD_TARGET_SECONDS - activeSeconds);
-      if (remaining === 0) return "¡Listo!";
-      return formatTime(remaining);
+      return remaining === 0 ? "¡Listo!" : formatTime(remaining);
   };
 
-  // ... (Fetch functions same as before)
   const fetchMyServices = async () => {
-    setLoadingServices(true);
     const { data } = await supabase.from('services').select('*').eq('user_id', session.user.id).order('created_at', {ascending: false});
     setMyServices(data || []);
-    setLoadingServices(false);
   };
   const fetchFavorites = async (uid?: string) => {
-    setLoadingFavorites(true);
     const { data } = await supabase.from('favorites').select(`service_id, services:service_id(*)`).eq('user_id', uid || session.user.id);
     setMyFavorites(data?.map((i:any) => i.services).filter(Boolean) || []);
-    setLoadingFavorites(false);
   };
   const fetchReputation = async () => {
-    setLoadingReputation(true);
     const { data } = await supabase.from('reviews').select('*').eq('reviewee_id', session.user.id);
     setReviews(data || []);
     setAverageRating(data && data.length > 0 ? data.reduce((a:any,b:any)=>a+b.rating,0)/data.length : 0);
-    setLoadingReputation(false);
   };
   const handleDeleteService = async (id: string) => {
     await supabase.from('services').delete().eq('id', id);
@@ -242,18 +240,36 @@ const Profile = () => {
   const handleOpenReputation = () => { setView('reputation'); fetchReputation(); };
   const handleBackToDashboard = () => { if(searchParams.get('view')) navigate('/profile', {replace:true}); setView('dashboard'); };
 
+  // Componente de Avatar Reutilizable
+  const ProfileAvatar = ({ size = "md", className = "" }: { size?: "sm" | "md" | "lg" | "xl", className?: string }) => {
+    const sizeClasses = {
+      sm: "h-8 w-8 text-xs",
+      md: "h-12 w-12 text-lg",
+      lg: "h-24 w-24 text-3xl",
+      xl: "h-28 w-28 text-4xl"
+    };
+    
+    return (
+      <Avatar className={`${sizeClasses[size]} ${className}`}>
+        <AvatarImage src={avatarUrl || profileData?.avatar_url} className="object-cover" />
+        <AvatarFallback className="bg-gray-200 text-gray-500 font-bold">
+          {firstName ? firstName[0].toUpperCase() : <User className="h-1/2 w-1/2" />}
+        </AvatarFallback>
+      </Avatar>
+    );
+  };
+
   if (loading) return <div className="min-h-screen bg-white flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[#F97316]" /></div>;
 
-  // --- REWARDS VIEW (LIGHT MODE) ---
+  // --- VIEWS ---
+
   if (view === 'rewards') {
     return (
       <div className="min-h-screen bg-white pb-20 pt-safe animate-fade-in relative overflow-hidden">
-        {/* Animated Background */}
         <div className="absolute inset-0 z-0 opacity-10">
           <div className="absolute top-[-50px] right-[-50px] w-64 h-64 bg-[#F97316] rounded-full blur-[80px] animate-pulse" />
           <div className="absolute bottom-[-50px] left-[-50px] w-64 h-64 bg-purple-400 rounded-full blur-[80px] animate-pulse delay-1000" />
         </div>
-
         <div className="relative z-10">
           <div className="p-4 flex items-center justify-between">
             <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="text-gray-500 hover:bg-gray-100 rounded-full">
@@ -262,68 +278,30 @@ const Profile = () => {
             <h1 className="text-lg font-bold text-gray-900">Mis Recompensas</h1>
             <div className="w-10" />
           </div>
-
           <div className="flex flex-col items-center justify-center mt-4 space-y-6 px-6">
-             {/* Boost Balance */}
              <div className="text-center space-y-2">
                 <div className="inline-flex items-center justify-center p-4 bg-orange-50 rounded-full border border-orange-100 mb-2 shadow-sm">
                   <Zap className="h-10 w-10 text-[#F97316] fill-[#F97316]" />
                 </div>
                 <h2 className="text-4xl font-black tracking-tight text-gray-900">{userStats?.boosts || 0}</h2>
                 <p className="text-gray-500 font-medium">Boosts Disponibles</p>
-                <Button 
-                   variant="link" 
-                   className="text-[#F97316] text-xs h-auto p-0 hover:text-orange-700"
-                   onClick={() => navigate('/publish')}
-                >
-                  Usar en nueva publicación
-                </Button>
+                <Button variant="link" className="text-[#F97316] text-xs h-auto p-0 hover:text-orange-700" onClick={() => navigate('/publish')}>Usar en nueva publicación</Button>
              </div>
-
-             {/* Progress Card */}
              <div className="w-full bg-white rounded-3xl p-6 border border-gray-100 shadow-xl text-center space-y-6 relative overflow-hidden">
                 <div className="flex items-center justify-center gap-2 text-[#F97316]">
                   <Hourglass className={`h-5 w-5 ${!canClaim ? "animate-spin-slow" : ""}`} />
                   <span className="font-bold tracking-widest text-sm uppercase">Tiempo Activo</span>
                 </div>
-                
                 <div className="space-y-2">
                     <div className="font-mono text-4xl font-bold tracking-wider text-gray-900 tabular-nums">
                       {formatTime(activeSeconds)} <span className="text-base text-gray-400 font-normal">/ 5h</span>
                     </div>
-                    
-                    {/* Progress Bar Visual */}
                     <div className="h-4 w-full bg-gray-100 rounded-full overflow-hidden border border-gray-200 relative">
-                       {/* Striped Background effect */}
-                       <div className="absolute inset-0 opacity-30" style={{backgroundImage: 'linear-gradient(45deg,rgba(0,0,0,.05) 25%,transparent 25%,transparent 50%,rgba(0,0,0,.05) 50%,rgba(0,0,0,.05) 75%,transparent 75%,transparent)', backgroundSize: '1rem 1rem'}}></div>
-                       <div 
-                         className="h-full bg-gradient-to-r from-[#F97316] to-yellow-500 transition-all duration-1000 ease-out relative"
-                         style={{ width: `${getProgressPercentage()}%` }}
-                       >
-                         {/* Shine effect */}
-                         <div className="absolute top-0 right-0 bottom-0 w-1 bg-white/50 blur-[2px] shadow-[0_0_10px_white]"></div>
-                       </div>
+                       <div className="h-full bg-gradient-to-r from-[#F97316] to-yellow-500 transition-all duration-1000 ease-out relative" style={{ width: `${getProgressPercentage()}%` }} />
                     </div>
-                    
-                    <p className="text-xs text-gray-500">
-                      {canClaim ? "¡Meta alcanzada!" : `Faltan ${getRemainingTime()} de uso`}
-                    </p>
+                    <p className="text-xs text-gray-500">{canClaim ? "¡Meta alcanzada!" : `Faltan ${getRemainingTime()} de uso`}</p>
                 </div>
-
-                <div className="bg-orange-50 rounded-xl p-3 text-left text-xs text-orange-800 flex gap-3 items-start border border-orange-100">
-                   <Clock className="h-4 w-4 text-[#F97316] shrink-0 mt-0.5" />
-                   <p>El tiempo solo cuenta mientras utilizas la aplicación activamente. Úsala para buscar, ver perfiles o gestionar tu cuenta.</p>
-                </div>
-
-                <Button 
-                  onClick={handleClaimReward}
-                  disabled={!canClaim || claiming}
-                  className={`w-full h-12 rounded-xl text-lg font-bold transition-all transform ${
-                    canClaim 
-                      ? "bg-[#F97316] hover:bg-orange-600 text-white shadow-lg shadow-orange-500/40 scale-105 animate-pulse" 
-                      : "bg-gray-100 text-gray-400 cursor-not-allowed hover:bg-gray-200"
-                  }`}
-                >
+                <Button onClick={handleClaimReward} disabled={!canClaim || claiming} className={`w-full h-12 rounded-xl text-lg font-bold transition-all transform ${canClaim ? "bg-[#F97316] hover:bg-orange-600 text-white shadow-lg shadow-orange-500/40 scale-105 animate-pulse" : "bg-gray-100 text-gray-400 cursor-not-allowed hover:bg-gray-200"}`}>
                   {claiming ? <Loader2 className="animate-spin" /> : canClaim ? "¡Reclamar Boost!" : "Sigue usándola..."}
                 </Button>
              </div>
@@ -333,7 +311,6 @@ const Profile = () => {
     );
   }
 
-  // --- OTRAS VISTAS ---
   if (view === 'favorites') {
     return (
       <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
@@ -409,7 +386,7 @@ const Profile = () => {
           <div className="bg-white rounded-3xl shadow-xl p-6 text-center mt-24 space-y-4 border border-gray-100">
             <div className="relative -mt-20 mb-4 flex justify-center">
                <div className="p-2 bg-white rounded-full shadow-sm">
-                  <Avatar className="h-28 w-28 border-4 border-orange-50"><AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${session?.user.email}`} /><AvatarFallback>U</AvatarFallback></Avatar>
+                  <ProfileAvatar size="xl" className="border-4 border-orange-50" />
                </div>
             </div>
             <div><h2 className="text-2xl font-bold">{firstName} {lastName}</h2><p className="text-gray-500 text-sm">{session?.user.email}</p></div>
@@ -426,13 +403,46 @@ const Profile = () => {
   if (view === 'edit') {
     return (
       <div className="min-h-screen bg-gray-50 pb-20 pt-safe">
-        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6"/></Button><h1 className="text-lg font-bold">Editar</h1></div>
-        <div className="p-6 max-w-md mx-auto space-y-4">
-            <div><Label>Nombre</Label><Input value={firstName} onChange={e=>setFirstName(e.target.value)}/></div>
-            <div><Label>Apellido</Label><Input value={lastName} onChange={e=>setLastName(e.target.value)}/></div>
-            <div><Label>Teléfono</Label><Input value={phone} onChange={e=>setPhone(e.target.value)}/></div>
-            <div><Label>Ciudad</Label><Select value={city} onValueChange={setCity}><SelectTrigger><SelectValue placeholder="Selecciona"/></SelectTrigger><SelectContent>{DR_CITIES.map(c=><SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
-            <Button onClick={updateProfile} className="w-full bg-[#F97316]">{updating ? <Loader2 className="animate-spin"/> : "Guardar"}</Button>
+        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6"/></Button>
+          <h1 className="text-lg font-bold">Editar Perfil</h1>
+        </div>
+        
+        <div className="p-6 max-w-md mx-auto space-y-6">
+            
+            {/* Avatar Upload Section */}
+            <div className="flex flex-col items-center gap-3">
+               <div className="relative group cursor-pointer">
+                 <ProfileAvatar size="xl" />
+                 <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-[#F97316] text-white p-2 rounded-full cursor-pointer shadow-md hover:bg-orange-600 transition-colors">
+                    {uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                 </label>
+                 <input 
+                   id="avatar-upload" 
+                   type="file" 
+                   accept="image/*" 
+                   className="hidden" 
+                   onChange={uploadAvatar}
+                   disabled={uploadingAvatar}
+                 />
+               </div>
+               <p className="text-xs text-gray-500">Toca el icono de cámara para cambiar tu foto</p>
+            </div>
+
+            <div className="space-y-4">
+              <div><Label>Nombre</Label><Input value={firstName} onChange={e=>setFirstName(e.target.value)}/></div>
+              <div><Label>Apellido</Label><Input value={lastName} onChange={e=>setLastName(e.target.value)}/></div>
+              <div><Label>Teléfono</Label><Input value={phone} onChange={e=>setPhone(e.target.value)} type="tel"/></div>
+              <div>
+                <Label>Ciudad</Label>
+                <Select value={city} onValueChange={setCity}>
+                  <SelectTrigger><SelectValue placeholder="Selecciona tu ciudad"/></SelectTrigger>
+                  <SelectContent className="bg-white">{DR_CITIES.map(c=><SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <Button onClick={updateProfile} className="w-full bg-[#F97316] h-12 text-lg">{updating ? <Loader2 className="animate-spin"/> : "Guardar Cambios"}</Button>
         </div>
       </div>
     );
@@ -441,17 +451,15 @@ const Profile = () => {
   // --- DASHBOARD VIEW ---
   return (
     <div className="min-h-screen bg-gray-50 pb-24 pt-safe animate-fade-in">
-      {/* Header */}
       <div className="bg-white pt-4 pb-4 px-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] rounded-b-[2.5rem] relative z-10">
         <div className="flex justify-between items-center mb-6">
           <div className="flex-1">
             <p className="text-gray-400 text-sm font-medium">Bienvenido,</p>
-            <h1 className="text-2xl font-bold text-[#0F172A] truncate">{profileData?.first_name || 'Usuario'}</h1>
+            <h1 className="text-2xl font-bold text-[#0F172A] truncate">{firstName || 'Usuario'}</h1>
           </div>
-          <Avatar className="h-12 w-12 border-2 border-orange-100 cursor-pointer" onClick={() => setView('preview')}>
-            <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${session?.user.email}`} />
-            <AvatarFallback>U</AvatarFallback>
-          </Avatar>
+          <div onClick={() => setView('preview')} className="cursor-pointer">
+             <ProfileAvatar size="md" className="border-2 border-orange-100" />
+          </div>
         </div>
         <div className="flex justify-between gap-2 pb-2">
           <QuickAction icon={User} label="Perfil" onClick={() => setView('preview')} />
@@ -462,7 +470,6 @@ const Profile = () => {
       </div>
 
       <div className="px-5 space-y-6 mt-6">
-        {/* Completion Card */}
         {completedSteps < totalSteps && (
            <div className="bg-white rounded-2xl p-5 border border-orange-100 shadow-sm">
              <div className="mb-2"><h3 className="font-bold">Completa tu perfil</h3><p className="text-sm text-gray-500">{completedSteps}/{totalSteps} pasos</p></div>
@@ -478,13 +485,7 @@ const Profile = () => {
           </MenuSection>
 
           <MenuSection title="Recompensas & Cuenta">
-            {/* NEW BUTTON FOR REWARDS */}
-            <MenuItem 
-              icon={Gift} 
-              label="Recompensas" 
-              badge={canClaim ? "!" : undefined}
-              onClick={() => setView('rewards')}
-            />
+            <MenuItem icon={Gift} label="Recompensas" badge={canClaim ? "!" : undefined} onClick={() => setView('rewards')} />
             <MenuItem icon={Bell} label="Notificaciones" />
           </MenuSection>
 
@@ -498,8 +499,6 @@ const Profile = () => {
   );
 };
 
-// ... Components (QuickAction, MenuItem, etc) same as previous
-const InfoItem = ({ icon: Icon, label, value, isMissing }: any) => (<div className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 border border-gray-100"><div className={`p-2 rounded-full ${isMissing ? 'bg-red-100 text-red-500' : 'bg-white text-orange-500'} shadow-sm`}><Icon className="h-4 w-4" /></div><div className="flex-1"><p className="text-xs text-gray-400 font-medium">{label}</p><p className={`text-sm font-semibold ${isMissing ? 'text-red-500' : 'text-gray-900'}`}>{value}</p></div></div>);
 const MenuSection = ({ title, children }: any) => (<div><h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-2">{title}</h3><div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">{children}</div></div>);
 const QuickAction = ({ icon: Icon, label, onClick }: any) => (<button onClick={onClick} className="flex flex-col items-center gap-2 group flex-1"><div className="w-14 h-14 bg-orange-50/80 group-hover:bg-[#F97316] rounded-2xl flex items-center justify-center transition-all shadow-sm border border-orange-100/50"><Icon className="h-6 w-6 text-[#F97316] group-hover:text-white transition-colors" strokeWidth={2} /></div><span className="text-[11px] font-semibold text-gray-600 group-hover:text-[#F97316]">{label}</span></button>);
 const MenuItem = ({ icon: Icon, label, onClick, isDestructive, badge }: any) => (<button onClick={onClick} className="w-full flex items-center justify-between p-4 hover:bg-orange-50/30 transition-colors group relative"><div className="flex items-center gap-4"><div className={`p-2 rounded-xl ${isDestructive ? 'bg-red-50 text-red-500' : 'bg-orange-50/50 text-[#F97316]'} transition-all`}><Icon className="h-5 w-5" strokeWidth={2} /></div><span className={`font-semibold text-sm ${isDestructive ? 'text-red-500' : 'text-gray-700'}`}>{label}</span></div><div className="flex items-center gap-3">{badge && (<span className={`text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm ${badge === "!" ? "bg-red-500 animate-pulse" : "bg-[#F97316]"}`}>{badge}</span>)}<ChevronRight className="h-4 w-4 text-gray-300" /></div></button>);
