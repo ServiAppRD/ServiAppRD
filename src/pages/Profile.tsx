@@ -524,9 +524,9 @@ const Profile = () => {
              </div>
            ) : (
              myServices.map(s => {
-                const isPromoted = s.is_promoted && (!s.promoted_until || new Date(s.promoted_until) > new Date());
+                // Validación estricta: Es promovido solo si la fecha futura es válida
+                const isPromoted = s.is_promoted && s.promoted_until && new Date(s.promoted_until) > new Date();
                 
-                // Calculate remaining time for promoted service
                 let remainingLabel = "";
                 if (isPromoted && s.promoted_until) {
                     const now = new Date();
