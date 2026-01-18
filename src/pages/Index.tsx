@@ -94,7 +94,7 @@ const Index = () => {
           </AlertDialogContent>
         </AlertDialog>
 
-        <main className="flex-1 space-y-8 py-6">
+        <main className="flex-1 space-y-6 py-6">
           
           {/* Banner Promocional */}
           <div className="px-4">
@@ -143,11 +143,8 @@ const Index = () => {
             </div>
           </section>
 
-          {/* Separator */}
-          <div className="h-2 bg-gray-50" />
-
-          {/* Recommended Section (Static/Placeholder for now) */}
-          <section className="pt-6">
+          {/* Recommended Section (Joined with previous section) */}
+          <section className="pt-2">
             <SectionHeader title="Servicios Recomendados" />
             <div className="flex overflow-x-auto gap-4 px-4 pb-4 no-scrollbar min-h-[100px]">
               {recommendedServices.length > 0 ? (
@@ -162,7 +159,7 @@ const Index = () => {
             </div>
           </section>
 
-          {/* Featured Section (Static/Placeholder for now) */}
+          {/* Featured Section */}
           <section>
             <SectionHeader title="Profesionales Destacados" />
             <div className="flex overflow-x-auto gap-4 px-4 pb-4 no-scrollbar min-h-[100px]">
