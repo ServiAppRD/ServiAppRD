@@ -10,6 +10,7 @@ import ServiceDetail from "./pages/ServiceDetail";
 import NotFound from "./pages/NotFound";
 import { MobileNavbar } from "./components/MobileNavbar";
 import { SplashScreen } from "@/components/SplashScreen";
+import { ActivityTracker } from "@/components/ActivityTracker";
 import { useState } from "react";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,9 @@ const AppLayout = () => {
 
   return (
     <div className={hideNavbar ? "" : "pb-24"}>
+      {/* El Tracker funciona globalmente dentro del Router */}
+      <ActivityTracker />
+      
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
