@@ -52,6 +52,7 @@ const REWARD_TARGET_SECONDS = 5 * 60 * 60; // 5 Horas
 
 // Nuevas opciones de Boost mejoradas
 const BOOST_OPTIONS = [
+  { label: "Test Flash (2 min)", duration: 0.033, price: 0, popular: false },
   { label: "1 Día", duration: 24, price: 299, popular: false },
   { label: "3 Días", duration: 72, price: 499, popular: true },
   { label: "7 Días", duration: 168, price: 999, popular: false },
