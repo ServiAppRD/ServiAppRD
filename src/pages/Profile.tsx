@@ -9,7 +9,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { 
   Loader2, LogOut, User, Phone, MapPin, Heart, 
   HelpCircle, ChevronRight, Star, 
-  ArrowLeft, Bell, Settings, Edit2, Briefcase, Trash2, Camera, Gift, Zap, Clock, Hourglass, Palette
+  ArrowLeft, Bell, Settings, Edit2, Briefcase, Trash2, Camera, Gift, Zap, Palette, Check
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,14 +23,15 @@ const DR_CITIES = [
 ];
 
 const PROFILE_COLORS = [
-  { name: "Original", value: "#0F172A" }, // Slate 900
-  { name: "Naranja", value: "#F97316" }, // Orange 500
-  { name: "Azul", value: "#3B82F6" },    // Blue 500
-  { name: "Verde", value: "#22C55E" },   // Green 500
-  { name: "Morado", value: "#A855F7" },  // Purple 500
-  { name: "Rosa", value: "#EC4899" },    // Pink 500
-  { name: "Rojo", value: "#EF4444" },    // Red 500
-  { name: "Teal", value: "#14B8A6" },    // Teal 500
+  { name: "Medianoche", value: "#0F172A" }, 
+  { name: "Naranja", value: "#F97316" }, 
+  { name: "Azul Real", value: "#3B82F6" },   
+  { name: "Indigo", value: "#6366F1" },  
+  { name: "Violeta", value: "#8B5CF6" },
+  { name: "Rosa", value: "#EC4899" },    
+  { name: "Rojo", value: "#EF4444" },   
+  { name: "Esmeralda", value: "#10B981" },    
+  { name: "Turquesa", value: "#06B6D4" },
 ];
 
 const REWARD_TARGET_SECONDS = 5 * 60 * 60; // 5 Horas
@@ -180,8 +181,7 @@ const Profile = () => {
 
       const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
       setAvatarUrl(data.publicUrl);
-      
-      // Auto-guardar la URL en el perfil
+      // Auto-guardar
       await supabase.from('profiles').update({ avatar_url: data.publicUrl }).eq('id', session.user.id);
       showSuccess("Foto actualizada");
 
@@ -212,7 +212,7 @@ const Profile = () => {
       showSuccess("Perfil actualizado");
       setProfileData(updates);
       calculateCompletion(updates);
-      setView('preview');
+      setView('dashboard');
     } catch (error: any) {
       showError(error.message);
     } finally {
@@ -226,10 +226,6 @@ const Profile = () => {
     return `${h}h ${m}m`;
   };
   const getProgressPercentage = () => Math.min((activeSeconds / REWARD_TARGET_SECONDS) * 100, 100);
-  const getRemainingTime = () => {
-      const remaining = Math.max(0, REWARD_TARGET_SECONDS - activeSeconds);
-      return remaining === 0 ? "¡Listo!" : formatTime(remaining);
-  };
 
   const fetchMyServices = async () => {
     const { data } = await supabase.from('services').select('*').eq('user_id', session.user.id).order('created_at', {ascending: false});
@@ -276,7 +272,242 @@ const Profile = () => {
 
   if (loading) return <div className="min-h-screen bg-white flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[#F97316]" /></div>;
 
-  // --- VIEWS ---
+  // --- REPUTATION VIEW (MODERN) ---
+  if (view === 'reputation') {
+    // Calculate star distribution
+    const starCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } as Record<number, number>;
+    reviews.forEach(r => {
+        const rating = Math.round(r.rating);
+        if (rating >= 1 && rating <= 5) starCounts[rating]++;
+    });
+    const totalReviews = reviews.length || 1; // avoid division by zero
+
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
+        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
+           <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Reputación</h1></div>
+        </div>
+        
+        <div className="p-5 space-y-6">
+            {/* Summary Card */}
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center">
+                <div className="text-5xl font-black text-[#0F172A] mb-1">{averageRating.toFixed(1)}</div>
+                <div className="flex gap-1 mb-2">
+                    {[1,2,3,4,5].map((star) => (
+                        <Star key={star} className={cn("h-5 w-5", star <= Math.round(averageRating) ? "fill-[#F97316] text-[#F97316]" : "text-gray-200 fill-gray-100")} />
+                    ))}
+                </div>
+                <p className="text-gray-400 text-sm font-medium">{reviews.length} reseñas recibidas</p>
+                
+                {/* Breakdown */}
+                <div className="w-full mt-6 space-y-2">
+                    {[5, 4, 3, 2, 1].map((star) => (
+                        <div key={star} className="flex items-center gap-3 text-xs">
+                            <span className="font-bold w-3 text-right text-gray-700">{star}</span>
+                            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div 
+                                    className="h-full bg-[#F97316] rounded-full" 
+                                    style={{ width: `${(starCounts[star] / totalReviews) * 100}%` }}
+                                />
+                            </div>
+                            <span className="text-gray-400 w-6 text-right">{starCounts[star]}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Reviews List */}
+            <div className="space-y-4">
+                <h3 className="font-bold text-gray-900">Comentarios recientes</h3>
+                {reviews.length === 0 ? (
+                    <div className="text-center py-8 text-gray-400 bg-white rounded-2xl border border-dashed">
+                        Aún no tienes reseñas.
+                    </div>
+                ) : (
+                    reviews.map((r, i) => (
+                        <div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                            <div className="flex justify-between items-start mb-2">
+                                <div className="flex gap-1">
+                                    {[...Array(5)].map((_, i) => (
+                                        <Star key={i} className={cn("h-3 w-3", i < r.rating ? "fill-[#F97316] text-[#F97316]" : "text-gray-200")} />
+                                    ))}
+                                </div>
+                                <span className="text-[10px] text-gray-400">{new Date(r.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-gray-700 text-sm leading-relaxed">"{r.comment}"</p>
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
+      </div>
+    )
+  }
+
+  // --- EDIT PROFILE VIEW (MODERN) ---
+  if (view === 'edit') {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20 pt-safe">
+        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6"/></Button>
+            <h1 className="text-lg font-bold">Editar Perfil</h1>
+          </div>
+          <Button onClick={updateProfile} disabled={updating} size="sm" className="bg-[#0F172A] text-white rounded-full px-4">
+              {updating ? <Loader2 className="h-4 w-4 animate-spin"/> : "Guardar"}
+          </Button>
+        </div>
+        
+        <div className="pb-10">
+            {/* Visual Preview Section */}
+            <div className="relative mb-16">
+                <div 
+                    className="h-40 w-full transition-colors duration-500 shadow-inner"
+                    style={{ backgroundColor: profileColor }}
+                />
+                <div className="absolute -bottom-12 left-0 right-0 flex justify-center">
+                    <div className="relative group">
+                         <div className="p-1 bg-white rounded-full shadow-lg">
+                            <ProfileAvatar size="xl" className="border-4 border-white" />
+                         </div>
+                         <label 
+                            htmlFor="avatar-upload" 
+                            className="absolute bottom-1 right-1 bg-[#F97316] text-white p-2.5 rounded-full cursor-pointer shadow-lg hover:bg-orange-600 transition-transform hover:scale-110 active:scale-95 border-2 border-white"
+                         >
+                            {uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                         </label>
+                         <input 
+                           id="avatar-upload" 
+                           type="file" 
+                           accept="image/*" 
+                           className="hidden" 
+                           onChange={uploadAvatar}
+                           disabled={uploadingAvatar}
+                         />
+                    </div>
+                </div>
+            </div>
+
+            <div className="px-6 space-y-8 mt-4">
+                {/* Color Picker Grid */}
+                <div className="space-y-3 text-center">
+                   <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Color de Portada</Label>
+                   <div className="flex flex-wrap justify-center gap-3">
+                      {PROFILE_COLORS.map((color) => (
+                        <button
+                          key={color.value}
+                          onClick={() => setProfileColor(color.value)}
+                          className={cn(
+                            "w-10 h-10 rounded-full transition-all shadow-sm flex items-center justify-center relative",
+                            profileColor === color.value ? "ring-2 ring-offset-2 ring-gray-900 scale-110" : "hover:scale-105"
+                          )}
+                          style={{ backgroundColor: color.value }}
+                          title={color.name}
+                        >
+                            {profileColor === color.value && <Check className="h-5 w-5 text-white drop-shadow-md" />}
+                        </button>
+                      ))}
+                   </div>
+                </div>
+
+                {/* Modern Inputs */}
+                <div className="space-y-5 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label className="text-gray-500 font-medium">Nombre</Label>
+                            <Input 
+                                value={firstName} 
+                                onChange={e=>setFirstName(e.target.value)} 
+                                className="h-11 bg-gray-50 border-gray-200 focus:bg-white transition-colors rounded-xl"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-gray-500 font-medium">Apellido</Label>
+                            <Input 
+                                value={lastName} 
+                                onChange={e=>setLastName(e.target.value)}
+                                className="h-11 bg-gray-50 border-gray-200 focus:bg-white transition-colors rounded-xl"
+                            />
+                        </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                        <Label className="text-gray-500 font-medium">Teléfono</Label>
+                        <div className="relative">
+                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input 
+                                value={phone} 
+                                onChange={e=>setPhone(e.target.value)} 
+                                type="tel" 
+                                className="pl-10 h-11 bg-gray-50 border-gray-200 focus:bg-white transition-colors rounded-xl"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-gray-500 font-medium">Ciudad</Label>
+                        <Select value={city} onValueChange={setCity}>
+                            <SelectTrigger className="h-11 bg-gray-50 border-gray-200 focus:bg-white rounded-xl">
+                                <SelectValue placeholder="Selecciona tu ciudad"/>
+                            </SelectTrigger>
+                            <SelectContent className="bg-white max-h-[200px]">
+                                {DR_CITIES.map(c=><SelectItem key={c} value={c}>{c}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
+    );
+  }
+
+  // --- OTHER VIEWS (Favorites, My Services, etc are same as before but inside same file) ---
+  if (view === 'favorites') {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
+        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={handleBackToDashboard}><ArrowLeft className="h-6 w-6" /></Button>
+            <h1 className="text-lg font-bold">Mis Favoritos</h1>
+          </div>
+        </div>
+        <div className="p-4">
+          {myFavorites.length === 0 ? <div className="text-center py-10 text-gray-500">Sin favoritos</div> : (
+            <div className="grid grid-cols-2 gap-4">
+              {myFavorites.map((s) => <div key={s.id} onClick={()=>navigate(`/service/${s.id}`)}><ServiceCard title={s.title} price={`RD$ ${s.price}`} image={s.image_url} /></div>)}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'my-services') {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
+        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
+           <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Publicaciones</h1></div>
+           <Button size="sm" variant="outline" onClick={()=>navigate('/publish')}>+ Nueva</Button>
+        </div>
+        <div className="p-4 space-y-4">
+           {myServices.map(s => (
+             <div key={s.id} className="bg-white p-3 rounded-xl shadow-sm flex gap-3">
+               <img src={s.image_url} className="h-16 w-16 rounded object-cover" />
+               <div className="flex-1">
+                 <h3 className="font-bold truncate">{s.title}</h3>
+                 <p className="text-orange-500 text-sm font-bold">RD$ {s.price}</p>
+                 <div className="flex gap-2 mt-2">
+                   <Button size="sm" variant="outline" className="h-7 text-xs" onClick={()=>navigate(`/service/${s.id}`)}>Ver</Button>
+                   <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={()=>handleDeleteService(s.id)}><Trash2 className="h-3 w-3"/></Button>
+                 </div>
+               </div>
+             </div>
+           ))}
+        </div>
+      </div>
+    )
+  }
 
   if (view === 'rewards') {
     return (
@@ -326,68 +557,7 @@ const Profile = () => {
     );
   }
 
-  if (view === 'favorites') {
-    return (
-      <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
-        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={handleBackToDashboard}><ArrowLeft className="h-6 w-6" /></Button>
-            <h1 className="text-lg font-bold">Mis Favoritos</h1>
-          </div>
-        </div>
-        <div className="p-4">
-          {myFavorites.length === 0 ? <div className="text-center py-10 text-gray-500">Sin favoritos</div> : (
-            <div className="grid grid-cols-2 gap-4">
-              {myFavorites.map((s) => <div key={s.id} onClick={()=>navigate(`/service/${s.id}`)}><ServiceCard title={s.title} price={`RD$ ${s.price}`} image={s.image_url} /></div>)}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  if (view === 'reputation') {
-    return (
-      <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
-        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
-           <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Reputación</h1></div>
-        </div>
-        <div className="p-4 text-center">
-            <div className="text-4xl font-bold mb-2 flex justify-center items-center gap-2"><Star className="h-8 w-8 text-[#F97316] fill-current"/>{averageRating.toFixed(1)}</div>
-            <div className="space-y-4 text-left mt-6">
-                {reviews.map(r => <div key={r.id} className="bg-white p-4 rounded-xl shadow-sm border"><p>"{r.comment}"</p></div>)}
-            </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (view === 'my-services') {
-    return (
-      <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
-        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
-           <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Publicaciones</h1></div>
-           <Button size="sm" variant="outline" onClick={()=>navigate('/publish')}>+ Nueva</Button>
-        </div>
-        <div className="p-4 space-y-4">
-           {myServices.map(s => (
-             <div key={s.id} className="bg-white p-3 rounded-xl shadow-sm flex gap-3">
-               <img src={s.image_url} className="h-16 w-16 rounded object-cover" />
-               <div className="flex-1">
-                 <h3 className="font-bold truncate">{s.title}</h3>
-                 <p className="text-orange-500 text-sm font-bold">RD$ {s.price}</p>
-                 <div className="flex gap-2 mt-2">
-                   <Button size="sm" variant="outline" className="h-7 text-xs" onClick={()=>navigate(`/service/${s.id}`)}>Ver</Button>
-                   <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={()=>handleDeleteService(s.id)}><Trash2 className="h-3 w-3"/></Button>
-                 </div>
-               </div>
-             </div>
-           ))}
-        </div>
-      </div>
-    )
-  }
-
+  // --- PREVIEW VIEW ---
   if (view === 'preview') {
     return (
       <div className="min-h-screen bg-gray-50 pb-20 pt-safe relative">
@@ -413,73 +583,6 @@ const Profile = () => {
                <div className="flex gap-3"><MapPin className="text-gray-400 h-4 w-4"/><span>{city || "No agregado"}</span></div>
             </div>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (view === 'edit') {
-    return (
-      <div className="min-h-screen bg-gray-50 pb-20 pt-safe">
-        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6"/></Button>
-          <h1 className="text-lg font-bold">Editar Perfil</h1>
-        </div>
-        
-        <div className="p-6 max-w-md mx-auto space-y-8">
-            
-            {/* Avatar Upload Section */}
-            <div className="flex flex-col items-center gap-3">
-               <div className="relative group cursor-pointer">
-                 <ProfileAvatar size="xl" />
-                 <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-[#F97316] text-white p-2 rounded-full cursor-pointer shadow-md hover:bg-orange-600 transition-colors">
-                    {uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
-                 </label>
-                 <input 
-                   id="avatar-upload" 
-                   type="file" 
-                   accept="image/*" 
-                   className="hidden" 
-                   onChange={uploadAvatar}
-                   disabled={uploadingAvatar}
-                 />
-               </div>
-               <p className="text-xs text-gray-500">Toca el icono de cámara para cambiar tu foto</p>
-            </div>
-
-            {/* Profile Color Section */}
-            <div className="space-y-3">
-               <Label className="flex items-center gap-2"><Palette className="h-4 w-4"/> Color de Portada</Label>
-               <div className="flex flex-wrap gap-3">
-                  {PROFILE_COLORS.map((color) => (
-                    <button
-                      key={color.value}
-                      onClick={() => setProfileColor(color.value)}
-                      className={cn(
-                        "w-10 h-10 rounded-full border-2 transition-all shadow-sm",
-                        profileColor === color.value ? "border-black scale-110" : "border-transparent hover:scale-105"
-                      )}
-                      style={{ backgroundColor: color.value }}
-                      title={color.name}
-                    />
-                  ))}
-               </div>
-            </div>
-
-            <div className="space-y-4">
-              <div><Label>Nombre</Label><Input value={firstName} onChange={e=>setFirstName(e.target.value)}/></div>
-              <div><Label>Apellido</Label><Input value={lastName} onChange={e=>setLastName(e.target.value)}/></div>
-              <div><Label>Teléfono</Label><Input value={phone} onChange={e=>setPhone(e.target.value)} type="tel"/></div>
-              <div>
-                <Label>Ciudad</Label>
-                <Select value={city} onValueChange={setCity}>
-                  <SelectTrigger><SelectValue placeholder="Selecciona tu ciudad"/></SelectTrigger>
-                  <SelectContent className="bg-white">{DR_CITIES.map(c=><SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <Button onClick={updateProfile} className="w-full bg-[#F97316] h-12 text-lg">{updating ? <Loader2 className="animate-spin"/> : "Guardar Cambios"}</Button>
         </div>
       </div>
     );
