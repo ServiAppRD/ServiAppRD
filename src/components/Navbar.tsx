@@ -48,10 +48,10 @@ export const Navbar = () => {
         
         {/* DESKTOP HEADER ROW */}
         <div className="flex items-center justify-between gap-8">
-            {/* Logo Area */}
-            <div className="flex items-center gap-2 cursor-pointer shrink-0" onClick={() => navigate('/')}>
+            {/* Logo Area - Visible only on Desktop */}
+            <div className="hidden md:flex items-center gap-2 cursor-pointer shrink-0" onClick={() => navigate('/')}>
                <img src="/logo.png" alt="ServiAPP" className="h-8 md:h-10 w-auto object-contain" />
-               <span className="font-bold text-xl tracking-tight text-gray-900 hidden md:block">Servi<span className="text-[#F97316]">APP</span></span>
+               <span className="font-bold text-xl tracking-tight text-gray-900">Servi<span className="text-[#F97316]">APP</span></span>
             </div>
 
             {/* Desktop Navigation & Search */}
@@ -96,8 +96,8 @@ export const Navbar = () => {
                 )}
             </div>
 
-            {/* MOBILE SEARCH (Solo visible en móviles, reemplaza al header complejo) */}
-            <div className="md:hidden flex-1 ml-4">
+            {/* MOBILE SEARCH (Solo visible en móviles, ocupa todo el ancho) */}
+            <div className="md:hidden flex-1">
                 <form onSubmit={handleSearch} className="relative w-full">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <Input 
@@ -110,7 +110,7 @@ export const Navbar = () => {
             </div>
         </div>
 
-        {/* Categories / Tags Scroll (Visible en ambos pero mejorado) */}
+        {/* Categories / Tags Scroll */}
         <div className={cn(
           "flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 transition-all duration-500 ease-in-out origin-top",
           isScrolled 
