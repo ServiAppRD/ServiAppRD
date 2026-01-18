@@ -77,10 +77,10 @@ const Publish = () => {
       }
       setSession(session);
 
-      // Verificar si el perfil está completo (INCLUYENDO DIRECCIÓN)
+      // Verificar si el perfil está completo (SIN DIRECCIÓN)
       const { data: profile } = await supabase
         .from('profiles')
-        .select('first_name, last_name, phone, city, address')
+        .select('first_name, last_name, phone, city')
         .eq('id', session.user.id)
         .single();
 
@@ -89,13 +89,10 @@ const Publish = () => {
           profile.first_name && 
           profile.last_name && 
           profile.phone && 
-          profile.city && 
-          profile.address; // Ahora verifica dirección también
+          profile.city; // Dirección eliminada
         
         if (!isComplete) {
           // Si falta algo, bloqueamos inmediatamente
-          showIncompleteProfileDialog(true); 
-          // O mostramos el diálogo en lugar de redirigir silenciosamente
           setShowIncompleteProfileDialog(true);
           return;
         }
@@ -162,7 +159,7 @@ const Publish = () => {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('first_name, last_name, phone, city, address')
+      .select('first_name, last_name, phone, city')
       .eq('id', session.user.id)
       .single();
 
@@ -171,8 +168,7 @@ const Publish = () => {
         profile.first_name && 
         profile.last_name && 
         profile.phone && 
-        profile.city && 
-        profile.address;
+        profile.city;
 
       if (!isComplete) {
         setShowIncompleteProfileDialog(true);
@@ -274,8 +270,9 @@ const Publish = () => {
           </Select>
         </div>
         
-        <div className="bg-blue-50 p-4 rounded-xl flex gap-3 text-blue-700 text-sm">
-           <Tag className="h-5 w-5 flex-shrink-0 mt-0.5" />
+        {/* Mensaje cambiado a gris */}
+        <div className="bg-gray-50 p-4 rounded-xl flex gap-3 text-gray-500 text-sm">
+           <Tag className="h-5 w-5 flex-shrink-0 mt-0.5 text-gray-400" />
            <p>Elegir la categoría correcta ayuda a que los clientes te encuentren más rápido en las búsquedas.</p>
         </div>
       </div>
@@ -557,7 +554,7 @@ const Publish = () => {
             <AlertDialogTitle className="text-xl font-bold text-center">Perfil incompleto</AlertDialogTitle>
             <AlertDialogDescription className="text-center text-gray-600 mt-2">
               <p>Para garantizar la seguridad de nuestros usuarios, necesitamos que completes tu perfil antes de publicar un servicio.</p>
-              <p className="mt-2 text-sm font-medium">Te falta: Teléfono, Ciudad o Dirección.</p>
+              <p className="mt-2 text-sm font-medium">Te falta: Teléfono o Ciudad.</p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col gap-2 space-y-2">

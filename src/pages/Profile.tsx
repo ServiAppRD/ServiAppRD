@@ -37,7 +37,9 @@ const Profile = () => {
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
-  const [address, setAddress] = useState("");
+  // address state removed from logic although variable could stay to avoid breaking changes if used elsewhere, 
+  // but we remove it from completion logic and UI.
+  const [address, setAddress] = useState(""); 
   const [updating, setUpdating] = useState(false);
 
   // My Services Data
@@ -81,7 +83,7 @@ const Profile = () => {
       { key: 'last_name', label: 'Apellido' },
       { key: 'phone', label: 'Teléfono' },
       { key: 'city', label: 'Ciudad' },
-      { key: 'address', label: 'Dirección' }
+      // Address removed from completion check
     ];
     
     const completed = fields.filter(f => {
@@ -135,7 +137,7 @@ const Profile = () => {
         last_name: lastName,
         phone: phone,
         city: city,
-        address: address,
+        address: address, // Keeping saving logic just in case, but removing UI
         updated_at: new Date().toISOString(),
       };
 
@@ -549,7 +551,7 @@ const Profile = () => {
             <div className="grid grid-cols-1 gap-4 pt-4 text-left border-t border-gray-50">
                <InfoItem icon={Phone} label="Teléfono" value={phone || "No agregado"} isMissing={!phone} />
                <InfoItem icon={Mail} label="Correo" value={session?.user.email} />
-               <InfoItem icon={MapPin} label="Dirección" value={address || "No agregada"} isMissing={!address} />
+               {/* Dirección REMOVIDA de la vista previa */}
                <InfoItem icon={MapPin} label="Ciudad" value={city || "No seleccionada"} isMissing={!city} />
             </div>
 
@@ -631,16 +633,7 @@ const Profile = () => {
                         </Select>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="address">Dirección</Label>
-                        <Input 
-                          id="address" 
-                          placeholder="Ej. Sector, Calle, #"
-                          value={address} 
-                          onChange={(e) => setAddress(e.target.value)} 
-                          className="focus-visible:ring-[#F97316]"
-                        />
-                    </div>
+                    {/* Dirección Input REMOVIDO */}
                 </div>
             </div>
           </div>
@@ -690,7 +683,8 @@ const Profile = () => {
             label="Reputación" 
             onClick={handleOpenReputation}
           />
-          <QuickAction icon={MapPin} label="Dirección" onClick={() => setView('edit')} />
+          {/* Cambiamos la acción del botón dirección, pero como ya no hay dirección, tal vez podríamos cambiarlo a 'Ciudad' o eliminarlo. Por ahora, dirige a editar perfil que es donde se edita la ciudad */}
+          <QuickAction icon={MapPin} label="Ubicación" onClick={() => setView('edit')} />
           <QuickAction icon={HelpCircle} label="Ayuda" />
         </div>
       </div>
