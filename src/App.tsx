@@ -1,5 +1,3 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
@@ -8,7 +6,7 @@ import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Search from "./pages/Search";
 import Publish from "./pages/Publish";
-import ServiceDetail from "./pages/ServiceDetail"; // Nueva importación
+import ServiceDetail from "./pages/ServiceDetail"; 
 import NotFound from "./pages/NotFound";
 import { MobileNavbar } from "./components/MobileNavbar";
 
@@ -28,7 +26,7 @@ const AppLayout = () => {
         <Route path="/profile" element={<Profile />} />
         <Route path="/search" element={<Search />} />
         <Route path="/publish" element={<Publish />} />
-        <Route path="/service/:id" element={<ServiceDetail />} /> {/* Nueva ruta */}
+        <Route path="/service/:id" element={<ServiceDetail />} /> 
         <Route path="*" element={<NotFound />} />
       </Routes>
       <MobileNavbar />
@@ -39,8 +37,7 @@ const AppLayout = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
+      {/* Notificaciones desactivadas */}
       <BrowserRouter>
         <AppLayout />
       </BrowserRouter>
