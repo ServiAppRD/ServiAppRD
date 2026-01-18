@@ -244,36 +244,36 @@ const Profile = () => {
 
   if (loading) return <div className="min-h-screen bg-white flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[#F97316]" /></div>;
 
-  // --- REWARDS VIEW ---
+  // --- REWARDS VIEW (LIGHT MODE) ---
   if (view === 'rewards') {
     return (
-      <div className="min-h-screen bg-gray-900 pb-20 pt-safe animate-fade-in text-white relative overflow-hidden">
+      <div className="min-h-screen bg-white pb-20 pt-safe animate-fade-in relative overflow-hidden">
         {/* Animated Background */}
-        <div className="absolute inset-0 z-0 opacity-20">
-          <div className="absolute top-10 left-10 w-32 h-32 bg-[#F97316] rounded-full blur-[80px] animate-pulse" />
-          <div className="absolute bottom-20 right-10 w-40 h-40 bg-purple-600 rounded-full blur-[80px] animate-pulse delay-1000" />
+        <div className="absolute inset-0 z-0 opacity-10">
+          <div className="absolute top-[-50px] right-[-50px] w-64 h-64 bg-[#F97316] rounded-full blur-[80px] animate-pulse" />
+          <div className="absolute bottom-[-50px] left-[-50px] w-64 h-64 bg-purple-400 rounded-full blur-[80px] animate-pulse delay-1000" />
         </div>
 
         <div className="relative z-10">
           <div className="p-4 flex items-center justify-between">
-            <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="text-white hover:bg-white/10 rounded-full">
+            <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="text-gray-500 hover:bg-gray-100 rounded-full">
               <ArrowLeft className="h-6 w-6" />
             </Button>
-            <h1 className="text-lg font-bold">Mis Recompensas</h1>
+            <h1 className="text-lg font-bold text-gray-900">Mis Recompensas</h1>
             <div className="w-10" />
           </div>
 
           <div className="flex flex-col items-center justify-center mt-4 space-y-6 px-6">
              {/* Boost Balance */}
              <div className="text-center space-y-2">
-                <div className="inline-flex items-center justify-center p-4 bg-white/10 backdrop-blur-md rounded-full border border-white/20 mb-2 shadow-lg shadow-orange-500/20">
-                  <Zap className="h-10 w-10 text-yellow-400 fill-yellow-400" />
+                <div className="inline-flex items-center justify-center p-4 bg-orange-50 rounded-full border border-orange-100 mb-2 shadow-sm">
+                  <Zap className="h-10 w-10 text-[#F97316] fill-[#F97316]" />
                 </div>
-                <h2 className="text-4xl font-black tracking-tight">{userStats?.boosts || 0}</h2>
-                <p className="text-gray-400 font-medium">Boosts Disponibles</p>
+                <h2 className="text-4xl font-black tracking-tight text-gray-900">{userStats?.boosts || 0}</h2>
+                <p className="text-gray-500 font-medium">Boosts Disponibles</p>
                 <Button 
                    variant="link" 
-                   className="text-[#F97316] text-xs h-auto p-0 hover:text-orange-400"
+                   className="text-[#F97316] text-xs h-auto p-0 hover:text-orange-700"
                    onClick={() => navigate('/publish')}
                 >
                   Usar en nueva publicación
@@ -281,21 +281,21 @@ const Profile = () => {
              </div>
 
              {/* Progress Card */}
-             <div className="w-full bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/10 text-center space-y-6">
+             <div className="w-full bg-white rounded-3xl p-6 border border-gray-100 shadow-xl text-center space-y-6 relative overflow-hidden">
                 <div className="flex items-center justify-center gap-2 text-[#F97316]">
                   <Hourglass className={`h-5 w-5 ${!canClaim ? "animate-spin-slow" : ""}`} />
                   <span className="font-bold tracking-widest text-sm uppercase">Tiempo Activo</span>
                 </div>
                 
                 <div className="space-y-2">
-                    <div className="font-mono text-4xl font-bold tracking-wider text-white tabular-nums">
-                      {formatTime(activeSeconds)} <span className="text-base text-gray-500 font-normal">/ 5h</span>
+                    <div className="font-mono text-4xl font-bold tracking-wider text-gray-900 tabular-nums">
+                      {formatTime(activeSeconds)} <span className="text-base text-gray-400 font-normal">/ 5h</span>
                     </div>
                     
                     {/* Progress Bar Visual */}
-                    <div className="h-4 w-full bg-gray-800 rounded-full overflow-hidden border border-white/5 relative">
+                    <div className="h-4 w-full bg-gray-100 rounded-full overflow-hidden border border-gray-200 relative">
                        {/* Striped Background effect */}
-                       <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent)', backgroundSize: '1rem 1rem'}}></div>
+                       <div className="absolute inset-0 opacity-30" style={{backgroundImage: 'linear-gradient(45deg,rgba(0,0,0,.05) 25%,transparent 25%,transparent 50%,rgba(0,0,0,.05) 50%,rgba(0,0,0,.05) 75%,transparent 75%,transparent)', backgroundSize: '1rem 1rem'}}></div>
                        <div 
                          className="h-full bg-gradient-to-r from-[#F97316] to-yellow-500 transition-all duration-1000 ease-out relative"
                          style={{ width: `${getProgressPercentage()}%` }}
@@ -305,12 +305,12 @@ const Profile = () => {
                        </div>
                     </div>
                     
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-500">
                       {canClaim ? "¡Meta alcanzada!" : `Faltan ${getRemainingTime()} de uso`}
                     </p>
                 </div>
 
-                <div className="bg-black/20 rounded-xl p-3 text-left text-xs text-gray-400 flex gap-3 items-start border border-white/5">
+                <div className="bg-orange-50 rounded-xl p-3 text-left text-xs text-orange-800 flex gap-3 items-start border border-orange-100">
                    <Clock className="h-4 w-4 text-[#F97316] shrink-0 mt-0.5" />
                    <p>El tiempo solo cuenta mientras utilizas la aplicación activamente. Úsala para buscar, ver perfiles o gestionar tu cuenta.</p>
                 </div>
@@ -321,7 +321,7 @@ const Profile = () => {
                   className={`w-full h-12 rounded-xl text-lg font-bold transition-all transform ${
                     canClaim 
                       ? "bg-[#F97316] hover:bg-orange-600 text-white shadow-lg shadow-orange-500/40 scale-105 animate-pulse" 
-                      : "bg-gray-800 text-gray-500 cursor-not-allowed"
+                      : "bg-gray-100 text-gray-400 cursor-not-allowed hover:bg-gray-200"
                   }`}
                 >
                   {claiming ? <Loader2 className="animate-spin" /> : canClaim ? "¡Reclamar Boost!" : "Sigue usándola..."}
@@ -333,8 +333,7 @@ const Profile = () => {
     );
   }
 
-  // ... (Rest of views: favorites, reputation, my-services, preview, edit, dashboard remain unchanged from previous step, keeping them here is redundant for the diff but critical for final file)
-  
+  // --- OTRAS VISTAS ---
   if (view === 'favorites') {
     return (
       <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
@@ -354,14 +353,105 @@ const Profile = () => {
       </div>
     );
   }
-  
-  // Minimal Dashboard Return (condensed for output limit, assuming structure persists)
+
+  if (view === 'reputation') {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
+        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
+           <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Reputación</h1></div>
+        </div>
+        <div className="p-4 text-center">
+            <div className="text-4xl font-bold mb-2 flex justify-center items-center gap-2"><Star className="h-8 w-8 text-[#F97316] fill-current"/>{averageRating.toFixed(1)}</div>
+            <div className="space-y-4 text-left mt-6">
+                {reviews.map(r => <div key={r.id} className="bg-white p-4 rounded-xl shadow-sm border"><p>"{r.comment}"</p></div>)}
+            </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (view === 'my-services') {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
+        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
+           <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Publicaciones</h1></div>
+           <Button size="sm" variant="outline" onClick={()=>navigate('/publish')}>+ Nueva</Button>
+        </div>
+        <div className="p-4 space-y-4">
+           {myServices.map(s => (
+             <div key={s.id} className="bg-white p-3 rounded-xl shadow-sm flex gap-3">
+               <img src={s.image_url} className="h-16 w-16 rounded object-cover" />
+               <div className="flex-1">
+                 <h3 className="font-bold truncate">{s.title}</h3>
+                 <p className="text-orange-500 text-sm font-bold">RD$ {s.price}</p>
+                 <div className="flex gap-2 mt-2">
+                   <Button size="sm" variant="outline" className="h-7 text-xs" onClick={()=>navigate(`/service/${s.id}`)}>Ver</Button>
+                   <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={()=>handleDeleteService(s.id)}><Trash2 className="h-3 w-3"/></Button>
+                 </div>
+               </div>
+             </div>
+           ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (view === 'preview') {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20 pt-safe relative">
+        <div className="absolute top-0 left-0 right-0 h-72 bg-gradient-to-br from-[#F97316] to-orange-600 rounded-b-[3rem] z-0 shadow-lg" />
+        <div className="relative z-10 px-4 pt-4">
+          <div className="flex justify-between items-center text-white mb-2">
+            <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="text-white hover:bg-white/20"><ArrowLeft className="h-6 w-6" /></Button>
+            <h1 className="text-lg font-bold">Mi Perfil</h1>
+            <Button variant="ghost" size="icon" onClick={() => setView('edit')} className="text-white hover:bg-white/20"><Edit2 className="h-5 w-5" /></Button>
+          </div>
+          <div className="bg-white rounded-3xl shadow-xl p-6 text-center mt-24 space-y-4 border border-gray-100">
+            <div className="relative -mt-20 mb-4 flex justify-center">
+               <div className="p-2 bg-white rounded-full shadow-sm">
+                  <Avatar className="h-28 w-28 border-4 border-orange-50"><AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${session?.user.email}`} /><AvatarFallback>U</AvatarFallback></Avatar>
+               </div>
+            </div>
+            <div><h2 className="text-2xl font-bold">{firstName} {lastName}</h2><p className="text-gray-500 text-sm">{session?.user.email}</p></div>
+            <div className="grid grid-cols-1 gap-4 pt-4 text-left border-t border-gray-50">
+               <div className="flex gap-3"><Phone className="text-orange-500 h-4 w-4"/><span>{phone || "No agregado"}</span></div>
+               <div className="flex gap-3"><MapPin className="text-orange-500 h-4 w-4"/><span>{city || "No agregado"}</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'edit') {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20 pt-safe">
+        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6"/></Button><h1 className="text-lg font-bold">Editar</h1></div>
+        <div className="p-6 max-w-md mx-auto space-y-4">
+            <div><Label>Nombre</Label><Input value={firstName} onChange={e=>setFirstName(e.target.value)}/></div>
+            <div><Label>Apellido</Label><Input value={lastName} onChange={e=>setLastName(e.target.value)}/></div>
+            <div><Label>Teléfono</Label><Input value={phone} onChange={e=>setPhone(e.target.value)}/></div>
+            <div><Label>Ciudad</Label><Select value={city} onValueChange={setCity}><SelectTrigger><SelectValue placeholder="Selecciona"/></SelectTrigger><SelectContent>{DR_CITIES.map(c=><SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
+            <Button onClick={updateProfile} className="w-full bg-[#F97316]">{updating ? <Loader2 className="animate-spin"/> : "Guardar"}</Button>
+        </div>
+      </div>
+    );
+  }
+
+  // --- DASHBOARD VIEW ---
   return (
     <div className="min-h-screen bg-gray-50 pb-24 pt-safe animate-fade-in">
-      <div className="bg-white pt-4 pb-4 px-6 shadow rounded-b-[2.5rem] relative z-10">
+      {/* Header */}
+      <div className="bg-white pt-4 pb-4 px-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] rounded-b-[2.5rem] relative z-10">
         <div className="flex justify-between items-center mb-6">
-          <div className="flex-1"><p className="text-gray-400 text-sm">Bienvenido,</p><h1 className="text-2xl font-bold">{profileData?.first_name || 'Usuario'}</h1></div>
-          <Avatar onClick={() => setView('preview')}><AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${session?.user.email}`} /><AvatarFallback>U</AvatarFallback></Avatar>
+          <div className="flex-1">
+            <p className="text-gray-400 text-sm font-medium">Bienvenido,</p>
+            <h1 className="text-2xl font-bold text-[#0F172A] truncate">{profileData?.first_name || 'Usuario'}</h1>
+          </div>
+          <Avatar className="h-12 w-12 border-2 border-orange-100 cursor-pointer" onClick={() => setView('preview')}>
+            <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${session?.user.email}`} />
+            <AvatarFallback>U</AvatarFallback>
+          </Avatar>
         </div>
         <div className="flex justify-between gap-2 pb-2">
           <QuickAction icon={User} label="Perfil" onClick={() => setView('preview')} />
@@ -370,23 +460,34 @@ const Profile = () => {
           <QuickAction icon={HelpCircle} label="Ayuda" />
         </div>
       </div>
+
       <div className="px-5 space-y-6 mt-6">
+        {/* Completion Card */}
         {completedSteps < totalSteps && (
-           <div className="bg-white rounded-2xl p-5 border shadow-sm">
+           <div className="bg-white rounded-2xl p-5 border border-orange-100 shadow-sm">
              <div className="mb-2"><h3 className="font-bold">Completa tu perfil</h3><p className="text-sm text-gray-500">{completedSteps}/{totalSteps} pasos</p></div>
              <Progress value={(completedSteps/totalSteps)*100} className="h-2 mb-3" />
              <Button onClick={()=>setView('edit')} className="w-full bg-[#F97316] h-9 text-sm">Terminar</Button>
            </div>
         )}
+
         <div className="space-y-6">
           <MenuSection title="Mis Servicios">
             <MenuItem icon={Briefcase} label="Mis Publicaciones" onClick={handleOpenMyServices} />
             <MenuItem icon={Heart} label="Mis Favoritos" badge={myFavorites.length > 0 ? String(myFavorites.length) : undefined} onClick={() => handleOpenFavorites()} />
           </MenuSection>
+
           <MenuSection title="Recompensas & Cuenta">
-            <MenuItem icon={Gift} label="Recompensas" badge={canClaim ? "!" : undefined} onClick={() => setView('rewards')} />
+            {/* NEW BUTTON FOR REWARDS */}
+            <MenuItem 
+              icon={Gift} 
+              label="Recompensas" 
+              badge={canClaim ? "!" : undefined}
+              onClick={() => setView('rewards')}
+            />
             <MenuItem icon={Bell} label="Notificaciones" />
           </MenuSection>
+
           <MenuSection title="Preferencias">
             <MenuItem icon={Settings} label="Configuración" onClick={() => setView('edit')} />
             <MenuItem icon={LogOut} label="Cerrar Sesión" onClick={handleSignOut} isDestructive />
