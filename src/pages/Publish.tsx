@@ -48,7 +48,6 @@ const CATEGORIES = [
 
 const BOOST_PLANS = [
   { id: 'free', label: "Estándar", duration: 0, price: 0, popular: false },
-  { id: 'test', label: "Test Flash (2 min)", duration: 0.033, price: 0, popular: false }, // 2 mins aprox
   { id: '1day', label: "Boost 1 Día", duration: 24, price: 299, popular: false },
   { id: '3days', label: "Boost 3 Días", duration: 72, price: 499, popular: true },
   { id: '7days', label: "Boost 7 Días", duration: 168, price: 999, popular: false },
@@ -479,7 +478,7 @@ const Publish = () => {
                  <div>
                     <h3 className={cn("font-bold text-base", isSelected ? "text-gray-900" : "text-gray-700")}>{plan.label}</h3>
                     <p className="text-xs text-gray-500">
-                      {plan.id === 'free' ? "Visibilidad estándar" : `Destacado por ${plan.duration > 1 ? plan.duration + ' horas' : '2 minutos'}`}
+                      {plan.id === 'free' ? "Visibilidad estándar" : `Destacado por ${plan.duration > 24 ? (plan.duration / 24) + ' días' : plan.duration + ' horas'}`}
                     </p>
                  </div>
               </div>
@@ -495,7 +494,7 @@ const Publish = () => {
       </div>
 
       {/* Pay with Boost Option - Only if a paid plan is selected */}
-      {formData.selectedPlanId !== 'free' && formData.selectedPlanId !== 'test' && userBoosts > 0 && (
+      {formData.selectedPlanId !== 'free' && userBoosts > 0 && (
           <div onClick={() => setUseBoostToPay(!useBoostToPay)} className={cn(
              "mt-4 p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all animate-fade-in", 
              useBoostToPay ? "bg-purple-50 border-purple-500" : "bg-white border-gray-200 hover:border-purple-200"
