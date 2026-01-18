@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft, MapPin, Share2, Heart, Check, Phone, ShieldCheck, Calendar, Star } from "lucide-react";
+import { Loader2, ArrowLeft, MapPin, Check, Phone, Calendar, Star } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { showError } from "@/utils/toast";
 
@@ -108,7 +108,7 @@ const ServiceDetail = () => {
           className="relative z-10 w-full h-auto max-h-[60vh] object-contain"
         />
         
-        {/* Navbar Overlay */}
+        {/* Navbar Overlay - Botones eliminados */}
         <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start z-20 pt-safe">
           <Button 
             size="icon" 
@@ -118,14 +118,6 @@ const ServiceDetail = () => {
           >
             <ArrowLeft className="h-6 w-6" />
           </Button>
-          <div className="flex gap-2">
-            <Button size="icon" variant="ghost" className="rounded-full bg-black/20 backdrop-blur-md text-white hover:bg-black/40">
-              <Share2 className="h-5 w-5" />
-            </Button>
-            <Button size="icon" variant="ghost" className="rounded-full bg-black/20 backdrop-blur-md text-white hover:bg-black/40">
-              <Heart className="h-5 w-5" />
-            </Button>
-          </div>
         </div>
       </div>
 
