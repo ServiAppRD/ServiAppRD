@@ -8,9 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { showSuccess, showError } from "@/utils/toast";
 import { 
   Loader2, LogOut, User, Phone, MapPin, Heart, 
-  HelpCircle, ChevronRight, CreditCard, Star, 
+  HelpCircle, ChevronRight, Star, 
   ArrowLeft, Bell, Shield, Settings, Edit2, Mail, CheckCircle2, AlertCircle,
-  Briefcase, Trash2, Eye, Award
+  Briefcase, Trash2, Eye, Award, Building2
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -738,7 +738,11 @@ const Profile = () => {
           </MenuSection>
 
           <MenuSection title="Cuenta">
-            <MenuItem icon={CreditCard} label="Métodos de Pago" />
+            <MenuItem 
+              icon={Building2} 
+              label="Agregar mi empresa" 
+              onClick={() => showSuccess("Próximamente: Perfiles de empresa")}
+            />
             <MenuItem icon={Bell} label="Notificaciones" />
           </MenuSection>
 
