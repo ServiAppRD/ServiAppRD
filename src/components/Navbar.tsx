@@ -20,27 +20,13 @@ export const Navbar = () => {
 
   return (
     <div className={cn(
-      "bg-white sticky top-0 z-50 shadow-sm transition-all duration-500 ease-in-out",
-      isScrolled ? "py-2" : "py-0"
+      "bg-white sticky top-0 z-50 transition-all duration-500 ease-in-out",
+      isScrolled ? "py-2 shadow-md" : "py-3 shadow-sm"
     )}>
       <div className="container mx-auto px-4">
         
-        {/* Logo Section - Collapses smoothly */}
-        <div className={cn(
-          "flex items-center gap-2 overflow-hidden transition-all duration-500 ease-in-out origin-top",
-          // Aumentamos max-h-32 a max-h-40 para acomodar el logo más grande
-          isScrolled 
-            ? "max-h-0 opacity-0 mb-0 translate-y-[-10px]" 
-            : "max-h-40 opacity-100 pt-2 mb-0 translate-y-0"
-        )}>
-          <a href="/" className="flex-shrink-0 mr-2 w-full flex justify-start">
-            {/* Aumentado de h-24 a h-32 */}
-            <img src="/logo.png" alt="ServiAPP" className="h-32 object-contain" />
-          </a>
-        </div>
-
         {/* Search Bar Row - Always visible */}
-        <div className="flex gap-2 items-center transition-all duration-500 pt-0">
+        <div className="flex gap-2 items-center transition-all duration-500">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <Input 
@@ -57,8 +43,8 @@ export const Navbar = () => {
         <div className={cn(
           "flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 transition-all duration-500 ease-in-out origin-top",
           isScrolled 
-            ? "max-h-0 opacity-0 py-0 translate-y-[-10px]" 
-            : "max-h-20 opacity-100 pb-2 pt-3 translate-y-0"
+            ? "max-h-0 opacity-0 py-0 translate-y-[-10px] mt-0" 
+            : "max-h-20 opacity-100 pb-1 pt-3 translate-y-0 mt-0"
         )}>
           {tags.map((tag, i) => (
             <button 
