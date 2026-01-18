@@ -1,28 +1,43 @@
 import { Navbar } from "@/components/Navbar";
 import { ServiceCard } from "@/components/ServiceCard";
 import { Button } from "@/components/ui/button";
-import { Wrench } from "lucide-react";
+import { Wrench, Loader2 } from "lucide-react";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { useNavigate } from "react-router-dom";
-
-// Empty arrays for now
-const recommendedServices: any[] = [];
-const featuredServices: any[] = [];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const SectionHeader = ({ title }: { title: string }) => (
   <div className="flex justify-between items-end mb-4 px-4">
     <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-    <a href="#" className="text-[#F97316] font-semibold text-sm hover:underline">Ver todo</a>
+    <a href="/search" className="text-[#F97316] font-semibold text-sm hover:underline">Ver todo</a>
   </div>
 );
 
 const Index = () => {
   const navigate = useNavigate();
 
+  // Fetch recent services from Supabase
+  const { data: recentServices, isLoading, refetch } = useQuery({
+    queryKey: ['recentServices'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('services')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Placeholder for other sections (could be filtered queries later)
+  const recommendedServices: any[] = [];
+  const featuredServices: any[] = [];
+
   const handleRefresh = async () => {
-    // Simulamos carga y recargamos la página para "traer nuevas opciones"
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    window.location.reload();
+    await refetch();
   };
 
   return (
@@ -32,7 +47,7 @@ const Index = () => {
 
         <main className="flex-1 space-y-8 py-6">
           
-          {/* Banner Promocional - Dark Theme with Orange Wrench */}
+          {/* Banner Promocional */}
           <div className="px-4">
               <div className="bg-gradient-to-r from-[#0F172A] to-[#1e293b] rounded-xl p-8 text-white relative overflow-hidden shadow-lg">
                 <div className="relative z-10 max-w-lg">
@@ -52,17 +67,28 @@ const Index = () => {
               </div>
           </div>
 
-          {/* Recommended Section */}
+          {/* New Section: Recently Published */}
           <section>
-            <SectionHeader title="Servicios Recomendados" />
+            <SectionHeader title="Publicados Recientemente" />
             <div className="flex overflow-x-auto gap-4 px-4 pb-4 no-scrollbar min-h-[100px]">
-              {recommendedServices.length > 0 ? (
-                recommendedServices.map((item) => (
-                  <ServiceCard key={item.id} {...item} />
+              {isLoading ? (
+                <div className="w-full flex justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-300" />
+                </div>
+              ) : recentServices && recentServices.length > 0 ? (
+                recentServices.map((item) => (
+                  <div key={item.id} onClick={() => navigate(`/service/${item.id}`)}>
+                    <ServiceCard 
+                      title={item.title} 
+                      price={`$${item.price}`} 
+                      image={item.image_url || "/placeholder.svg"} 
+                      badge={item.is_promoted ? { text: "Nuevo", color: "blue" } : undefined}
+                    />
+                  </div>
                 ))
               ) : (
                 <div className="w-full text-center py-8 text-gray-400 bg-gray-50 rounded-lg mx-4 border border-dashed">
-                  No hay servicios recomendados por el momento.
+                  No hay servicios recientes.
                 </div>
               )}
             </div>
@@ -71,8 +97,24 @@ const Index = () => {
           {/* Separator */}
           <div className="h-2 bg-gray-50" />
 
-          {/* Featured Section */}
+          {/* Recommended Section (Static/Placeholder for now) */}
           <section className="pt-6">
+            <SectionHeader title="Servicios Recomendados" />
+            <div className="flex overflow-x-auto gap-4 px-4 pb-4 no-scrollbar min-h-[100px]">
+              {recommendedServices.length > 0 ? (
+                recommendedServices.map((item) => (
+                  <ServiceCard key={item.id} {...item} />
+                ))
+              ) : (
+                <div className="w-full text-center py-8 text-gray-400 bg-gray-50 rounded-lg mx-4 border border-dashed">
+                  Pronto veremos recomendaciones para ti.
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Featured Section (Static/Placeholder for now) */}
+          <section>
             <SectionHeader title="Profesionales Destacados" />
             <div className="flex overflow-x-auto gap-4 px-4 pb-4 no-scrollbar min-h-[100px]">
               {featuredServices.length > 0 ? (
