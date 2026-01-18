@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft, MapPin, Share2, Heart, Check, Phone, ShieldCheck } from "lucide-react";
+import { Loader2, ArrowLeft, MapPin, Share2, Heart, Check, Phone, ShieldCheck, Calendar } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const ServiceDetail = () => {
@@ -48,6 +48,13 @@ const ServiceDetail = () => {
       </div>
     );
   }
+
+  // Formatear fecha
+  const formattedDate = new Date(service.created_at).toLocaleDateString('es-ES', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
 
   return (
     <div className="min-h-screen bg-white pb-24 animate-fade-in">
@@ -99,13 +106,19 @@ const ServiceDetail = () => {
             </div>
           </div>
           
-          <h1 className="text-2xl font-bold text-gray-900 leading-tight mb-2">
+          <h1 className="text-2xl font-bold text-gray-900 leading-tight mb-3">
             {service.title}
           </h1>
           
-          <div className="flex items-center text-gray-500 text-sm">
-            <MapPin className="h-4 w-4 mr-1 text-gray-400" />
-            {service.location || "Ubicación no especificada"}
+          <div className="flex flex-wrap gap-y-2 gap-x-4">
+            <div className="flex items-center text-gray-500 text-sm">
+              <MapPin className="h-4 w-4 mr-1.5 text-gray-400" />
+              {service.location || "Ubicación no especificada"}
+            </div>
+            <div className="flex items-center text-gray-500 text-sm">
+              <Calendar className="h-4 w-4 mr-1.5 text-gray-400" />
+              Publicado el {formattedDate}
+            </div>
           </div>
         </div>
 
