@@ -3,7 +3,7 @@ import { ServiceCard } from "@/components/ServiceCard";
 import { Button } from "@/components/ui/button";
 import { Wrench, Loader2, Info, Crown, Sparkles, Clock } from "lucide-react";
 import { PullToRefresh } from "@/components/PullToRefresh";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
@@ -23,7 +23,7 @@ const SectionHeader = ({ title, icon: Icon }: { title: string, icon?: any }) => 
        {Icon && <Icon className="h-5 w-5 text-[#F97316]" />}
        <h2 className="text-lg font-bold text-gray-900">{title}</h2>
     </div>
-    <a href="/search" className="text-[#F97316] font-semibold text-xs hover:underline bg-orange-50 px-2 py-1 rounded-md">Ver todo</a>
+    <Link to="/search" className="text-[#F97316] font-semibold text-xs hover:underline bg-orange-50 px-2 py-1 rounded-md">Ver todo</Link>
   </div>
 );
 
@@ -190,7 +190,7 @@ const Index = () => {
 
           {/* 2. Publicados Recientemente (Últimas 24h) */}
           <section className="-mt-2">
-            <SectionHeader title="Recién Publicados (24h)" icon={Clock} />
+            <SectionHeader title="Recién Publicados" icon={Clock} />
             <div className="flex overflow-x-auto gap-4 px-4 pb-4 no-scrollbar min-h-[100px]">
               {loadingRecent ? (
                 <div className="w-full flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-gray-300" /></div>
