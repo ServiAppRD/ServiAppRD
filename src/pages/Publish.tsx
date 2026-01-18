@@ -263,12 +263,12 @@ const Publish = () => {
 
   const renderStep1 = () => (
     <div className="space-y-6 animate-fade-in">
-      <div className="text-center space-y-2 mb-8">
+      <div className="text-center space-y-2 mb-4">
         <h2 className="text-2xl font-bold text-gray-900">Categoría</h2>
         <p className="text-gray-500">Elige la categoría que mejor describa tu servicio</p>
       </div>
       
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pb-10">
+      <div className="flex flex-col gap-3 pb-10">
         {CATEGORIES.map((cat) => {
           const Icon = cat.icon;
           const isSelected = formData.category === cat.name;
@@ -277,24 +277,31 @@ const Publish = () => {
               key={cat.name}
               onClick={() => setFormData({ ...formData, category: cat.name })}
               className={cn(
-                "flex flex-col items-center justify-center p-4 rounded-2xl cursor-pointer transition-all duration-200 border-2 aspect-square",
+                "flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all border",
                 isSelected 
-                  ? "border-[#F97316] bg-orange-50 scale-95 shadow-inner" 
-                  : "border-gray-100 bg-white hover:border-orange-200 hover:shadow-lg hover:-translate-y-1"
+                  ? "border-[#F97316] bg-orange-50 shadow-sm" 
+                  : "border-gray-100 bg-white hover:bg-gray-50"
               )}
             >
               <div className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-colors",
+                "w-10 h-10 rounded-full flex items-center justify-center transition-colors flex-shrink-0",
                 isSelected ? "bg-[#F97316] text-white" : "bg-gray-100 text-gray-500"
               )}>
-                <Icon className="h-6 w-6" />
+                <Icon className="h-5 w-5" />
               </div>
               <span className={cn(
-                "text-xs font-bold text-center leading-tight",
-                isSelected ? "text-[#F97316]" : "text-gray-600"
+                "font-medium text-base flex-1",
+                isSelected ? "text-[#F97316] font-bold" : "text-gray-700"
               )}>
                 {cat.name}
               </span>
+              
+              <div className={cn(
+                "w-5 h-5 rounded-full border flex items-center justify-center transition-all",
+                isSelected ? "border-[#F97316] bg-[#F97316]" : "border-gray-300"
+              )}>
+                {isSelected && <Check className="h-3 w-3 text-white" />}
+              </div>
             </div>
           );
         })}
