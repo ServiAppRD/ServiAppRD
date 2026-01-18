@@ -379,25 +379,24 @@ const Profile = () => {
         const uploadFile = async (file: File, prefix: string) => {
            const ext = file.name.split('.').pop();
            const path = `${session.user.id}/${prefix}_${Date.now()}.${ext}`;
+           
            const { error } = await supabase.storage.from('verification-docs').upload(path, file);
            if (error) throw error;
-           // En este caso generamos URLs firmadas (temporales) para que la Edge Function las pueda descargar
-           // O si el bucket es privado, usamos el service role key dentro de la edge function para descargarlas.
-           // Para simplificar aqui, usaremos createSignedUrl
-           const { data } = await supabase.storage.from('verification-docs').createSignedUrl(path, 300); // 5 mins
-           return data?.signedUrl;
+           
+           // Retornamos el path para que el backend genere URLs seguras
+           return path;
         };
 
-        const frontUrl = await uploadFile(frontId, 'front');
-        const backUrl = await uploadFile(backId, 'back');
-        const selfieUrl = await uploadFile(selfieId, 'selfie');
+        const frontPath = await uploadFile(frontId, 'front');
+        const backPath = await uploadFile(backId, 'back');
+        const selfiePath = await uploadFile(selfieId, 'selfie');
 
         // 2. Call Edge Function (AI Analysis)
         const { data, error } = await supabase.functions.invoke('verify-identity', {
            body: {
-              frontImage: frontUrl,
-              backImage: backUrl,
-              selfieImage: selfieUrl,
+              frontPath,
+              backPath,
+              selfiePath,
               userId: session.user.id
            }
         });

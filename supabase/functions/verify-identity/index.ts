@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { frontImage, backImage, selfieImage, userId } = await req.json()
+    const { frontPath, backPath, selfiePath, userId } = await req.json()
     
     // 1. Inicializar Supabase Admin
     const supabaseAdmin = createClient(
@@ -28,9 +28,21 @@ serve(async (req) => {
 
     if (!AI_KEY) throw new Error('AI_KEY no configurada')
 
-    console.log(`[verify-identity] Iniciando verificación para usuario: ${userId} usando gpt-5-nano`)
+    console.log(`[verify-identity] Iniciando verificación para usuario: ${userId}`)
 
-    // 2. Preparar el Prompt para la IA
+    // 2. Generar URLs temporales para la IA (Cortas, 60 segundos)
+    const getUrl = async (path: string, expire: number) => {
+       const { data } = await supabaseAdmin.storage.from('verification-docs').createSignedUrl(path, expire)
+       return data?.signedUrl
+    }
+
+    const frontImage = await getUrl(frontPath, 60)
+    const backImage = await getUrl(backPath, 60)
+    const selfieImage = await getUrl(selfiePath, 60)
+
+    if(!frontImage || !backImage || !selfieImage) throw new Error("Error generando links")
+
+    // 3. Preparar el Prompt para la IA
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -75,7 +87,7 @@ serve(async (req) => {
 
     console.log("[verify-identity] Resultado:", analysis)
 
-    // 3. Lógica de Decisión
+    // 4. Lógica de Decisión
     if (analysis.approved && analysis.confidence > 0.85) {
       // --- APROBADO ---
       await supabaseAdmin.from('profiles').update({ is_verified: true, verification_status: 'verified' }).eq('id', userId)
@@ -86,17 +98,22 @@ serve(async (req) => {
       )
 
     } else {
-      // --- REVISIÓN MANUAL (ENVIAR CORREO GMAIL) ---
+      // --- REVISIÓN MANUAL ---
       
       await supabaseAdmin.from('profiles').update({ verification_status: 'manual_review' }).eq('id', userId)
 
-      // Obtener datos del usuario para el correo
+      // Generar URLs de LARGA DURACIÓN (7 días) para el email
+      const frontEmail = await getUrl(frontPath, 60 * 60 * 24 * 7)
+      const backEmail = await getUrl(backPath, 60 * 60 * 24 * 7)
+      const selfieEmail = await getUrl(selfiePath, 60 * 60 * 24 * 7)
+
+      // Obtener datos del usuario
       const { data: profile } = await supabaseAdmin.from('profiles').select('first_name, last_name, email').eq('id', userId).single();
       const userName = profile ? `${profile.first_name} ${profile.last_name}` : 'Usuario Desconocido';
 
       if (GMAIL_USER && GMAIL_APP_PASSWORD) {
         try {
-          console.log("[verify-identity] Enviando correo vía Gmail...")
+          console.log("[verify-identity] Bot enviando correo a rodrigopepe281@gmail.com...")
           
           const transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -108,26 +125,27 @@ serve(async (req) => {
 
           const mailOptions = {
             from: `"ServiAPP Bot" <${GMAIL_USER}>`,
-            to: 'rodrigopepe281@gmail.com', // Correo destino fijo
+            to: 'rodrigopepe281@gmail.com', // El correo llega AQUÍ
             subject: `⚠️ Revisión Manual: ${userName}`,
             html: `
-              <h1>Solicitud de Verificación Manual</h1>
-              <p>La IA no pudo verificar automáticamente a este usuario.</p>
-              <ul>
-                <li><strong>Usuario ID:</strong> ${userId}</li>
-                <li><strong>Nombre:</strong> ${userName}</li>
-                <li><strong>Razón IA:</strong> ${analysis.reason}</li>
-                <li><strong>Confianza IA:</strong> ${analysis.confidence}</li>
-              </ul>
-              <h2>Evidencias:</h2>
-              <p>Haz clic para ver las imágenes:</p>
-              <ul>
-                <li><a href="${frontImage}">Cédula Frontal</a></li>
-                <li><a href="${backImage}">Cédula Trasera</a></li>
-                <li><a href="${selfieImage}">Selfie</a></li>
-              </ul>
-              <hr/>
-              <p>Para aprobar, ve al panel de Supabase y cambia el estado a 'verified' y is_verified a TRUE.</p>
+              <div style="font-family: sans-serif; padding: 20px;">
+                <h2 style="color: #F97316;">Solicitud de Verificación Manual</h2>
+                <p>La IA no pudo verificar automáticamente a este usuario.</p>
+                <div style="background: #f3f4f6; padding: 15px; border-radius: 8px;">
+                  <p><strong>Usuario ID:</strong> ${userId}</p>
+                  <p><strong>Nombre:</strong> ${userName}</p>
+                  <p><strong>Razón IA:</strong> ${analysis.reason}</p>
+                  <p><strong>Confianza IA:</strong> ${analysis.confidence}</p>
+                </div>
+                <h3>Evidencias (Links válidos por 7 días):</h3>
+                <ul>
+                  <li><a href="${frontEmail}" style="color: #F97316; font-weight: bold;">Ver Cédula Frontal</a></li>
+                  <li><a href="${backEmail}" style="color: #F97316; font-weight: bold;">Ver Cédula Trasera</a></li>
+                  <li><a href="${selfieEmail}" style="color: #F97316; font-weight: bold;">Ver Selfie</a></li>
+                </ul>
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+                <p style="font-size: 12px; color: #888;">Este correo fue enviado automáticamente por el sistema de verificación.</p>
+              </div>
             `,
           };
 
@@ -136,10 +154,9 @@ serve(async (req) => {
         
         } catch (emailError) {
           console.error("[verify-identity] Error enviando correo:", emailError);
-          // No fallamos la request completa si falla el email, solo logueamos
         }
       } else {
-        console.warn("[verify-identity] Credenciales GMAIL no configuradas. Correo omitido.");
+        console.warn("[verify-identity] Credenciales GMAIL no configuradas. No se pudo enviar el reporte.");
       }
 
       return new Response(
