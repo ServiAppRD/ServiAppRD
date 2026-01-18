@@ -19,7 +19,7 @@ import {
 import { showSuccess, showError } from "@/utils/toast";
 import { 
   ArrowLeft, ArrowRight, Camera, Check, ChevronRight, 
-  DollarSign, MapPin, Tag, Sparkles, UploadCloud, X, Loader2, Rocket, User
+  DollarSign, MapPin, Tag, Sparkles, UploadCloud, X, Loader2, Rocket, User, Zap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ServiceCard } from "@/components/ServiceCard";
@@ -46,6 +46,8 @@ const Publish = () => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [session, setSession] = useState<any>(null);
+  const [userBoosts, setUserBoosts] = useState(0);
+  const [useBoostToPay, setUseBoostToPay] = useState(false);
   
   // Dialogs State
   const [showPublishWelcome, setShowPublishWelcome] = useState(false);
@@ -77,6 +79,17 @@ const Publish = () => {
       }
       setSession(session);
 
+      // Fetch user boosts
+      const { data: stats } = await supabase
+        .from('user_stats')
+        .select('boosts')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+      
+      if (stats) {
+        setUserBoosts(stats.boosts || 0);
+      }
+
       // Verificar si el perfil está completo (SIN DIRECCIÓN)
       const { data: profile } = await supabase
         .from('profiles')
@@ -89,16 +102,14 @@ const Publish = () => {
           profile.first_name && 
           profile.last_name && 
           profile.phone && 
-          profile.city; // Dirección eliminada
+          profile.city; 
         
         if (!isComplete) {
-          // Si falta algo, bloqueamos inmediatamente
           setShowIncompleteProfileDialog(true);
           return;
         }
       }
 
-      // Check for first time publisher message only if profile is OK
       const hasSeenPublishMsg = localStorage.getItem("hasSeenPublishWelcome");
       if (!hasSeenPublishMsg) {
         setTimeout(() => setShowPublishWelcome(true), 500);
@@ -156,32 +167,15 @@ const Publish = () => {
 
   const checkProfileCompleteness = async () => {
     if (!session?.user?.id) return false;
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('first_name, last_name, phone, city')
-      .eq('id', session.user.id)
-      .single();
-
+    const { data: profile } = await supabase.from('profiles').select('first_name, last_name, phone, city').eq('id', session.user.id).single();
     if (profile) {
-      const isComplete = 
-        profile.first_name && 
-        profile.last_name && 
-        profile.phone && 
-        profile.city;
-
-      if (!isComplete) {
-        setShowIncompleteProfileDialog(true);
-        return false;
-      }
-      return true;
+      return !!(profile.first_name && profile.last_name && profile.phone && profile.city);
     }
     return false;
   };
 
   const handleSubmit = async () => {
     setLoading(true);
-    // 1. Doble chequeo al final
     const isProfileComplete = await checkProfileCompleteness();
     
     if (!isProfileComplete) {
@@ -190,32 +184,32 @@ const Publish = () => {
     }
 
     try {
-      let imageUrl = null;
+      // Si decide usar un boost y tiene saldo
+      if (formData.isPromoted && useBoostToPay) {
+        if (userBoosts > 0) {
+           const { error: boostError } = await supabase
+             .from('user_stats')
+             .update({ boosts: userBoosts - 1 })
+             .eq('user_id', session.user.id);
+           
+           if (boostError) throw new Error("Error al aplicar el boost");
+        } else {
+           throw new Error("No tienes suficientes boosts");
+        }
+      }
 
-      // 2. Subir imagen (Requerido)
+      let imageUrl = null;
       if (formData.imageFile) {
         const fileExt = formData.imageFile.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('service-images')
-          .upload(fileName, formData.imageFile, {
-            cacheControl: '3600',
-            upsert: false
-          });
-
+        const { error: uploadError } = await supabase.storage.from('service-images').upload(fileName, formData.imageFile, { cacheControl: '3600', upsert: false });
         if (uploadError) throw new Error("Error al subir la imagen.");
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('service-images')
-          .getPublicUrl(fileName);
-          
+        const { data: { publicUrl } } = supabase.storage.from('service-images').getPublicUrl(fileName);
         imageUrl = publicUrl;
       } else {
         throw new Error("No se ha seleccionado ninguna imagen.");
       }
 
-      // 3. Insertar en base de datos
       const { error } = await supabase.from('services').insert({
         user_id: session.user.id,
         title: formData.title,
@@ -249,28 +243,20 @@ const Publish = () => {
         <h2 className="text-2xl font-bold text-gray-900">Categoría del Servicio</h2>
         <p className="text-gray-500">Selecciona el área profesional que mejor describa tu servicio.</p>
       </div>
-      
       <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
         <div className="space-y-2">
           <Label className="text-base font-semibold">Categoría Principal</Label>
-          <Select 
-            value={formData.category} 
-            onValueChange={(val) => setFormData({ ...formData, category: val })}
-          >
+          <Select value={formData.category} onValueChange={(val) => setFormData({ ...formData, category: val })}>
             <SelectTrigger className="h-14 text-base bg-gray-50 border-gray-200 focus:ring-[#F97316] rounded-xl px-4">
               <SelectValue placeholder="Seleccionar categoría..." />
             </SelectTrigger>
             <SelectContent className="bg-white max-h-[300px]">
               {CATEGORIES.map((cat) => (
-                <SelectItem key={cat} value={cat} className="h-12 text-base cursor-pointer">
-                  {cat}
-                </SelectItem>
+                <SelectItem key={cat} value={cat} className="h-12 text-base cursor-pointer">{cat}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-        
-        {/* Mensaje cambiado a gris */}
         <div className="bg-gray-50 p-4 rounded-xl flex gap-3 text-gray-500 text-sm">
            <Tag className="h-5 w-5 flex-shrink-0 mt-0.5 text-gray-400" />
            <p>Elegir la categoría correcta ayuda a que los clientes te encuentren más rápido en las búsquedas.</p>
@@ -285,7 +271,6 @@ const Publish = () => {
         <h2 className="text-2xl font-bold text-gray-900">Foto de Portada</h2>
         <p className="text-gray-500">Una imagen profesional aumenta tus ventas</p>
       </div>
-
       <div className="relative aspect-square w-full max-w-sm mx-auto bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden hover:border-[#F97316] transition-colors group">
         {formData.imagePreview ? (
           <>
@@ -305,19 +290,7 @@ const Publish = () => {
             </div>
           </div>
         )}
-        <input 
-          type="file" 
-          accept="image/*" 
-          onChange={handleImageUpload}
-          className="absolute inset-0 opacity-0 cursor-pointer"
-        />
-      </div>
-
-      <div className="bg-gray-50 p-4 rounded-xl flex items-start gap-3 border border-gray-100">
-        <Camera className="h-5 w-5 text-gray-500 mt-0.5" />
-        <p className="text-sm text-gray-600">
-          Usa fotos reales de tus trabajos anteriores para generar más confianza.
-        </p>
+        <input type="file" accept="image/*" onChange={handleImageUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
       </div>
     </div>
   );
@@ -328,79 +301,14 @@ const Publish = () => {
         <h2 className="text-2xl font-bold text-gray-900">Detalles del servicio</h2>
         <p className="text-gray-500">Describe lo que ofreces claramente</p>
       </div>
-
       <div className="space-y-4">
-        <div className="space-y-2">
-          <Label>Título del servicio</Label>
-          <Input 
-            placeholder="Ej. Reparación de Aires Acondicionados"
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className="h-12 text-base focus-visible:ring-[#F97316]"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Descripción</Label>
-          <Textarea 
-            placeholder="Explica tu experiencia, herramientas, garantías..."
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            className="min-h-[100px] text-base focus-visible:ring-[#F97316]"
-          />
-        </div>
-
+        <div className="space-y-2"><Label>Título del servicio</Label><Input placeholder="Ej. Reparación de Aires Acondicionados" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="h-12 text-base focus-visible:ring-[#F97316]" /></div>
+        <div className="space-y-2"><Label>Descripción</Label><Textarea placeholder="Explica tu experiencia, herramientas, garantías..." value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="min-h-[100px] text-base focus-visible:ring-[#F97316]" /></div>
         <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Precio (Desde)</Label>
-            <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input 
-                type="number"
-                placeholder="0.00"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                className="pl-9 h-12 focus-visible:ring-[#F97316]"
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Ubicación</Label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input 
-                placeholder="Ej. Santo Domingo"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                className="pl-9 h-12 focus-visible:ring-[#F97316]"
-              />
-            </div>
-          </div>
+          <div className="space-y-2"><Label>Precio (Desde)</Label><div className="relative"><DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /><Input type="number" placeholder="0.00" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className="pl-9 h-12 focus-visible:ring-[#F97316]" /></div></div>
+          <div className="space-y-2"><Label>Ubicación</Label><div className="relative"><MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /><Input placeholder="Ej. Santo Domingo" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} className="pl-9 h-12 focus-visible:ring-[#F97316]" /></div></div>
         </div>
-
-        <div className="space-y-2 pt-2">
-          <Label>Características (Opcional)</Label>
-          <div className="flex gap-2">
-            <Input 
-              placeholder="Ej. A domicilio, Garantía 30 días..."
-              value={featureInput}
-              onChange={(e) => setFeatureInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && addFeature()}
-              className="h-11 focus-visible:ring-[#F97316]"
-            />
-            <Button onClick={addFeature} type="button" variant="secondary" className="bg-orange-100 text-[#F97316] hover:bg-orange-200">
-              <Check className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {formData.features.map((feat, i) => (
-              <span key={i} className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                {feat}
-                <button onClick={() => removeFeature(i)}><X className="h-3 w-3" /></button>
-              </span>
-            ))}
-          </div>
-        </div>
+        <div className="space-y-2 pt-2"><Label>Características (Opcional)</Label><div className="flex gap-2"><Input placeholder="Ej. A domicilio, Garantía 30 días..." value={featureInput} onChange={(e) => setFeatureInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addFeature()} className="h-11 focus-visible:ring-[#F97316]" /><Button onClick={addFeature} type="button" variant="secondary" className="bg-orange-100 text-[#F97316] hover:bg-orange-200"><Check className="h-4 w-4" /></Button></div><div className="flex flex-wrap gap-2 mt-2">{formData.features.map((feat, i) => (<span key={i} className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full flex items-center gap-1">{feat}<button onClick={() => removeFeature(i)}><X className="h-3 w-3" /></button></span>))}</div></div>
       </div>
     </div>
   );
@@ -413,8 +321,12 @@ const Publish = () => {
       </div>
 
       <div className="grid gap-4 pt-4">
+        {/* FREE OPTION */}
         <div 
-          onClick={() => setFormData({ ...formData, isPromoted: false })}
+          onClick={() => {
+            setFormData({ ...formData, isPromoted: false });
+            setUseBoostToPay(false);
+          }}
           className={cn(
             "p-5 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between",
             !formData.isPromoted 
@@ -433,6 +345,7 @@ const Publish = () => {
           </div>
         </div>
 
+        {/* PROMOTED OPTION */}
         <div 
           onClick={() => setFormData({ ...formData, isPromoted: true })}
           className={cn(
@@ -465,17 +378,29 @@ const Publish = () => {
               {formData.isPromoted && <div className="h-3 w-3 rounded-full bg-[#F97316]" />}
             </div>
           </div>
+
+          {/* BOOST PAYMENT OPTION (Visible only if Promoted is selected and has boosts) */}
+          {formData.isPromoted && userBoosts > 0 && (
+             <div 
+               onClick={(e) => { e.stopPropagation(); setUseBoostToPay(!useBoostToPay); }}
+               className={`mt-3 p-3 rounded-xl border flex items-center justify-between transition-colors ${useBoostToPay ? "bg-purple-100 border-purple-500" : "bg-white border-gray-200"}`}
+             >
+                <div className="flex items-center gap-2">
+                   <div className="bg-purple-600 text-white p-1 rounded-full"><Zap className="h-4 w-4" /></div>
+                   <div className="text-left">
+                     <p className="text-sm font-bold text-purple-900">Usar 1 Boost Gratis</p>
+                     <p className="text-xs text-purple-600">Tienes {userBoosts} disponibles</p>
+                   </div>
+                </div>
+                <div className={`h-5 w-5 rounded border ${useBoostToPay ? "bg-purple-600 border-purple-600" : "border-gray-300"} flex items-center justify-center`}>
+                    {useBoostToPay && <Check className="h-3 w-3 text-white" />}
+                </div>
+             </div>
+          )}
           
-          <ul className="space-y-2 ml-1">
-            <li className="flex items-center gap-2 text-sm text-gray-600">
-              <Check className="h-4 w-4 text-[#F97316]" /> Aparece primero en búsquedas
-            </li>
-            <li className="flex items-center gap-2 text-sm text-gray-600">
-              <Check className="h-4 w-4 text-[#F97316]" /> Etiqueta "Destacado"
-            </li>
-            <li className="flex items-center gap-2 text-sm text-gray-600">
-              <Check className="h-4 w-4 text-[#F97316]" /> 3x más visualizaciones
-            </li>
+          <ul className="space-y-2 ml-1 mt-3">
+            <li className="flex items-center gap-2 text-sm text-gray-600"><Check className="h-4 w-4 text-[#F97316]" /> Aparece primero en búsquedas</li>
+            <li className="flex items-center gap-2 text-sm text-gray-600"><Check className="h-4 w-4 text-[#F97316]" /> Etiqueta "Destacado"</li>
           </ul>
         </div>
       </div>
@@ -511,7 +436,11 @@ const Publish = () => {
         </div>
         <div className="flex justify-between text-sm pt-2 border-t">
           <span className="text-gray-500">Total a pagar</span>
-          <span className="font-bold text-[#F97316]">{formData.isPromoted ? "RD$ 250.00" : "Gratis"}</span>
+          <span className="font-bold text-[#F97316]">
+            {formData.isPromoted 
+              ? (useBoostToPay ? <span className="text-purple-600 flex items-center justify-end gap-1"><Zap className="h-3 w-3"/> 1 Boost (Gratis)</span> : "RD$ 250.00") 
+              : "Gratis"}
+          </span>
         </div>
       </div>
     </div>
@@ -519,79 +448,27 @@ const Publish = () => {
 
   return (
     <div className="min-h-screen bg-white pb-safe">
-
-      {/* Welcome/First Time Dialog */}
       <AlertDialog open={showPublishWelcome} onOpenChange={setShowPublishWelcome}>
         <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto">
           <AlertDialogHeader className="text-center">
-            <div className="mx-auto bg-orange-100 w-12 h-12 rounded-full flex items-center justify-center mb-2">
-              <Rocket className="h-6 w-6 text-[#F97316]" />
-            </div>
+            <div className="mx-auto bg-orange-100 w-12 h-12 rounded-full flex items-center justify-center mb-2"><Rocket className="h-6 w-6 text-[#F97316]" /></div>
             <AlertDialogTitle className="text-xl font-bold text-center">¡Sé de los primeros!</AlertDialogTitle>
-            <AlertDialogDescription className="text-center text-gray-600 mt-2">
-              <p className="mb-2">Al ser una app nueva, puede que el tráfico de usuarios sea bajo inicialmente.</p>
-              <p><strong>¡Pero no te preocupes!</strong></p>
-              <p className="mt-2 text-sm">
-                Publicar ahora te posicionará como uno de los <strong>expertos fundadores</strong> y tendrás mejor visibilidad cuando lleguen más usuarios en las próximas semanas.
-              </p>
-            </AlertDialogDescription>
+            <AlertDialogDescription className="text-center text-gray-600 mt-2">Publicar ahora te posicionará como uno de los expertos fundadores.</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={handleClosePublishWelcome} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl">
-              ¡Entendido, vamos a publicar!
-            </AlertDialogAction>
-          </AlertDialogFooter>
+          <AlertDialogFooter><AlertDialogAction onClick={handleClosePublishWelcome} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl">¡Entendido, vamos a publicar!</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Incomplete Profile Dialog */}
       <AlertDialog open={showIncompleteProfileDialog} onOpenChange={setShowIncompleteProfileDialog}>
         <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto">
-          <AlertDialogHeader className="text-center">
-            <div className="mx-auto bg-red-100 w-12 h-12 rounded-full flex items-center justify-center mb-2">
-              <User className="h-6 w-6 text-red-500" />
-            </div>
-            <AlertDialogTitle className="text-xl font-bold text-center">Perfil incompleto</AlertDialogTitle>
-            <AlertDialogDescription className="text-center text-gray-600 mt-2">
-              <p>Para garantizar la seguridad de nuestros usuarios, necesitamos que completes tu perfil antes de publicar un servicio.</p>
-              <p className="mt-2 text-sm font-medium">Te falta: Teléfono o Ciudad.</p>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col gap-2 space-y-2">
-            <AlertDialogAction 
-              onClick={() => navigate('/profile')} 
-              className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl"
-            >
-              Ir a completar perfil
-            </AlertDialogAction>
-            <AlertDialogCancel 
-              onClick={() => {
-                setShowIncompleteProfileDialog(false);
-                navigate('/');
-              }} 
-              className="w-full mt-2 rounded-xl border-gray-200"
-            >
-              Cancelar
-            </AlertDialogCancel>
-          </AlertDialogFooter>
+          <AlertDialogHeader className="text-center"><div className="mx-auto bg-red-100 w-12 h-12 rounded-full flex items-center justify-center mb-2"><User className="h-6 w-6 text-red-500" /></div><AlertDialogTitle className="text-xl font-bold text-center">Perfil incompleto</AlertDialogTitle><AlertDialogDescription className="text-center text-gray-600 mt-2">Te falta: Teléfono o Ciudad.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 space-y-2"><AlertDialogAction onClick={() => navigate('/profile')} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl">Ir a completar perfil</AlertDialogAction><AlertDialogCancel onClick={() => {setShowIncompleteProfileDialog(false);navigate('/');}} className="w-full mt-2 rounded-xl border-gray-200">Cancelar</AlertDialogCancel></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       <div className="px-4 py-4 flex items-center justify-between sticky top-0 bg-white z-10">
-        <Button variant="ghost" size="icon" onClick={step === 1 ? () => navigate(-1) : handleBack}>
-          <ArrowLeft className="h-6 w-6 text-gray-900" />
-        </Button>
-        <div className="flex gap-1">
-          {[1, 2, 3, 4, 5].map((s) => (
-            <div 
-              key={s} 
-              className={cn(
-                "h-1.5 rounded-full transition-all duration-300",
-                s === step ? "w-8 bg-[#F97316]" : s < step ? "w-4 bg-[#F97316]/40" : "w-2 bg-gray-100"
-              )} 
-            />
-          ))}
-        </div>
+        <Button variant="ghost" size="icon" onClick={step === 1 ? () => navigate(-1) : handleBack}><ArrowLeft className="h-6 w-6 text-gray-900" /></Button>
+        <div className="flex gap-1">{[1, 2, 3, 4, 5].map((s) => (<div key={s} className={cn("h-1.5 rounded-full transition-all duration-300",s === step ? "w-8 bg-[#F97316]" : s < step ? "w-4 bg-[#F97316]/40" : "w-2 bg-gray-100")} />))}</div>
         <div className="w-10" />
       </div>
 
@@ -606,18 +483,11 @@ const Publish = () => {
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 pb-safe z-20">
         <div className="max-w-lg mx-auto flex gap-3">
             {step === 5 ? (
-              <Button 
-                onClick={handleSubmit} 
-                disabled={loading}
-                className="w-full bg-[#F97316] hover:bg-orange-600 text-white h-14 rounded-2xl text-lg font-bold shadow-lg shadow-orange-200"
-              >
+              <Button onClick={handleSubmit} disabled={loading} className="w-full bg-[#F97316] hover:bg-orange-600 text-white h-14 rounded-2xl text-lg font-bold shadow-lg shadow-orange-200">
                 {loading ? <Loader2 className="animate-spin mr-2" /> : "Publicar Ahora"}
               </Button>
             ) : (
-              <Button 
-                onClick={handleNext} 
-                className="w-full bg-[#0F172A] hover:bg-slate-800 text-white h-14 rounded-2xl text-lg font-bold shadow-lg"
-              >
+              <Button onClick={handleNext} className="w-full bg-[#0F172A] hover:bg-slate-800 text-white h-14 rounded-2xl text-lg font-bold shadow-lg">
                 Siguiente <ChevronRight className="ml-2 h-5 w-5" />
               </Button>
             )}
