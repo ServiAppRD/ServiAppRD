@@ -93,8 +93,7 @@ const Login = () => {
         <ArrowLeft className="h-6 w-6" />
       </Button>
 
-      {/* Main Container - Centered on Desktop */}
-      <div className="w-full max-w-md animate-accordion-down mx-auto">
+      <div className="w-full max-w-md animate-accordion-down">
         
         {/* Header/Logo Section */}
         <div className="text-center space-y-2 mb-8">

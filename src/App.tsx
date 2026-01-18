@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
-import PublicProfile from "./pages/PublicProfile"; 
+import PublicProfile from "./pages/PublicProfile"; // Importar nuevo componente
 import Search from "./pages/Search";
 import Publish from "./pages/Publish";
 import ServiceDetail from "./pages/ServiceDetail"; 
@@ -19,29 +19,24 @@ const queryClient = new QueryClient();
 // Componente Layout para manejar el padding condicionalmente
 const AppLayout = () => {
   const location = useLocation();
-  // Ocultamos navbar en publicar, login y en el detalle del servicio (SOLO MÓVIL)
-  // En desktop, el header superior siempre está, así que el padding bottom no importa tanto para navbar, pero sí para el footer.
-  const hideNavbarMobile = ["/publish", "/login"].includes(location.pathname) || location.pathname.startsWith("/service/") || location.pathname.startsWith("/user/");
+  // Ocultamos navbar en publicar, login y en el detalle del servicio
+  const hideNavbar = ["/publish", "/login"].includes(location.pathname) || location.pathname.startsWith("/service/") || location.pathname.startsWith("/user/");
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      {/* Tracker funciona globalmente */}
+    <div className={hideNavbar ? "" : "pb-24"}>
+      {/* El Tracker funciona globalmente dentro del Router */}
       <ActivityTracker />
       
-      {/* CONTENEDOR PRINCIPAL: Centrado en Desktop */}
-      <div className={`flex-1 w-full max-w-7xl mx-auto bg-white min-h-screen shadow-2xl shadow-gray-200/50 ${hideNavbarMobile ? "" : "pb-24 md:pb-10"}`}>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/user/:id" element={<PublicProfile />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="/publish" element={<Publish />} />
-            <Route path="/service/:id" element={<ServiceDetail />} /> 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-      </div>
-
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/user/:id" element={<PublicProfile />} /> {/* Ruta Publica */}
+        <Route path="/search" element={<Search />} />
+        <Route path="/publish" element={<Publish />} />
+        <Route path="/service/:id" element={<ServiceDetail />} /> 
+        <Route path="*" element={<NotFound />} />
+      </Routes>
       <MobileNavbar />
     </div>
   );
@@ -53,6 +48,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        {/* SplashScreen se muestra sobre todo lo demás */}
         {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
         
         <BrowserRouter>
