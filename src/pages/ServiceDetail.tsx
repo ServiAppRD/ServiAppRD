@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft, MapPin, Check, Phone, Calendar, Star } from "lucide-react";
+import { Loader2, ArrowLeft, MapPin, Check, Phone, Calendar, Star, MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { showError } from "@/utils/toast";
 
@@ -60,6 +60,25 @@ const ServiceDetail = () => {
       window.location.href = `tel:${service.profiles.phone}`;
     } else {
       showError("Este usuario no tiene un teléfono público registrado.");
+    }
+  };
+
+  const handleWhatsApp = () => {
+    if (service?.profiles?.phone) {
+      // Limpiar el número (quitar guiones, espacios, etc.)
+      let cleanPhone = service.profiles.phone.replace(/\D/g, '');
+      
+      // Si el número tiene 10 dígitos (ej. 8091234567), asumimos que es RD y agregamos el 1
+      if (cleanPhone.length === 10) {
+        cleanPhone = '1' + cleanPhone;
+      }
+
+      const message = `Hola ${service.profiles.first_name}, vi tu servicio "${service.title}" en ServiAPP y me interesa más información.`;
+      const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+      
+      window.open(url, '_blank');
+    } else {
+      showError("Este usuario no tiene un teléfono registrado para WhatsApp.");
     }
   };
 
@@ -235,8 +254,11 @@ const ServiceDetail = () => {
           >
             <Phone className="mr-2 h-5 w-5" /> Llamar
           </Button>
-          <Button className="flex-[2] bg-[#F97316] hover:bg-orange-600 text-white h-12 rounded-xl font-bold shadow-lg shadow-orange-200">
-            Contratar Ahora
+          <Button 
+            className="flex-[2] bg-[#25D366] hover:bg-[#20bd5a] text-white h-12 rounded-xl font-bold shadow-lg shadow-green-100"
+            onClick={handleWhatsApp}
+          >
+            <MessageCircle className="mr-2 h-5 w-5" /> WhatsApp
           </Button>
         </div>
       </div>
