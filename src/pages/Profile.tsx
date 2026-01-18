@@ -10,7 +10,7 @@ import {
   Loader2, LogOut, User, Phone, MapPin, Heart, 
   HelpCircle, ChevronRight, Star, 
   ArrowLeft, Bell, Shield, Settings, Edit2, Mail, CheckCircle2, AlertCircle,
-  Briefcase, Trash2, Eye, Award, Building2
+  Briefcase, Trash2, Eye, Award, Gift
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -41,6 +41,9 @@ const Profile = () => {
   // but we remove it from completion logic and UI.
   const [address, setAddress] = useState(""); 
   const [updating, setUpdating] = useState(false);
+
+  // Reward Dialog State
+  const [showRewardDialog, setShowRewardDialog] = useState(false);
 
   // My Services Data
   const [myServices, setMyServices] = useState<any[]>([]);
@@ -654,6 +657,28 @@ const Profile = () => {
   // --- DASHBOARD VIEW ---
   return (
     <div className="min-h-screen bg-gray-50 pb-24 pt-safe animate-fade-in">
+      
+      {/* Reward Info Dialog */}
+      <AlertDialog open={showRewardDialog} onOpenChange={setShowRewardDialog}>
+        <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto">
+          <AlertDialogHeader className="text-center">
+            <div className="mx-auto bg-orange-100 w-12 h-12 rounded-full flex items-center justify-center mb-2">
+              <Gift className="h-6 w-6 text-[#F97316]" />
+            </div>
+            <AlertDialogTitle className="text-xl font-bold text-center">¡Gana recompensas!</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-gray-600 mt-2">
+              <p>Al utilizar la app y crear publicaciones, puedes ganar <strong>1 boost gratis</strong> para destacar una de tus publicaciones durante 1 hora.</p>
+              <p className="mt-2 text-xs text-gray-400">¡Mantente activo para recibir esta recompensa!</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowRewardDialog(false)} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl">
+              ¡Entendido!
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Header */}
       <div className="bg-white pt-4 pb-4 px-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] rounded-b-[2.5rem] relative z-10">
         <div className="flex justify-between items-center mb-6">
@@ -739,9 +764,9 @@ const Profile = () => {
 
           <MenuSection title="Cuenta">
             <MenuItem 
-              icon={Building2} 
-              label="Agregar mi empresa" 
-              onClick={() => showSuccess("Próximamente: Perfiles de empresa")}
+              icon={Gift} 
+              label="Recompensa" 
+              onClick={() => setShowRewardDialog(true)}
             />
             <MenuItem icon={Bell} label="Notificaciones" />
           </MenuSection>
