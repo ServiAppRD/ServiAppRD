@@ -37,7 +37,7 @@ export const MobileNavbar = () => {
   );
 
   return (
-    <div className="fixed bottom-6 left-4 right-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 py-3 px-4 flex justify-between items-center z-[999]">
+    <div className="md:hidden fixed bottom-6 left-4 right-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 py-3 px-4 flex justify-between items-center z-[999]">
       <NavItem icon={Home} label="Inicio" path="/" />
       <NavItem icon={Search} label="Buscar" path="/search" />
       <NavItem icon={PlusCircle} label="Publicar" path="/publish" />
