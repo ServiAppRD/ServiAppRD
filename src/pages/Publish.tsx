@@ -67,7 +67,7 @@ const Publish = () => {
   const [featureInput, setFeatureInput] = useState("");
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuthAndProfile = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
@@ -77,14 +77,38 @@ const Publish = () => {
       }
       setSession(session);
 
-      // Check for first time publisher message
+      // Verificar si el perfil está completo (INCLUYENDO DIRECCIÓN)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, phone, city, address')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profile) {
+        const isComplete = 
+          profile.first_name && 
+          profile.last_name && 
+          profile.phone && 
+          profile.city && 
+          profile.address; // Ahora verifica dirección también
+        
+        if (!isComplete) {
+          // Si falta algo, bloqueamos inmediatamente
+          showIncompleteProfileDialog(true); 
+          // O mostramos el diálogo en lugar de redirigir silenciosamente
+          setShowIncompleteProfileDialog(true);
+          return;
+        }
+      }
+
+      // Check for first time publisher message only if profile is OK
       const hasSeenPublishMsg = localStorage.getItem("hasSeenPublishWelcome");
       if (!hasSeenPublishMsg) {
         setTimeout(() => setShowPublishWelcome(true), 500);
       }
     };
 
-    checkAuth();
+    checkAuthAndProfile();
   }, [navigate]);
 
   const handleClosePublishWelcome = () => {
@@ -138,12 +162,18 @@ const Publish = () => {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('first_name, last_name, phone, city')
+      .select('first_name, last_name, phone, city, address')
       .eq('id', session.user.id)
       .single();
 
     if (profile) {
-      const isComplete = profile.first_name && profile.last_name && profile.phone && profile.city;
+      const isComplete = 
+        profile.first_name && 
+        profile.last_name && 
+        profile.phone && 
+        profile.city && 
+        profile.address;
+
       if (!isComplete) {
         setShowIncompleteProfileDialog(true);
         return false;
@@ -154,13 +184,13 @@ const Publish = () => {
   };
 
   const handleSubmit = async () => {
-    // 1. Verificar perfil completo ANTES de cualquier cosa
     setLoading(true);
+    // 1. Doble chequeo al final
     const isProfileComplete = await checkProfileCompleteness();
     
     if (!isProfileComplete) {
       setLoading(false);
-      return; // Detener ejecución si no está completo
+      return; 
     }
 
     try {
@@ -527,7 +557,7 @@ const Publish = () => {
             <AlertDialogTitle className="text-xl font-bold text-center">Perfil incompleto</AlertDialogTitle>
             <AlertDialogDescription className="text-center text-gray-600 mt-2">
               <p>Para garantizar la seguridad de nuestros usuarios, necesitamos que completes tu perfil antes de publicar un servicio.</p>
-              <p className="mt-2 text-sm font-medium">Te falta: Teléfono o Ciudad.</p>
+              <p className="mt-2 text-sm font-medium">Te falta: Teléfono, Ciudad o Dirección.</p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col gap-2 space-y-2">
@@ -537,7 +567,13 @@ const Publish = () => {
             >
               Ir a completar perfil
             </AlertDialogAction>
-            <AlertDialogCancel className="w-full mt-2 rounded-xl border-gray-200">
+            <AlertDialogCancel 
+              onClick={() => {
+                setShowIncompleteProfileDialog(false);
+                navigate('/');
+              }} 
+              className="w-full mt-2 rounded-xl border-gray-200"
+            >
               Cancelar
             </AlertDialogCancel>
           </AlertDialogFooter>
