@@ -16,7 +16,8 @@ const CATEGORIES = [
 
 const SearchPage = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  // Fixed: Destructuring both searchParams and setSearchParams
+  const [searchParams, setSearchParams] = useSearchParams();
   
   // Inicializar estado basado en URL params
   const initialSearch = searchParams.get("q") || "";
