@@ -123,10 +123,13 @@ export const ServiceCard = ({ id, title, price, image, badge }: ServiceCardProps
       </div>
 
       <div className="px-1">
-        <h3 className="font-medium text-gray-900 line-clamp-2 text-sm leading-snug h-10 mb-1 group-hover:text-[#F97316] transition-colors">
+        {/* Precio destacado arriba */}
+        <p className="font-bold text-base text-[#F97316] mb-0.5">{price}</p>
+        
+        {/* Título / Descripción abajo */}
+        <h3 className="font-medium text-gray-600 line-clamp-2 text-xs leading-snug h-8 group-hover:text-[#F97316] transition-colors">
           {title}
         </h3>
-        <p className="font-bold text-base text-gray-900">{price}</p>
       </div>
     </div>
   );
