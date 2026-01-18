@@ -9,6 +9,8 @@ import Publish from "./pages/Publish";
 import ServiceDetail from "./pages/ServiceDetail"; 
 import NotFound from "./pages/NotFound";
 import { MobileNavbar } from "./components/MobileNavbar";
+import { SplashScreen } from "@/components/SplashScreen";
+import { useState } from "react";
 
 const queryClient = new QueryClient();
 
@@ -34,15 +36,21 @@ const AppLayout = () => {
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      {/* Notificaciones desactivadas */}
-      <BrowserRouter>
-        <AppLayout />
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [showSplash, setShowSplash] = useState(true);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        {/* SplashScreen se muestra sobre todo lo demás */}
+        {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
+        
+        <BrowserRouter>
+          <AppLayout />
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
