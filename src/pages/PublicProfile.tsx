@@ -82,7 +82,10 @@ const PublicProfile = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-safe">
       {/* Header Background */}
-      <div className="bg-[#0F172A] h-48 relative rounded-b-[2rem]">
+      <div 
+        className="h-48 relative rounded-b-[2rem] transition-colors duration-500"
+        style={{ backgroundColor: profile.profile_color || '#0F172A' }}
+      >
          <Button 
             variant="ghost" 
             size="icon" 
@@ -99,7 +102,9 @@ const PublicProfile = () => {
            <div className="absolute -top-12 p-2 bg-white rounded-full">
              <Avatar className="h-24 w-24 border-2 border-gray-100">
                 <AvatarImage src={profile.avatar_url} />
-                <AvatarFallback className="text-2xl">{profile.first_name?.[0]}</AvatarFallback>
+                <AvatarFallback className="text-2xl font-bold bg-gray-100 text-gray-500">
+                    {profile.first_name?.[0]?.toUpperCase()}
+                </AvatarFallback>
              </Avatar>
            </div>
            

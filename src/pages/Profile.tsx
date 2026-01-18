@@ -9,16 +9,28 @@ import { showSuccess, showError } from "@/utils/toast";
 import { 
   Loader2, LogOut, User, Phone, MapPin, Heart, 
   HelpCircle, ChevronRight, Star, 
-  ArrowLeft, Bell, Settings, Edit2, Briefcase, Trash2, Camera, Gift, Zap, Clock, Hourglass
+  ArrowLeft, Bell, Settings, Edit2, Briefcase, Trash2, Camera, Gift, Zap, Clock, Hourglass, Palette
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ServiceCard } from "@/components/ServiceCard";
+import { cn } from "@/lib/utils";
 
 const DR_CITIES = [
   "Santo Domingo", "Santiago de los Caballeros", "San Francisco de Macorís", 
   "Higüey", "La Romana", "San Cristóbal", "San Pedro de Macorís", 
   "La Vega", "Puerto Plata", "Barahona", "Punta Cana", "Bávaro"
+];
+
+const PROFILE_COLORS = [
+  { name: "Original", value: "#0F172A" }, // Slate 900
+  { name: "Naranja", value: "#F97316" }, // Orange 500
+  { name: "Azul", value: "#3B82F6" },    // Blue 500
+  { name: "Verde", value: "#22C55E" },   // Green 500
+  { name: "Morado", value: "#A855F7" },  // Purple 500
+  { name: "Rosa", value: "#EC4899" },    // Pink 500
+  { name: "Rojo", value: "#EF4444" },    // Red 500
+  { name: "Teal", value: "#14B8A6" },    // Teal 500
 ];
 
 const REWARD_TARGET_SECONDS = 5 * 60 * 60; // 5 Horas
@@ -38,6 +50,7 @@ const Profile = () => {
   const [city, setCity] = useState("");
   const [address, setAddress] = useState(""); 
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [profileColor, setProfileColor] = useState("#0F172A");
   
   const [updating, setUpdating] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -95,7 +108,7 @@ const Profile = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('profiles')
-        .select('first_name, last_name, phone, city, address, avatar_url')
+        .select('first_name, last_name, phone, city, address, avatar_url, profile_color')
         .eq('id', userId)
         .single();
 
@@ -107,6 +120,7 @@ const Profile = () => {
         setCity(data.city || "");
         setAddress(data.address || "");
         setAvatarUrl(data.avatar_url || "");
+        setProfileColor(data.profile_color || "#0F172A");
         calculateCompletion(data);
       }
     } catch (error) {
@@ -189,6 +203,7 @@ const Profile = () => {
         city: city,
         address: address,
         avatar_url: avatarUrl,
+        profile_color: profileColor,
         updated_at: new Date().toISOString(),
       };
 
@@ -376,7 +391,10 @@ const Profile = () => {
   if (view === 'preview') {
     return (
       <div className="min-h-screen bg-gray-50 pb-20 pt-safe relative">
-        <div className="absolute top-0 left-0 right-0 h-72 bg-gradient-to-br from-[#F97316] to-orange-600 rounded-b-[3rem] z-0 shadow-lg" />
+        <div 
+          className="absolute top-0 left-0 right-0 h-72 rounded-b-[3rem] z-0 shadow-lg transition-colors duration-500" 
+          style={{ backgroundColor: profileColor }}
+        />
         <div className="relative z-10 px-4 pt-4">
           <div className="flex justify-between items-center text-white mb-2">
             <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="text-white hover:bg-white/20"><ArrowLeft className="h-6 w-6" /></Button>
@@ -386,13 +404,13 @@ const Profile = () => {
           <div className="bg-white rounded-3xl shadow-xl p-6 text-center mt-24 space-y-4 border border-gray-100">
             <div className="relative -mt-20 mb-4 flex justify-center">
                <div className="p-2 bg-white rounded-full shadow-sm">
-                  <ProfileAvatar size="xl" className="border-4 border-orange-50" />
+                  <ProfileAvatar size="xl" className="border-4 border-white" />
                </div>
             </div>
             <div><h2 className="text-2xl font-bold">{firstName} {lastName}</h2><p className="text-gray-500 text-sm">{session?.user.email}</p></div>
             <div className="grid grid-cols-1 gap-4 pt-4 text-left border-t border-gray-50">
-               <div className="flex gap-3"><Phone className="text-orange-500 h-4 w-4"/><span>{phone || "No agregado"}</span></div>
-               <div className="flex gap-3"><MapPin className="text-orange-500 h-4 w-4"/><span>{city || "No agregado"}</span></div>
+               <div className="flex gap-3"><Phone className="text-gray-400 h-4 w-4"/><span>{phone || "No agregado"}</span></div>
+               <div className="flex gap-3"><MapPin className="text-gray-400 h-4 w-4"/><span>{city || "No agregado"}</span></div>
             </div>
           </div>
         </div>
@@ -408,7 +426,7 @@ const Profile = () => {
           <h1 className="text-lg font-bold">Editar Perfil</h1>
         </div>
         
-        <div className="p-6 max-w-md mx-auto space-y-6">
+        <div className="p-6 max-w-md mx-auto space-y-8">
             
             {/* Avatar Upload Section */}
             <div className="flex flex-col items-center gap-3">
@@ -427,6 +445,25 @@ const Profile = () => {
                  />
                </div>
                <p className="text-xs text-gray-500">Toca el icono de cámara para cambiar tu foto</p>
+            </div>
+
+            {/* Profile Color Section */}
+            <div className="space-y-3">
+               <Label className="flex items-center gap-2"><Palette className="h-4 w-4"/> Color de Portada</Label>
+               <div className="flex flex-wrap gap-3">
+                  {PROFILE_COLORS.map((color) => (
+                    <button
+                      key={color.value}
+                      onClick={() => setProfileColor(color.value)}
+                      className={cn(
+                        "w-10 h-10 rounded-full border-2 transition-all shadow-sm",
+                        profileColor === color.value ? "border-black scale-110" : "border-transparent hover:scale-105"
+                      )}
+                      style={{ backgroundColor: color.value }}
+                      title={color.name}
+                    />
+                  ))}
+               </div>
             </div>
 
             <div className="space-y-4">
