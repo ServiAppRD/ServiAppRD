@@ -236,7 +236,7 @@ const Profile = () => {
                 <div className="flex-1 min-w-0 flex flex-col justify-between">
                   <div>
                     <h3 className="font-bold text-gray-900 truncate">{service.title}</h3>
-                    <p className="text-[#F97316] font-bold text-sm">${service.price}</p>
+                    <p className="text-[#F97316] font-bold text-sm">RD$ {service.price}</p>
                   </div>
                   
                   <div className="flex items-center gap-2 mt-2">

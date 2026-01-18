@@ -398,7 +398,7 @@ const Publish = () => {
               </div>
               <div>
                 <h3 className="font-bold text-lg text-gray-900">Destacado</h3>
-                <p className="text-[#F97316] font-bold">$5.00 <span className="text-gray-400 font-normal text-xs">/único pago</span></p>
+                <p className="text-[#F97316] font-bold">RD$ 250.00 <span className="text-gray-400 font-normal text-xs">/único pago</span></p>
               </div>
             </div>
             <div className={cn(
@@ -436,7 +436,7 @@ const Publish = () => {
         <div className="transform scale-110 pointer-events-none">
           <ServiceCard 
             title={formData.title}
-            price={`$${formData.price}`}
+            price={`RD$ ${formData.price}`}
             image={formData.imagePreview || ""}
             badge={formData.isPromoted ? { text: "Destacado", color: "orange" } : undefined}
           />
@@ -454,7 +454,7 @@ const Publish = () => {
         </div>
         <div className="flex justify-between text-sm pt-2 border-t">
           <span className="text-gray-500">Total a pagar</span>
-          <span className="font-bold text-[#F97316]">{formData.isPromoted ? "$5.00 USD" : "Gratis"}</span>
+          <span className="font-bold text-[#F97316]">{formData.isPromoted ? "RD$ 250.00" : "Gratis"}</span>
         </div>
       </div>
     </div>

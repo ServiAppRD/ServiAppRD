@@ -169,7 +169,7 @@ const SearchPage = () => {
                           {service.category}
                         </Badge>
                         <span className="text-[#F97316] font-bold text-sm whitespace-nowrap">
-                          ${service.price} <span className="text-[10px] text-gray-400 font-normal">/{service.price_unit || 'servicio'}</span>
+                          RD$ {service.price} <span className="text-[10px] text-gray-400 font-normal">/{service.price_unit || 'servicio'}</span>
                         </span>
                       </div>
                       <h3 className="font-bold text-gray-900 leading-tight mb-1 group-hover:text-[#F97316] transition-colors truncate">

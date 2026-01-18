@@ -129,7 +129,7 @@ const Index = () => {
                   <div key={item.id} onClick={() => navigate(`/service/${item.id}`)}>
                     <ServiceCard 
                       title={item.title} 
-                      price={`$${item.price}`} 
+                      price={`RD$ ${item.price}`} 
                       image={item.image_url || "/placeholder.svg"} 
                       badge={item.is_promoted ? { text: "Nuevo", color: "blue" } : undefined}
                     />

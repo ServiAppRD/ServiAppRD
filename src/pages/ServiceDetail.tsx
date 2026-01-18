@@ -98,7 +98,7 @@ const ServiceDetail = () => {
             </Badge>
             <div className="text-right">
               <span className="block text-2xl font-bold text-[#F97316]">
-                ${service.price}
+                RD$ {service.price}
               </span>
               {service.price_unit && (
                 <span className="text-xs text-gray-400 font-medium">/{service.price_unit}</span>
