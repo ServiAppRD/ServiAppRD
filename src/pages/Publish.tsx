@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showSuccess, showError } from "@/utils/toast";
 import { 
   ArrowLeft, ArrowRight, Camera, Check, ChevronRight, 
@@ -14,15 +15,20 @@ import { cn } from "@/lib/utils";
 import { ServiceCard } from "@/components/ServiceCard";
 
 const CATEGORIES = [
-  { id: "Plomería", icon: "🔧" },
-  { id: "Electricidad", icon: "⚡" },
-  { id: "Limpieza", icon: "🧹" },
-  { id: "Mecánica", icon: "🚗" },
-  { id: "Carpintería", icon: "🪚" },
-  { id: "Jardinería", icon: "🌿" },
-  { id: "Tecnología", icon: "💻" },
-  { id: "Belleza", icon: "💅" },
-  { id: "Otros", icon: "📦" }
+  "Plomería",
+  "Electricidad",
+  "Limpieza",
+  "Mecánica",
+  "Carpintería",
+  "Jardinería",
+  "Tecnología",
+  "Belleza y Estética",
+  "Construcción",
+  "Transporte",
+  "Educación",
+  "Salud y Bienestar",
+  "Eventos",
+  "Otros Servicios"
 ];
 
 const Publish = () => {
@@ -162,26 +168,35 @@ const Publish = () => {
 
   const renderStep1 = () => (
     <div className="space-y-6 animate-fade-in">
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-gray-900">Elige una categoría</h2>
-        <p className="text-gray-500">¿Qué tipo de servicio vas a ofrecer?</p>
+      <div className="text-center space-y-2 mb-8">
+        <h2 className="text-2xl font-bold text-gray-900">Categoría del Servicio</h2>
+        <p className="text-gray-500">Selecciona el área profesional que mejor describa tu servicio.</p>
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => setFormData({ ...formData, category: cat.id })}
-            className={cn(
-              "p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all duration-200",
-              formData.category === cat.id 
-                ? "border-[#F97316] bg-orange-50 text-[#F97316]" 
-                : "border-gray-100 bg-white text-gray-600 hover:border-orange-100"
-            )}
+      
+      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+        <div className="space-y-2">
+          <Label className="text-base font-semibold">Categoría Principal</Label>
+          <Select 
+            value={formData.category} 
+            onValueChange={(val) => setFormData({ ...formData, category: val })}
           >
-            <span className="text-3xl">{cat.icon}</span>
-            <span className="font-semibold text-sm">{cat.id}</span>
-          </button>
-        ))}
+            <SelectTrigger className="h-14 text-base bg-gray-50 border-gray-200 focus:ring-[#F97316] rounded-xl px-4">
+              <SelectValue placeholder="Seleccionar categoría..." />
+            </SelectTrigger>
+            <SelectContent className="bg-white max-h-[300px]">
+              {CATEGORIES.map((cat) => (
+                <SelectItem key={cat} value={cat} className="h-12 text-base cursor-pointer">
+                  {cat}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="bg-blue-50 p-4 rounded-xl flex gap-3 text-blue-700 text-sm">
+           <Tag className="h-5 w-5 flex-shrink-0 mt-0.5" />
+           <p>Elegir la categoría correcta ayuda a que los clientes te encuentren más rápido en las búsquedas.</p>
+        </div>
       </div>
     </div>
   );
@@ -189,8 +204,8 @@ const Publish = () => {
   const renderStep2 = () => (
     <div className="space-y-6 animate-fade-in">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-gray-900">Sube una portada</h2>
-        <p className="text-gray-500">Una buena foto atrae más clientes</p>
+        <h2 className="text-2xl font-bold text-gray-900">Foto de Portada</h2>
+        <p className="text-gray-500">Una imagen profesional aumenta tus ventas</p>
       </div>
 
       <div className="relative aspect-square w-full max-w-sm mx-auto bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden hover:border-[#F97316] transition-colors group">
@@ -207,7 +222,7 @@ const Publish = () => {
               <UploadCloud className="h-8 w-8" />
             </div>
             <div>
-              <p className="font-semibold text-gray-900">Toca para subir</p>
+              <p className="font-semibold text-gray-900">Subir imagen</p>
               <p className="text-xs text-gray-400">JPG, PNG (Max 5MB)</p>
             </div>
           </div>
@@ -220,10 +235,10 @@ const Publish = () => {
         />
       </div>
 
-      <div className="bg-blue-50 p-4 rounded-xl flex items-start gap-3">
-        <Camera className="h-5 w-5 text-blue-500 mt-0.5" />
-        <p className="text-sm text-blue-700">
-          Tip: Usa fotos reales de tus trabajos anteriores, evita imágenes de internet.
+      <div className="bg-gray-50 p-4 rounded-xl flex items-start gap-3 border border-gray-100">
+        <Camera className="h-5 w-5 text-gray-500 mt-0.5" />
+        <p className="text-sm text-gray-600">
+          Usa fotos reales de tus trabajos anteriores para generar más confianza.
         </p>
       </div>
     </div>
