@@ -116,9 +116,9 @@ const Index = () => {
               </div>
           </div>
 
-          {/* New Section: Recently Published & Recommended (Unified) */}
+          {/* New Section: Recently Published */}
           <section>
-            <SectionHeader title="Explora Servicios" />
+            <SectionHeader title="Publicados Recientemente" />
             <div className="flex overflow-x-auto gap-4 px-4 pb-4 no-scrollbar min-h-[100px]">
               {isLoading ? (
                 <div className="w-full flex justify-center py-8">
@@ -141,11 +141,22 @@ const Index = () => {
                   No hay servicios recientes.
                 </div>
               )}
-              
-              {/* Recommended Items (Placeholder logic) */}
-              {recommendedServices.map((item) => (
-                  <ServiceCard key={item.id} id={item.id} {...item} />
-              ))}
+            </div>
+          </section>
+
+          {/* Recommended Section - Close to previous one */}
+          <section className="-mt-2">
+            <SectionHeader title="Servicios Recomendados" />
+            <div className="flex overflow-x-auto gap-4 px-4 pb-4 no-scrollbar min-h-[100px]">
+              {recommendedServices.length > 0 ? (
+                recommendedServices.map((item) => (
+                  <ServiceCard key={item.id} {...item} />
+                ))
+              ) : (
+                <div className="w-full text-center py-8 text-gray-400 bg-gray-50 rounded-lg mx-4 border border-dashed">
+                  Pronto veremos recomendaciones para ti.
+                </div>
+              )}
             </div>
           </section>
 
