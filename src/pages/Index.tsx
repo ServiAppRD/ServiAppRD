@@ -1,11 +1,21 @@
 import { Navbar } from "@/components/Navbar";
 import { ServiceCard } from "@/components/ServiceCard";
 import { Button } from "@/components/ui/button";
-import { Wrench, Loader2 } from "lucide-react";
+import { Wrench, Loader2, Info } from "lucide-react";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const SectionHeader = ({ title }: { title: string }) => (
   <div className="flex justify-between items-end mb-4 px-4">
@@ -16,6 +26,22 @@ const SectionHeader = ({ title }: { title: string }) => (
 
 const Index = () => {
   const navigate = useNavigate();
+  const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
+
+  useEffect(() => {
+    // Verificar si el usuario ya vio el mensaje de bienvenida
+    const hasSeenWelcome = localStorage.getItem("hasSeenAppWelcome");
+    if (!hasSeenWelcome) {
+      // Pequeño delay para que no sea intrusivo inmediatamente
+      const timer = setTimeout(() => setShowWelcomeDialog(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleCloseWelcome = () => {
+    setShowWelcomeDialog(false);
+    localStorage.setItem("hasSeenAppWelcome", "true");
+  };
 
   // Fetch recent services from Supabase
   const { data: recentServices, isLoading, refetch } = useQuery({
@@ -44,6 +70,29 @@ const Index = () => {
     <PullToRefresh onRefresh={handleRefresh}>
       <div className="min-h-screen bg-white flex flex-col pb-20">
         <Navbar />
+
+        <AlertDialog open={showWelcomeDialog} onOpenChange={setShowWelcomeDialog}>
+          <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto">
+            <AlertDialogHeader className="text-center">
+              <div className="mx-auto bg-orange-100 w-12 h-12 rounded-full flex items-center justify-center mb-2">
+                <Info className="h-6 w-6 text-[#F97316]" />
+              </div>
+              <AlertDialogTitle className="text-xl font-bold text-center">¡Bienvenido a nuestra comunidad beta!</AlertDialogTitle>
+              <AlertDialogDescription className="text-center text-gray-600 mt-2">
+                <p className="mb-2">Esta aplicación es nueva y estamos creciendo día a día.</p>
+                <p>Es posible que al principio no encuentres muchos servicios cerca de ti, <strong>¡pero tú puedes ayudarnos!</strong></p>
+                <p className="mt-2 text-xs bg-gray-50 p-2 rounded-lg border border-gray-100">
+                  Si publicas un servicio, ayudas a que la comunidad crezca. Próximamente llegarán muchos más usuarios y clientes.
+                </p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction onClick={handleCloseWelcome} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl">
+                Entendido, ¡gracias!
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <main className="flex-1 space-y-8 py-6">
           

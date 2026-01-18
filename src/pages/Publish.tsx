@@ -6,10 +6,19 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { showSuccess, showError } from "@/utils/toast";
 import { 
   ArrowLeft, ArrowRight, Camera, Check, ChevronRight, 
-  DollarSign, MapPin, Tag, Sparkles, UploadCloud, X, Loader2
+  DollarSign, MapPin, Tag, Sparkles, UploadCloud, X, Loader2, Rocket
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ServiceCard } from "@/components/ServiceCard";
@@ -36,6 +45,7 @@ const Publish = () => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [session, setSession] = useState<any>(null);
+  const [showPublishWelcome, setShowPublishWelcome] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -60,7 +70,18 @@ const Publish = () => {
       }
       setSession(session);
     });
+
+    // Check for first time publisher message
+    const hasSeenPublishMsg = localStorage.getItem("hasSeenPublishWelcome");
+    if (!hasSeenPublishMsg) {
+      setTimeout(() => setShowPublishWelcome(true), 500);
+    }
   }, [navigate]);
+
+  const handleClosePublishWelcome = () => {
+    setShowPublishWelcome(false);
+    localStorage.setItem("hasSeenPublishWelcome", "true");
+  };
 
   const handleNext = () => {
     if (step === 1 && !formData.category) return showError("Selecciona una categoría");
@@ -441,6 +462,31 @@ const Publish = () => {
 
   return (
     <div className="min-h-screen bg-white pb-safe">
+
+      {/* Welcome/Warning Dialog */}
+      <AlertDialog open={showPublishWelcome} onOpenChange={setShowPublishWelcome}>
+        <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto">
+          <AlertDialogHeader className="text-center">
+            <div className="mx-auto bg-orange-100 w-12 h-12 rounded-full flex items-center justify-center mb-2">
+              <Rocket className="h-6 w-6 text-[#F97316]" />
+            </div>
+            <AlertDialogTitle className="text-xl font-bold text-center">¡Sé de los primeros!</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-gray-600 mt-2">
+              <p className="mb-2">Al ser una app nueva, puede que el tráfico de usuarios sea bajo inicialmente.</p>
+              <p><strong>¡Pero no te preocupes!</strong></p>
+              <p className="mt-2 text-sm">
+                Publicar ahora te posicionará como uno de los <strong>expertos fundadores</strong> y tendrás mejor visibilidad cuando lleguen más usuarios en las próximas semanas.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={handleClosePublishWelcome} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl">
+              ¡Entendido, vamos a publicar!
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="px-4 py-4 flex items-center justify-between sticky top-0 bg-white z-10">
         <Button variant="ghost" size="icon" onClick={step === 1 ? () => navigate(-1) : handleBack}>
           <ArrowLeft className="h-6 w-6 text-gray-900" />
