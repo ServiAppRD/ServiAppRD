@@ -89,29 +89,40 @@ const ServiceDetail = () => {
 
   return (
     <div className="min-h-screen bg-white pb-24 animate-fade-in">
-      {/* Header Image */}
-      <div className="relative h-72 w-full bg-gray-100">
+      {/* Header Image - Ajustado para mostrar imagen completa */}
+      <div className="relative w-full bg-black min-h-[300px] flex items-center justify-center overflow-hidden">
+        {/* Fondo borroso para efecto ambiental */}
+        <div 
+            className="absolute inset-0 opacity-50 blur-xl scale-110"
+            style={{ 
+                backgroundImage: `url(${service.image_url || "/placeholder.svg"})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+            }}
+        />
+        
+        {/* Imagen principal completa */}
         <img 
           src={service.image_url || "/placeholder.svg"} 
           alt={service.title} 
-          className="w-full h-full object-cover"
+          className="relative z-10 w-full h-auto max-h-[60vh] object-contain"
         />
         
         {/* Navbar Overlay */}
-        <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start bg-gradient-to-b from-black/50 to-transparent pt-safe">
+        <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start z-20 pt-safe">
           <Button 
             size="icon" 
             variant="ghost" 
-            className="rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/40"
+            className="rounded-full bg-black/20 backdrop-blur-md text-white hover:bg-black/40"
             onClick={() => navigate(-1)}
           >
             <ArrowLeft className="h-6 w-6" />
           </Button>
           <div className="flex gap-2">
-            <Button size="icon" variant="ghost" className="rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/40">
+            <Button size="icon" variant="ghost" className="rounded-full bg-black/20 backdrop-blur-md text-white hover:bg-black/40">
               <Share2 className="h-5 w-5" />
             </Button>
-            <Button size="icon" variant="ghost" className="rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/40">
+            <Button size="icon" variant="ghost" className="rounded-full bg-black/20 backdrop-blur-md text-white hover:bg-black/40">
               <Heart className="h-5 w-5" />
             </Button>
           </div>
