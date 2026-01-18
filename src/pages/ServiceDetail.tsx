@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, ArrowLeft, MapPin, Check, Phone, Calendar, Star, MessageCircle, Send } from "lucide-react";
+import { Loader2, ArrowLeft, MapPin, Check, Phone, Calendar, Star, MessageCircle, Send, Facebook, Instagram, Globe } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { showSuccess, showError } from "@/utils/toast";
 import { useState } from "react";
@@ -99,6 +99,12 @@ const ServiceDetail = () => {
     }
   };
 
+  const openSocial = (url: string) => {
+    if (!url) return;
+    const finalUrl = url.startsWith('http') ? url : `https://${url}`;
+    window.open(finalUrl, '_blank');
+  };
+
   const handleSubmitReview = async () => {
     if (newRating === 0) return showError("Por favor selecciona una calificación");
     setSubmitting(true);
@@ -153,6 +159,8 @@ const ServiceDetail = () => {
   }
 
   const formattedDate = new Date(service.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+  // Casting para evitar errores de tipo si social_media es null
+  const social = service.social_media as { facebook?: string; instagram?: string; website?: string } | null;
 
   return (
     <div className="min-h-screen bg-white pb-32 animate-fade-in">
@@ -224,6 +232,30 @@ const ServiceDetail = () => {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+        
+        {/* Redes Sociales - Mostrar solo si existen */}
+        {social && (social.facebook || social.instagram || social.website) && (
+          <div className="space-y-3">
+             <h3 className="font-bold text-gray-900 text-lg">Enlaces Externos</h3>
+             <div className="flex gap-3">
+                {social.facebook && (
+                  <Button variant="outline" className="flex-1 gap-2 border-blue-100 text-blue-600 hover:bg-blue-50" onClick={() => openSocial(social.facebook!)}>
+                    <Facebook className="h-4 w-4" /> Facebook
+                  </Button>
+                )}
+                {social.instagram && (
+                  <Button variant="outline" className="flex-1 gap-2 border-pink-100 text-pink-600 hover:bg-pink-50" onClick={() => openSocial(social.instagram!)}>
+                    <Instagram className="h-4 w-4" /> Instagram
+                  </Button>
+                )}
+                {social.website && (
+                  <Button variant="outline" className="flex-1 gap-2 border-gray-200 text-gray-600 hover:bg-gray-50" onClick={() => openSocial(social.website!)}>
+                    <Globe className="h-4 w-4" /> Web
+                  </Button>
+                )}
+             </div>
           </div>
         )}
 

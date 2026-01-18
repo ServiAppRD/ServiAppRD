@@ -19,7 +19,8 @@ import {
 import { showSuccess, showError } from "@/utils/toast";
 import { 
   ArrowLeft, ArrowRight, Camera, Check, ChevronRight, 
-  DollarSign, MapPin, Tag, Sparkles, UploadCloud, X, Loader2, Rocket, User, Zap
+  DollarSign, MapPin, Tag, Sparkles, UploadCloud, X, Loader2, Rocket, User, Zap,
+  Facebook, Instagram, Globe, Link as LinkIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ServiceCard } from "@/components/ServiceCard";
@@ -63,7 +64,10 @@ const Publish = () => {
     features: [] as string[],
     isPromoted: false,
     imagePreview: "" as string | null,
-    imageFile: null as File | null
+    imageFile: null as File | null,
+    facebook: "",
+    instagram: "",
+    website: ""
   });
 
   const [featureInput, setFeatureInput] = useState("");
@@ -210,6 +214,13 @@ const Publish = () => {
         throw new Error("No se ha seleccionado ninguna imagen.");
       }
 
+      // Preparar objeto social_media
+      const socialMedia = {
+        facebook: formData.facebook,
+        instagram: formData.instagram,
+        website: formData.website
+      };
+
       const { error } = await supabase.from('services').insert({
         user_id: session.user.id,
         title: formData.title,
@@ -219,7 +230,8 @@ const Publish = () => {
         location: formData.location,
         image_url: imageUrl,
         features: formData.features,
-        is_promoted: formData.isPromoted
+        is_promoted: formData.isPromoted,
+        social_media: socialMedia
       });
 
       if (error) throw error;
@@ -296,7 +308,7 @@ const Publish = () => {
   );
 
   const renderStep3 = () => (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in pb-10">
       <div className="text-center space-y-2">
         <h2 className="text-2xl font-bold text-gray-900">Detalles del servicio</h2>
         <p className="text-gray-500">Describe lo que ofreces claramente</p>
@@ -304,11 +316,37 @@ const Publish = () => {
       <div className="space-y-4">
         <div className="space-y-2"><Label>Título del servicio</Label><Input placeholder="Ej. Reparación de Aires Acondicionados" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="h-12 text-base focus-visible:ring-[#F97316]" /></div>
         <div className="space-y-2"><Label>Descripción</Label><Textarea placeholder="Explica tu experiencia, herramientas, garantías..." value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="min-h-[100px] text-base focus-visible:ring-[#F97316]" /></div>
+        
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2"><Label>Precio (Desde)</Label><div className="relative"><DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /><Input type="number" placeholder="0.00" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className="pl-9 h-12 focus-visible:ring-[#F97316]" /></div></div>
           <div className="space-y-2"><Label>Ubicación</Label><div className="relative"><MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /><Input placeholder="Ej. Santo Domingo" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} className="pl-9 h-12 focus-visible:ring-[#F97316]" /></div></div>
         </div>
-        <div className="space-y-2 pt-2"><Label>Características (Opcional)</Label><div className="flex gap-2"><Input placeholder="Ej. A domicilio, Garantía 30 días..." value={featureInput} onChange={(e) => setFeatureInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addFeature()} className="h-11 focus-visible:ring-[#F97316]" /><Button onClick={addFeature} type="button" variant="secondary" className="bg-orange-100 text-[#F97316] hover:bg-orange-200"><Check className="h-4 w-4" /></Button></div><div className="flex flex-wrap gap-2 mt-2">{formData.features.map((feat, i) => (<span key={i} className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full flex items-center gap-1">{feat}<button onClick={() => removeFeature(i)}><X className="h-3 w-3" /></button></span>))}</div></div>
+
+        <div className="space-y-2 pt-2">
+           <Label>Características (Opcional)</Label>
+           <div className="flex gap-2"><Input placeholder="Ej. A domicilio, Garantía 30 días..." value={featureInput} onChange={(e) => setFeatureInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addFeature()} className="h-11 focus-visible:ring-[#F97316]" /><Button onClick={addFeature} type="button" variant="secondary" className="bg-orange-100 text-[#F97316] hover:bg-orange-200"><Check className="h-4 w-4" /></Button></div>
+           <div className="flex flex-wrap gap-2 mt-2">{formData.features.map((feat, i) => (<span key={i} className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full flex items-center gap-1">{feat}<button onClick={() => removeFeature(i)}><X className="h-3 w-3" /></button></span>))}</div>
+        </div>
+
+        {/* Sección de Redes Sociales */}
+        <div className="pt-6 border-t border-gray-100">
+           <Label className="text-base font-semibold text-gray-900 mb-4 block">Redes Sociales (Opcional)</Label>
+           <div className="space-y-3">
+              <div className="relative">
+                 <Facebook className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-600" />
+                 <Input placeholder="Enlace a Facebook" value={formData.facebook} onChange={(e) => setFormData({...formData, facebook: e.target.value})} className="pl-10 h-11" />
+              </div>
+              <div className="relative">
+                 <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-pink-600" />
+                 <Input placeholder="Enlace a Instagram" value={formData.instagram} onChange={(e) => setFormData({...formData, instagram: e.target.value})} className="pl-10 h-11" />
+              </div>
+              <div className="relative">
+                 <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                 <Input placeholder="Otro enlace web" value={formData.website} onChange={(e) => setFormData({...formData, website: e.target.value})} className="pl-10 h-11" />
+              </div>
+           </div>
+           <p className="text-xs text-gray-400 mt-2">Los usuarios podrán ver estos iconos en tu publicación.</p>
+        </div>
       </div>
     </div>
   );
@@ -434,6 +472,16 @@ const Publish = () => {
           <span className="text-gray-500">Ubicación</span>
           <span className="font-medium text-gray-900">{formData.location}</span>
         </div>
+        {(formData.facebook || formData.instagram || formData.website) && (
+           <div className="flex justify-between text-sm">
+             <span className="text-gray-500">Redes</span>
+             <div className="flex gap-2">
+                {formData.facebook && <Facebook className="h-4 w-4 text-blue-600" />}
+                {formData.instagram && <Instagram className="h-4 w-4 text-pink-600" />}
+                {formData.website && <Globe className="h-4 w-4 text-gray-600" />}
+             </div>
+           </div>
+        )}
         <div className="flex justify-between text-sm pt-2 border-t">
           <span className="text-gray-500">Total a pagar</span>
           <span className="font-bold text-[#F97316]">
