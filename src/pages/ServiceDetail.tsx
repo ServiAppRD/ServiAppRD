@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, ArrowLeft, MapPin, Check, Phone, Calendar, Star, MessageCircle, Send, Facebook, Instagram, Globe } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { showSuccess, showError } from "@/utils/toast";
@@ -159,8 +160,9 @@ const ServiceDetail = () => {
   }
 
   const formattedDate = new Date(service.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
-  // Casting para evitar errores de tipo si social_media es null
   const social = service.social_media as { facebook?: string; instagram?: string; website?: string } | null;
+  // Parse service_areas safely
+  const serviceAreas = Array.isArray(service.service_areas) ? service.service_areas : [];
 
   return (
     <div className="min-h-screen bg-white pb-32 animate-fade-in">
@@ -184,12 +186,29 @@ const ServiceDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 leading-tight mb-3">{service.title}</h1>
           <div className="flex flex-wrap items-center gap-y-2 gap-x-3 text-sm">
              <Badge className="bg-orange-50 text-[#F97316] hover:bg-orange-100 border-0">{service.category}</Badge>
-            <div className="flex items-center text-gray-500"><MapPin className="h-4 w-4 mr-1 text-gray-400" />{service.location || "Ubicación no especificada"}</div>
+            <div className="flex items-center text-gray-500 font-medium"><MapPin className="h-4 w-4 mr-1 text-gray-400" />{service.location}</div>
             <div className="flex items-center text-gray-500"><Calendar className="h-4 w-4 mr-1 text-gray-400" />{formattedDate}</div>
           </div>
         </div>
 
         <div className="h-px bg-gray-100 w-full" />
+
+        {/* Áreas de Servicio - Nueva Sección */}
+        {serviceAreas.length > 0 && (
+          <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+             <h3 className="font-bold text-gray-900 text-sm mb-2 flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-[#F97316]" /> 
+                Cobertura en {service.location}
+             </h3>
+             <div className="flex flex-wrap gap-2">
+                {serviceAreas.map((area: string, i: number) => (
+                  <span key={i} className="bg-white border border-gray-200 text-gray-600 text-xs px-2.5 py-1 rounded-md shadow-sm font-medium">
+                    {area}
+                  </span>
+                ))}
+             </div>
+          </div>
+        )}
 
         {/* Perfil Clicable */}
         <div 
@@ -235,7 +254,7 @@ const ServiceDetail = () => {
           </div>
         )}
         
-        {/* Redes Sociales - Mostrar solo si existen */}
+        {/* Redes Sociales */}
         {social && (social.facebook || social.instagram || social.website) && (
           <div className="space-y-3">
              <h3 className="font-bold text-gray-900 text-lg">Enlaces Externos</h3>
