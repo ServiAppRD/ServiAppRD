@@ -21,17 +21,29 @@ import {
 import { showSuccess, showError } from "@/utils/toast";
 import { 
   ArrowLeft, Check, ChevronRight, 
-  DollarSign, Tag, Sparkles, UploadCloud, X, Loader2, Rocket, User, Zap,
-  Facebook, Instagram, Globe, Link as LinkIcon, MapPin
+  DollarSign, Sparkles, UploadCloud, X, Loader2, Rocket, User, Zap,
+  Facebook, Instagram, Globe, MapPin,
+  Wrench, Droplets, Car, Hammer, Leaf, Laptop, Scissors, HardHat, Truck, GraduationCap, Heart, Calendar, MoreHorizontal
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ServiceCard } from "@/components/ServiceCard";
 
-// Constantes de Datos
+// Constantes de Datos con Iconos
 const CATEGORIES = [
-  "Plomería", "Electricidad", "Limpieza", "Mecánica", "Carpintería", 
-  "Jardinería", "Tecnología", "Belleza y Estética", "Construcción", 
-  "Transporte", "Educación", "Salud y Bienestar", "Eventos", "Otros Servicios"
+  { name: "Plomería", icon: Droplets },
+  { name: "Electricidad", icon: Zap },
+  { name: "Limpieza", icon: Sparkles },
+  { name: "Mecánica", icon: Car },
+  { name: "Carpintería", icon: Hammer },
+  { name: "Jardinería", icon: Leaf },
+  { name: "Tecnología", icon: Laptop },
+  { name: "Belleza y Estética", icon: Scissors },
+  { name: "Construcción", icon: HardHat },
+  { name: "Transporte", icon: Truck },
+  { name: "Educación", icon: GraduationCap },
+  { name: "Salud y Bienestar", icon: Heart },
+  { name: "Eventos", icon: Calendar },
+  { name: "Otros Servicios", icon: MoreHorizontal }
 ];
 
 const DR_LOCATIONS: Record<string, string[]> = {
@@ -253,14 +265,39 @@ const Publish = () => {
     <div className="space-y-6 animate-fade-in">
       <div className="text-center space-y-2 mb-8">
         <h2 className="text-2xl font-bold text-gray-900">Categoría</h2>
-        <p className="text-gray-500">¿Qué tipo de servicio ofreces?</p>
+        <p className="text-gray-500">Elige la categoría que mejor describa tu servicio</p>
       </div>
-      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
-        <Label>Categoría Principal</Label>
-        <Select value={formData.category} onValueChange={(val) => setFormData({ ...formData, category: val })}>
-          <SelectTrigger className="h-14 bg-gray-50 border-gray-200 rounded-xl px-4"><SelectValue placeholder="Seleccionar..." /></SelectTrigger>
-          <SelectContent className="bg-white max-h-[300px]">{CATEGORIES.map((cat) => (<SelectItem key={cat} value={cat}>{cat}</SelectItem>))}</SelectContent>
-        </Select>
+      
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pb-10">
+        {CATEGORIES.map((cat) => {
+          const Icon = cat.icon;
+          const isSelected = formData.category === cat.name;
+          return (
+            <div
+              key={cat.name}
+              onClick={() => setFormData({ ...formData, category: cat.name })}
+              className={cn(
+                "flex flex-col items-center justify-center p-4 rounded-2xl cursor-pointer transition-all duration-200 border-2 aspect-square",
+                isSelected 
+                  ? "border-[#F97316] bg-orange-50 scale-95 shadow-inner" 
+                  : "border-gray-100 bg-white hover:border-orange-200 hover:shadow-lg hover:-translate-y-1"
+              )}
+            >
+              <div className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-colors",
+                isSelected ? "bg-[#F97316] text-white" : "bg-gray-100 text-gray-500"
+              )}>
+                <Icon className="h-6 w-6" />
+              </div>
+              <span className={cn(
+                "text-xs font-bold text-center leading-tight",
+                isSelected ? "text-[#F97316]" : "text-gray-600"
+              )}>
+                {cat.name}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -271,7 +308,7 @@ const Publish = () => {
         <h2 className="text-2xl font-bold text-gray-900">Foto de Portada</h2>
         <p className="text-gray-500">Sube una foto real de tu trabajo</p>
       </div>
-      <div className="relative aspect-square w-full max-w-sm mx-auto bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden hover:border-[#F97316] transition-colors group">
+      <div className="relative aspect-square w-full max-w-sm mx-auto bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden hover:border-[#F97316] transition-colors group cursor-pointer">
         {formData.imagePreview ? (
           <>
             <img src={formData.imagePreview} alt="Preview" className="w-full h-full object-cover" />
@@ -289,16 +326,16 @@ const Publish = () => {
     <div className="space-y-6 animate-fade-in pb-10">
       <div className="text-center space-y-2">
         <h2 className="text-2xl font-bold text-gray-900">Detalles y Ubicación</h2>
-        <p className="text-gray-500">¿Dónde puedes trabajar?</p>
+        <p className="text-gray-500">Describe tu servicio y dónde trabajas</p>
       </div>
       <div className="space-y-4">
-        <div className="space-y-2"><Label>Título</Label><Input placeholder="Ej. Plomero Experto 24/7" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="h-12" /></div>
-        <div className="space-y-2"><Label>Descripción</Label><Textarea placeholder="Detalles de tu servicio..." value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="min-h-[100px]" /></div>
+        <div className="space-y-2"><Label>Título del Anuncio</Label><Input placeholder="Ej. Plomero Experto 24/7" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="h-12 text-lg" /></div>
+        <div className="space-y-2"><Label>Descripción Detallada</Label><Textarea placeholder="Describe tu experiencia, herramientas, garantía, etc." value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="min-h-[120px]" /></div>
         
-        <div className="space-y-2"><Label>Precio Base (RD$)</Label><div className="relative"><DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /><Input type="number" placeholder="0.00" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className="pl-9 h-12" /></div></div>
+        <div className="space-y-2"><Label>Precio Base (RD$)</Label><div className="relative"><DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" /><Input type="number" placeholder="0.00" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className="pl-10 h-12 text-lg font-bold" /></div></div>
 
         {/* SELECCIÓN DE ZONA */}
-        <div className="bg-gray-50 p-4 rounded-xl space-y-4 border border-gray-200">
+        <div className="bg-gray-50 p-4 rounded-xl space-y-4 border border-gray-200 mt-4">
            <div className="flex items-center gap-2 mb-2"><MapPin className="h-5 w-5 text-[#F97316]" /><h3 className="font-bold text-gray-800">Zona de Cobertura</h3></div>
            
            <div className="space-y-2">
@@ -309,7 +346,7 @@ const Publish = () => {
                   setFormData({ ...formData, province: val, serviceAreas: [] }); // Resetear sectores al cambiar provincia
                 }}
               >
-                <SelectTrigger className="bg-white border-gray-300 h-11"><SelectValue placeholder="Selecciona provincia..." /></SelectTrigger>
+                <SelectTrigger className="bg-white border-gray-300 h-12"><SelectValue placeholder="Selecciona provincia..." /></SelectTrigger>
                 <SelectContent className="bg-white h-[300px]">
                   {Object.keys(DR_LOCATIONS).map((prov) => (<SelectItem key={prov} value={prov}>{prov}</SelectItem>))}
                 </SelectContent>
@@ -333,7 +370,7 @@ const Publish = () => {
                              key={sector} 
                              onClick={() => toggleSector(sector)}
                              className={cn(
-                               "flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all border",
+                               "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all border",
                                isSelected ? "bg-orange-50 border-orange-200" : "hover:bg-gray-50 border-transparent"
                              )}
                            >
@@ -352,18 +389,18 @@ const Publish = () => {
         </div>
 
         {/* Features & Social Media (Compactados) */}
-        <div className="space-y-2 pt-2">
-           <Label>Características Adicionales</Label>
+        <div className="space-y-2 pt-4">
+           <Label>Características (Opcional)</Label>
            <div className="flex gap-2"><Input placeholder="Ej. A domicilio" value={featureInput} onChange={(e) => setFeatureInput(e.target.value)} className="h-10" /><Button onClick={addFeature} variant="secondary" size="sm"><Check className="h-4 w-4" /></Button></div>
-           <div className="flex flex-wrap gap-2">{formData.features.map((f, i) => (<Badge key={i} variant="secondary" className="pr-1">{f}<X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => removeFeature(i)}/></Badge>))}</div>
+           <div className="flex flex-wrap gap-2 pt-2">{formData.features.map((f, i) => (<Badge key={i} variant="secondary" className="pr-1 py-1 px-3 text-xs">{f}<X className="h-3 w-3 ml-2 cursor-pointer text-gray-400 hover:text-red-500" onClick={() => removeFeature(i)}/></Badge>))}</div>
         </div>
 
-        <div className="pt-4 border-t">
+        <div className="pt-6 border-t mt-4">
            <Label>Redes Sociales (Opcional)</Label>
-           <div className="grid grid-cols-3 gap-2 mt-2">
-              <div className="relative"><Facebook className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-blue-600"/><Input placeholder="Facebook" value={formData.facebook} onChange={e=>setFormData({...formData, facebook: e.target.value})} className="pl-7 h-9 text-xs"/></div>
-              <div className="relative"><Instagram className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-pink-600"/><Input placeholder="Instagram" value={formData.instagram} onChange={e=>setFormData({...formData, instagram: e.target.value})} className="pl-7 h-9 text-xs"/></div>
-              <div className="relative"><Globe className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-500"/><Input placeholder="Web" value={formData.website} onChange={e=>setFormData({...formData, website: e.target.value})} className="pl-7 h-9 text-xs"/></div>
+           <div className="grid grid-cols-1 gap-3 mt-3">
+              <div className="relative"><Facebook className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-600"/><Input placeholder="Link de Facebook" value={formData.facebook} onChange={e=>setFormData({...formData, facebook: e.target.value})} className="pl-10 h-11"/></div>
+              <div className="relative"><Instagram className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-pink-600"/><Input placeholder="Link de Instagram" value={formData.instagram} onChange={e=>setFormData({...formData, instagram: e.target.value})} className="pl-10 h-11"/></div>
+              <div className="relative"><Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500"/><Input placeholder="Sitio Web" value={formData.website} onChange={e=>setFormData({...formData, website: e.target.value})} className="pl-10 h-11"/></div>
            </div>
         </div>
       </div>
