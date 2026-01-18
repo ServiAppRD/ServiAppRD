@@ -9,9 +9,9 @@ import { showSuccess, showError } from "@/utils/toast";
 import { 
   Loader2, LogOut, User, Phone, MapPin, Heart, 
   HelpCircle, ChevronRight, Star, 
-  ArrowLeft, Bell, Settings, Edit2, Briefcase, Trash2, Camera, Gift, Zap, Palette, Check,
-  Clock, TrendingUp, CreditCard, Sparkles, MoreVertical, Calendar, Crown,
-  BarChart3, ShieldCheck, Eye, MousePointerClick, CalendarRange
+  ArrowLeft, Settings, Edit2, Briefcase, Trash2, Camera, Gift, Zap, Check,
+  Clock, TrendingUp, Crown, BarChart3, ShieldCheck, Eye, MousePointerClick, CalendarRange,
+  UploadCloud, AlertTriangle, FileCheck
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -31,7 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { 
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
 
 const DR_CITIES = [
@@ -99,6 +99,12 @@ const Profile = () => {
   const [totalClicks, setTotalClicks] = useState(0);
   const [loadingMetrics, setLoadingMetrics] = useState(false);
 
+  // Verification State
+  const [frontId, setFrontId] = useState<File | null>(null);
+  const [backId, setBackId] = useState<File | null>(null);
+  const [selfieId, setSelfieId] = useState<File | null>(null);
+  const [verifying, setVerifying] = useState(false);
+
   // Boost Logic
   const [boostModalOpen, setBoostModalOpen] = useState(false);
   const [selectedServiceToBoost, setSelectedServiceToBoost] = useState<any>(null);
@@ -131,7 +137,6 @@ const Profile = () => {
     return () => clearInterval(interval);
   }, [session, view]);
 
-  // Cargar métricas REALES cuando cambia la vista o el rango
   useEffect(() => {
     if (view === 'metrics' && session?.user?.id) {
         fetchRealMetrics();
@@ -148,9 +153,8 @@ const Profile = () => {
         else if (metricsTimeRange === '7d') startDate.setDate(now.getDate() - 7);
         else if (metricsTimeRange === '30d') startDate.setDate(now.getDate() - 30);
         else if (metricsTimeRange === '1y') startDate.setFullYear(now.getFullYear() - 1);
-        else startDate = new Date(0); // Todo
+        else startDate = new Date(0); 
 
-        // Traer eventos crudos de la tabla de analíticas
         const { data: events, error } = await supabase
             .from('service_analytics')
             .select('event_type, created_at')
@@ -160,16 +164,12 @@ const Profile = () => {
 
         if (error) throw error;
 
-        // Procesar datos para gráfica y totales
         const viewsCount = events?.filter(e => e.event_type === 'view').length || 0;
         const clicksCount = events?.filter(e => e.event_type === 'click').length || 0;
         setTotalViews(viewsCount);
         setTotalClicks(clicksCount);
 
-        // Agrupar para la gráfica
         const groupedData = new Map();
-        
-        // Inicializar puntos vacíos para que la gráfica se vea bien
         const points = metricsTimeRange === '24h' ? 24 : metricsTimeRange === '7d' ? 7 : metricsTimeRange === '30d' ? 30 : 12;
         
         for (let i = 0; i < points; i++) {
@@ -182,14 +182,13 @@ const Profile = () => {
             } else if (metricsTimeRange === '7d' || metricsTimeRange === '30d') {
                 dateRef.setDate(now.getDate() - (points - 1 - i));
                 key = `${dateRef.getDate()}/${dateRef.getMonth() + 1}`;
-            } else { // 1y
+            } else { 
                 dateRef.setMonth(now.getMonth() - (points - 1 - i));
                 key = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][dateRef.getMonth()];
             }
             groupedData.set(key, { name: key, views: 0, clicks: 0 });
         }
 
-        // Rellenar con datos reales
         events?.forEach(e => {
             const date = new Date(e.created_at);
             let key = "";
@@ -228,7 +227,7 @@ const Profile = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('profiles')
-        .select('first_name, last_name, phone, city, address, avatar_url, profile_color')
+        .select('first_name, last_name, phone, city, address, avatar_url, profile_color, is_verified, verification_status')
         .eq('id', userId)
         .single();
 
@@ -329,7 +328,7 @@ const Profile = () => {
       const { error } = await supabase.from('profiles').upsert(updates);
       if (error) throw error;
       showSuccess("Perfil actualizado");
-      setProfileData(updates);
+      setProfileData({...profileData, ...updates});
       calculateCompletion(updates);
       setView('dashboard');
     } catch (error: any) {
@@ -367,6 +366,60 @@ const Profile = () => {
     }
   };
 
+  // --- IDENTITY VERIFICATION LOGIC ---
+  const handleVerificationSubmit = async () => {
+     if (!frontId || !backId || !selfieId) {
+        showError("Debes subir las 3 fotos requeridas");
+        return;
+     }
+
+     setVerifying(true);
+     try {
+        // 1. Upload Images
+        const uploadFile = async (file: File, prefix: string) => {
+           const ext = file.name.split('.').pop();
+           const path = `${session.user.id}/${prefix}_${Date.now()}.${ext}`;
+           const { error } = await supabase.storage.from('verification-docs').upload(path, file);
+           if (error) throw error;
+           // En este caso generamos URLs firmadas (temporales) para que la Edge Function las pueda descargar
+           // O si el bucket es privado, usamos el service role key dentro de la edge function para descargarlas.
+           // Para simplificar aqui, usaremos createSignedUrl
+           const { data } = await supabase.storage.from('verification-docs').createSignedUrl(path, 300); // 5 mins
+           return data?.signedUrl;
+        };
+
+        const frontUrl = await uploadFile(frontId, 'front');
+        const backUrl = await uploadFile(backId, 'back');
+        const selfieUrl = await uploadFile(selfieId, 'selfie');
+
+        // 2. Call Edge Function (AI Analysis)
+        const { data, error } = await supabase.functions.invoke('verify-identity', {
+           body: {
+              frontImage: frontUrl,
+              backImage: backUrl,
+              selfieImage: selfieUrl,
+              userId: session.user.id
+           }
+        });
+
+        if (error) throw error;
+
+        if (data.success) {
+           showSuccess("¡Identidad verificada exitosamente!");
+           setProfileData({ ...profileData, is_verified: true, verification_status: 'verified' });
+        } else {
+           showError("Verificación en revisión manual.");
+           setProfileData({ ...profileData, verification_status: 'manual_review' });
+        }
+
+     } catch (error: any) {
+        console.error(error);
+        showError("Error en el proceso de verificación. Intenta nuevamente.");
+     } finally {
+        setVerifying(false);
+     }
+  };
+
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
@@ -376,39 +429,27 @@ const Profile = () => {
   const getRemainingTime = () => formatTime(Math.max(0, REWARD_TARGET_SECONDS - activeSeconds));
 
   const fetchMyServices = async (uid: string) => {
-    // IMPORTANTE: Aquí solo mostramos los NO eliminados
     const { data } = await supabase.from('services')
         .select('*')
         .eq('user_id', uid)
-        .is('deleted_at', null) // Filtrar borrados lógicos
+        .is('deleted_at', null)
         .order('created_at', {ascending: false});
     setMyServices(data || []);
   };
   const fetchFavorites = async (uid?: string) => {
     const { data } = await supabase.from('favorites').select(`service_id, services:service_id(*)`).eq('user_id', uid || session.user.id);
-    setMyFavorites(data?.map((i:any) => i.services).filter((s:any) => s && !s.deleted_at) || []); // Filtrar también si el servicio fue borrado
+    setMyFavorites(data?.map((i:any) => i.services).filter((s:any) => s && !s.deleted_at) || []);
   };
   const fetchReputation = async () => {
     const { data } = await supabase.from('reviews').select('*').eq('reviewee_id', session.user.id);
     setReviews(data || []);
     setAverageRating(data && data.length > 0 ? data.reduce((a:any,b:any)=>a+b.rating,0)/data.length : 0);
   };
-  
-  // SOFT DELETE
   const handleDeleteService = async (id: string) => {
     if (!confirm("¿Estás seguro de eliminar este servicio? Desaparecerá de las búsquedas, pero mantendrás tus métricas históricas.")) return;
-    
-    // Soft Delete: Actualizar fecha de borrado en vez de borrar fila
     const { error } = await supabase.from('services').update({ deleted_at: new Date().toISOString() }).eq('id', id);
-    
-    if (error) {
-        showError("Error al eliminar");
-    } else {
-        setMyServices(prev => prev.filter(s => s.id !== id));
-        showSuccess("Servicio eliminado");
-    }
+    if (error) { showError("Error al eliminar"); } else { setMyServices(prev => prev.filter(s => s.id !== id)); showSuccess("Servicio eliminado"); }
   };
-
   const handleSignOut = async () => { await supabase.auth.signOut(); navigate("/"); };
   const handleOpenMyServices = () => { setView('my-services'); fetchMyServices(session.user.id); };
   const handleOpenFavorites = (uid?: string) => { setView('favorites'); fetchFavorites(uid); };
@@ -425,44 +466,112 @@ const Profile = () => {
     );
   };
 
+  const VerificationUploadBox = ({ label, file, setFile }: any) => (
+      <div className="space-y-2">
+          <Label className="text-gray-600 text-xs font-bold uppercase">{label}</Label>
+          <div 
+            onClick={() => document.getElementById(`file-${label}`)?.click()}
+            className={cn(
+                "border-2 border-dashed rounded-xl h-28 flex flex-col items-center justify-center cursor-pointer transition-all",
+                file ? "border-[#F97316] bg-orange-50" : "border-gray-200 hover:border-gray-300"
+            )}
+          >
+              {file ? (
+                  <div className="text-center">
+                      <FileCheck className="h-8 w-8 text-[#F97316] mx-auto mb-1" />
+                      <p className="text-xs text-[#F97316] font-medium truncate max-w-[150px] px-2">{file.name}</p>
+                  </div>
+              ) : (
+                  <div className="text-center text-gray-400">
+                      <UploadCloud className="h-8 w-8 mx-auto mb-1" />
+                      <p className="text-xs">Toca para subir</p>
+                  </div>
+              )}
+              <input 
+                  id={`file-${label}`} 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={(e) => e.target.files?.[0] && setFile(e.target.files[0])} 
+              />
+          </div>
+      </div>
+  );
+
   if (loading) return <div className="min-h-screen bg-white flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[#F97316]" /></div>;
 
   // --- VERIFICATION VIEW ---
   if (view === 'verification') {
+    const status = profileData?.verification_status || 'unverified';
+    
     return (
         <div className="min-h-screen bg-white pb-20 pt-safe animate-fade-in">
            <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
               <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Verificación</h1></div>
            </div>
-           <div className="p-8 flex flex-col items-center justify-center text-center space-y-6 mt-10">
-               <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-4">
-                   <ShieldCheck className="h-12 w-12 text-blue-500" />
-               </div>
-               <h2 className="text-2xl font-bold text-gray-900">Verifica tu Identidad</h2>
-               <p className="text-gray-500 max-w-xs">
-                   Aumenta la confianza de tus clientes verificando tu identidad. Obtendrás una insignia azul en tu perfil.
-               </p>
+           
+           <div className="p-6 flex flex-col items-center">
                
-               <div className="w-full max-w-sm bg-gray-50 p-4 rounded-xl text-left space-y-3 border border-gray-100">
-                   <div className="flex items-center gap-3">
-                       <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-blue-500 font-bold">1</div>
-                       <span className="text-sm font-medium">Foto de tu Cédula (Ambos lados)</span>
+               {status === 'verified' ? (
+                   <div className="text-center space-y-4 mt-10">
+                       <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto animate-pulse">
+                           <ShieldCheck className="h-12 w-12 text-green-600" />
+                       </div>
+                       <h2 className="text-2xl font-bold text-gray-900">¡Estás verificado!</h2>
+                       <p className="text-gray-500">Tu perfil ahora muestra la insignia de confianza.</p>
+                       <Button onClick={() => setView('dashboard')} className="mt-4 bg-[#F97316]">Volver al Perfil</Button>
                    </div>
-                   <div className="flex items-center gap-3">
-                       <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-blue-500 font-bold">2</div>
-                       <span className="text-sm font-medium">Foto Selfie sosteniendo la Cédula</span>
+               ) : status === 'manual_review' ? (
+                   <div className="text-center space-y-4 mt-10">
+                       <div className="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mx-auto">
+                           <Clock className="h-12 w-12 text-yellow-600" />
+                       </div>
+                       <h2 className="text-2xl font-bold text-gray-900">En Revisión</h2>
+                       <p className="text-gray-500 max-w-xs mx-auto">
+                           La IA no pudo verificar automáticamente tus documentos. Nuestro equipo (rodrigopepe281@gmail.com) ha recibido tu caso y lo revisará manualmente.
+                       </p>
+                       <Button variant="outline" onClick={() => setView('dashboard')} className="mt-4">Entendido</Button>
                    </div>
-               </div>
+               ) : (
+                   <>
+                       <div className="text-center space-y-4 mb-8">
+                           <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto border-2 border-[#F97316]/20">
+                               <ShieldCheck className="h-10 w-10 text-[#F97316]" />
+                           </div>
+                           <h2 className="text-xl font-bold text-gray-900">Validación de Identidad</h2>
+                           <p className="text-sm text-gray-500 max-w-xs mx-auto">
+                               Sube fotos claras de tu Cédula Dominicana y una selfie actual.
+                           </p>
+                       </div>
 
-               <Button className="w-full max-w-sm h-12 rounded-xl text-lg font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200">
-                   Iniciar Verificación
-               </Button>
+                       <div className="w-full max-w-md space-y-4">
+                           <div className="grid grid-cols-2 gap-4">
+                               <VerificationUploadBox label="Cédula Frontal" file={frontId} setFile={setFrontId} />
+                               <VerificationUploadBox label="Cédula Trasera" file={backId} setFile={setBackId} />
+                           </div>
+                           <VerificationUploadBox label="Selfie con Cédula" file={selfieId} setFile={setSelfieId} />
+                           
+                           <div className="bg-yellow-50 p-3 rounded-lg flex gap-2 items-start text-yellow-800 text-xs mt-2 border border-yellow-200">
+                               <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                               <p>Asegúrate de que el texto sea legible y no haya reflejos. La IA analizará los datos automáticamente.</p>
+                           </div>
+
+                           <Button 
+                               onClick={handleVerificationSubmit} 
+                               disabled={verifying || !frontId || !backId || !selfieId}
+                               className="w-full h-12 rounded-xl text-lg font-bold bg-[#F97316] hover:bg-orange-600 shadow-lg shadow-orange-200 mt-4"
+                           >
+                               {verifying ? <Loader2 className="animate-spin mr-2" /> : "Verificar Ahora"}
+                           </Button>
+                       </div>
+                   </>
+               )}
            </div>
         </div>
     );
   }
 
-  // --- METRICS VIEW (REAL DATA) ---
+  // --- METRICS VIEW ---
   if (view === 'metrics') {
     return (
         <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
@@ -496,7 +605,6 @@ const Profile = () => {
                    <div className="flex justify-center py-20"><Loader2 className="animate-spin h-10 w-10 text-gray-300" /></div>
                ) : (
                    <>
-                       {/* Summary Cards */}
                        <div className="grid grid-cols-2 gap-4">
                            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-1">
                                <div className="flex items-center gap-2 text-gray-400 text-xs font-medium uppercase tracking-wider">
@@ -512,7 +620,6 @@ const Profile = () => {
                            </div>
                        </div>
 
-                       {/* Chart */}
                        <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
                            <div className="flex justify-between items-center mb-6">
                                <h3 className="font-bold text-gray-900">Actividad</h3>
@@ -560,8 +667,6 @@ const Profile = () => {
     );
   }
 
-  // --- REPUTATION VIEW, MY SERVICES VIEW, FAVORITES VIEW, REWARDS VIEW, EDIT VIEW, PREVIEW VIEW... 
-  
   // --- REPUTATION VIEW ---
   if (view === 'reputation') {
     const starCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } as Record<number, number>;
@@ -719,7 +824,13 @@ const Profile = () => {
           <div className="flex justify-between items-center text-white mb-2"><Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="text-white hover:bg-white/20"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mi Perfil</h1><Button variant="ghost" size="icon" onClick={() => setView('edit')} className="text-white hover:bg-white/20"><Edit2 className="h-5 w-5" /></Button></div>
           <div className="bg-white rounded-3xl shadow-xl p-6 text-center mt-24 space-y-4 border border-gray-100">
             <div className="relative -mt-20 mb-4 flex justify-center"><div className="p-2 bg-white rounded-full shadow-sm"><ProfileAvatar size="xl" className="border-4 border-white" /></div></div>
-            <div><h2 className="text-2xl font-bold">{firstName} {lastName}</h2><p className="text-gray-500 text-sm">{session?.user.email}</p></div>
+            <div className="flex flex-col items-center">
+                <div className="flex items-center gap-1.5">
+                    <h2 className="text-2xl font-bold">{firstName} {lastName}</h2>
+                    {profileData?.is_verified && <ShieldCheck className="h-5 w-5 text-green-500" />}
+                </div>
+                <p className="text-gray-500 text-sm">{session?.user.email}</p>
+            </div>
             <div className="grid grid-cols-1 gap-4 pt-4 text-left border-t border-gray-50"><div className="flex gap-3"><Phone className="text-gray-400 h-4 w-4"/><span>{phone || "No agregado"}</span></div><div className="flex gap-3"><MapPin className="text-gray-400 h-4 w-4"/><span>{city || "No agregado"}</span></div></div>
           </div>
         </div>
@@ -734,7 +845,10 @@ const Profile = () => {
         <div className="flex justify-between items-center mb-6">
           <div className="flex-1">
             <p className="text-gray-400 text-sm font-medium">Bienvenido,</p>
-            <h1 className="text-2xl font-bold text-[#0F172A] truncate">{firstName || 'Usuario'}</h1>
+            <div className="flex items-center gap-1.5">
+                <h1 className="text-2xl font-bold text-[#0F172A] truncate max-w-[200px]">{firstName || 'Usuario'}</h1>
+                {profileData?.is_verified && <ShieldCheck className="h-5 w-5 text-green-500" />}
+            </div>
           </div>
           <div onClick={() => setView('preview')} className="cursor-pointer">
              <ProfileAvatar size="md" className="border-2 border-orange-100" />
