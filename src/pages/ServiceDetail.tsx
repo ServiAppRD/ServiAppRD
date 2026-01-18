@@ -3,14 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft, MapPin, Share2, Heart, Check, Phone, ShieldCheck, Calendar } from "lucide-react";
+import { Loader2, ArrowLeft, MapPin, Share2, Heart, Check, Phone, ShieldCheck, Calendar, Star } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const ServiceDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const { data: service, isLoading } = useQuery({
+  const { data: service, isLoading: isLoadingService } = useQuery({
     queryKey: ['service', id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -18,6 +18,7 @@ const ServiceDetail = () => {
         .select(`
           *,
           profiles (
+            id,
             first_name,
             last_name,
             phone,
@@ -32,7 +33,28 @@ const ServiceDetail = () => {
     }
   });
 
-  if (isLoading) {
+  // Fetch reputation separately
+  const { data: reputation } = useQuery({
+    queryKey: ['reputation', service?.user_id],
+    enabled: !!service?.user_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('rating')
+        .eq('reviewee_id', service.user_id);
+        
+      if (error || !data) return { avg: 0, count: 0 };
+      
+      const count = data.length;
+      const avg = count > 0 
+        ? data.reduce((acc, curr) => acc + curr.rating, 0) / count 
+        : 0;
+        
+      return { avg, count };
+    }
+  });
+
+  if (isLoadingService) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <Loader2 className="h-8 w-8 animate-spin text-[#F97316]" />
@@ -125,21 +147,36 @@ const ServiceDetail = () => {
         {/* Divider */}
         <div className="h-px bg-gray-100 w-full" />
 
-        {/* Author Info */}
+        {/* Author Info & Reputation */}
         <div className="flex items-center gap-3">
-          <Avatar className="h-12 w-12 border border-gray-100">
+          <Avatar className="h-14 w-14 border border-gray-100">
             <AvatarImage src={service.profiles?.avatar_url} />
             <AvatarFallback className="bg-orange-100 text-[#F97316] font-bold">
               {service.profiles?.first_name?.[0] || 'U'}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <p className="text-sm font-medium text-gray-400">Publicado por</p>
-            <h3 className="font-bold text-gray-900">
+            <p className="text-xs font-medium text-gray-400 uppercase">Publicado por</p>
+            <h3 className="font-bold text-gray-900 text-lg leading-tight">
               {service.profiles?.first_name} {service.profiles?.last_name}
             </h3>
+            
+            {/* Reputation Display */}
+            <div className="mt-1">
+               {reputation && reputation.count > 0 ? (
+                 <div className="flex items-center gap-1">
+                   <Star className="h-4 w-4 text-[#F97316] fill-current" />
+                   <span className="font-bold text-gray-900">{reputation.avg.toFixed(1)}</span>
+                   <span className="text-gray-400 text-xs">({reputation.count} reseñas)</span>
+                 </div>
+               ) : (
+                 <p className="text-xs text-blue-500 font-medium bg-blue-50 inline-block px-2 py-0.5 rounded-full">
+                   Es nuevo en la app y no tiene reseñas
+                 </p>
+               )}
+            </div>
           </div>
-          <Button size="icon" className="rounded-full bg-green-50 text-green-600 hover:bg-green-100 h-10 w-10 shadow-sm">
+          <Button size="icon" className="rounded-full bg-green-50 text-green-600 hover:bg-green-100 h-12 w-12 shadow-sm">
             <Phone className="h-5 w-5" />
           </Button>
         </div>

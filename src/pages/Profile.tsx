@@ -8,9 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { showSuccess, showError } from "@/utils/toast";
 import { 
   Loader2, LogOut, User, Phone, MapPin, Heart, 
-  HelpCircle, ChevronRight, CreditCard, Gift, 
+  HelpCircle, ChevronRight, CreditCard, Star, 
   ArrowLeft, Bell, Shield, Settings, Edit2, Mail, CheckCircle2, AlertCircle,
-  Briefcase, Trash2, Eye
+  Briefcase, Trash2, Eye, Award
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,7 +26,7 @@ const DR_CITIES = [
 const Profile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'dashboard' | 'edit' | 'preview' | 'my-services'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'edit' | 'preview' | 'my-services' | 'reputation'>('dashboard');
   const [session, setSession] = useState<any>(null);
   
   // Profile Data
@@ -41,6 +41,11 @@ const Profile = () => {
   // My Services Data
   const [myServices, setMyServices] = useState<any[]>([]);
   const [loadingServices, setLoadingServices] = useState(false);
+
+  // Reputation Data
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [averageRating, setAverageRating] = useState(0);
+  const [loadingReputation, setLoadingReputation] = useState(false);
 
   // Completion Logic (Steps)
   const [completedSteps, setCompletedSteps] = useState(0);
@@ -155,6 +160,31 @@ const Profile = () => {
     setLoadingServices(false);
   };
 
+  const fetchReputation = async () => {
+    if (!session?.user?.id) return;
+    setLoadingReputation(true);
+    
+    // Fetch reviews where I am the reviewee
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*')
+      .eq('reviewee_id', session.user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error(error);
+    } else {
+      setReviews(data || []);
+      if (data && data.length > 0) {
+        const sum = data.reduce((acc, curr) => acc + curr.rating, 0);
+        setAverageRating(sum / data.length);
+      } else {
+        setAverageRating(0);
+      }
+    }
+    setLoadingReputation(false);
+  };
+
   const handleDeleteService = async (serviceId: string) => {
     const { error } = await supabase
       .from('services')
@@ -179,10 +209,91 @@ const Profile = () => {
     fetchMyServices();
   };
 
+  const handleOpenReputation = () => {
+    setView('reputation');
+    fetchReputation();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-[#F97316]" />
+      </div>
+    );
+  }
+
+  // --- REPUTATION VIEW ---
+  if (view === 'reputation') {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
+        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="hover:bg-orange-50 hover:text-[#F97316]">
+              <ArrowLeft className="h-6 w-6" />
+            </Button>
+            <h1 className="text-lg font-bold">Mi Reputación</h1>
+          </div>
+        </div>
+
+        <div className="p-4 space-y-6">
+          {loadingReputation ? (
+            <div className="flex justify-center py-10">
+              <Loader2 className="h-8 w-8 animate-spin text-gray-300" />
+            </div>
+          ) : (
+            <>
+              {/* Header Stats */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center">
+                {reviews.length > 0 ? (
+                  <>
+                    <div className="flex justify-center items-center gap-1 mb-2">
+                      <Star className="h-8 w-8 text-[#F97316] fill-current" />
+                      <span className="text-4xl font-bold text-gray-900">{averageRating.toFixed(1)}</span>
+                    </div>
+                    <p className="text-gray-500 text-sm">Basado en {reviews.length} reseñas</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Award className="h-8 w-8 text-[#F97316]" />
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">Sin calificaciones aún</h3>
+                    <p className="text-sm text-gray-500">
+                      Es normal si eres nuevo. Completa trabajos para que tus clientes te califiquen.
+                    </p>
+                  </>
+                )}
+              </div>
+
+              {/* Reviews List */}
+              <div className="space-y-4">
+                <h3 className="font-bold text-gray-900 px-1">Comentarios recientes</h3>
+                {reviews.length > 0 ? (
+                  reviews.map((review) => (
+                    <div key={review.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                      <div className="flex items-center gap-1 mb-2">
+                         {[1, 2, 3, 4, 5].map((s) => (
+                           <Star 
+                             key={s} 
+                             className={`h-4 w-4 ${s <= review.rating ? "text-[#F97316] fill-current" : "text-gray-200"}`} 
+                           />
+                         ))}
+                      </div>
+                      <p className="text-gray-700 text-sm italic">"{review.comment || 'Sin comentario'}"</p>
+                      <p className="text-xs text-gray-400 mt-2 text-right">
+                        {new Date(review.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-xl border border-dashed">
+                    No hay reseñas para mostrar
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     );
   }
@@ -469,7 +580,11 @@ const Profile = () => {
             label="Perfil" 
             onClick={() => setView('preview')} 
           />
-          <QuickAction icon={Gift} label="Cupones" />
+          <QuickAction 
+            icon={Star} 
+            label="Reputación" 
+            onClick={handleOpenReputation}
+          />
           <QuickAction icon={MapPin} label="Dirección" onClick={() => setView('edit')} />
           <QuickAction icon={HelpCircle} label="Ayuda" />
         </div>
