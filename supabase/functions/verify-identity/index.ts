@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import nodemailer from "npm:nodemailer@6.9.13";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,22 +16,21 @@ serve(async (req) => {
   try {
     const { frontImage, backImage, selfieImage, userId } = await req.json()
     
-    // 1. Inicializar Supabase Admin (para actualizar perfil si es exitoso)
+    // 1. Inicializar Supabase Admin
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
     const AI_KEY = Deno.env.get('AI_KEY')
+    const GMAIL_USER = Deno.env.get('GMAIL_USER')
+    const GMAIL_APP_PASSWORD = Deno.env.get('GMAIL_APP_PASSWORD')
 
-    if (!AI_KEY) {
-      throw new Error('AI_KEY no configurada')
-    }
+    if (!AI_KEY) throw new Error('AI_KEY no configurada')
 
     console.log(`[verify-identity] Iniciando verificación para usuario: ${userId} usando gpt-5-nano`)
 
     // 2. Preparar el Prompt para la IA
-    // Nota: Asumimos que la API acepta imágenes en formato URL o base64 en el contenido del mensaje
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -38,24 +38,18 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-nano', // Tu modelo específico
+        model: 'gpt-5-nano',
         messages: [
           {
             role: 'system',
-            content: `Eres un experto en seguridad y verificación de identidad de la República Dominicana. 
-            Tu trabajo es analizar 3 imágenes: Cédula Frontal, Cédula Trasera y una Selfie.
-            Debes verificar:
-            1. Que sea una Cédula de Identidad y Electoral Dominicana válida y no una falsificación obvia.
-            2. Que la foto de la cédula coincida razonablemente con la persona de la selfie.
-            3. Que los datos sean legibles.
-            
-            Responde EXCLUSIVAMENTE con un objeto JSON con este formato:
-            { "approved": boolean, "reason": "string", "confidence": number }`
+            content: `Eres un experto en seguridad de RD. Analiza: Cédula Frontal, Trasera y Selfie.
+            Verifica validez, coincidencia facial y legibilidad.
+            Responde JSON: { "approved": boolean, "reason": "string", "confidence": number }`
           },
           {
             role: 'user',
             content: [
-              { type: 'text', text: 'Verifica esta identidad por favor.' },
+              { type: 'text', text: 'Verifica esta identidad.' },
               { type: 'image_url', image_url: { url: frontImage } },
               { type: 'image_url', image_url: { url: backImage } },
               { type: 'image_url', image_url: { url: selfieImage } }
@@ -67,74 +61,89 @@ serve(async (req) => {
     })
 
     const aiData = await response.json()
-    console.log("[verify-identity] Respuesta IA Raw:", JSON.stringify(aiData))
-
-    if (!aiData.choices || !aiData.choices[0]) {
-      throw new Error("Error conectando con el modelo de IA")
-    }
-
-    // Parsear respuesta de la IA
+    
+    // Parsear respuesta IA
     let analysis
     try {
-      const content = aiData.choices[0].message.content
-      // Intentar limpiar el json si viene con markdown
+      const content = aiData.choices?.[0]?.message?.content || '{}'
       const cleanContent = content.replace(/```json/g, '').replace(/```/g, '').trim()
       analysis = JSON.parse(cleanContent)
     } catch (e) {
-      console.error("[verify-identity] Error parseando JSON de IA", e)
+      console.error("[verify-identity] Error IA", e)
       analysis = { approved: false, reason: "Error de análisis IA", confidence: 0 }
     }
 
-    console.log("[verify-identity] Análisis final:", analysis)
+    console.log("[verify-identity] Resultado:", analysis)
 
     // 3. Lógica de Decisión
     if (analysis.approved && analysis.confidence > 0.85) {
-      // CASO APROBADO AUTOMÁTICAMENTE
-      await supabaseAdmin
-        .from('profiles')
-        .update({ 
-          is_verified: true, 
-          verification_status: 'verified' 
-        })
-        .eq('id', userId)
+      // --- APROBADO ---
+      await supabaseAdmin.from('profiles').update({ is_verified: true, verification_status: 'verified' }).eq('id', userId)
 
       return new Response(
-        JSON.stringify({ success: true, status: 'verified', message: 'Identidad verificada exitosamente' }),
+        JSON.stringify({ success: true, status: 'verified', message: 'Identidad verificada.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
 
     } else {
-      // CASO REVISIÓN MANUAL
-      await supabaseAdmin
-        .from('profiles')
-        .update({ 
-          verification_status: 'manual_review' 
-        })
-        .eq('id', userId)
-
-      // 4. Enviar Correo al Admin (Simulado/Placeholder)
-      // Nota: Para enviar emails reales, se recomienda usar Resend o SendGrid.
-      // Aquí hacemos el log para que quede registrado el intento.
-      console.log(`[verify-identity] ALERTA: Verificación fallida o dudosa.`)
-      console.log(`[verify-identity] Enviando correo a: rodrigopepe281@gmail.com`)
-      console.log(`[verify-identity] Datos: Usuario ${userId}. Razón IA: ${analysis.reason}`)
+      // --- REVISIÓN MANUAL (ENVIAR CORREO GMAIL) ---
       
-      // Si tuvieras una API de email configurada, aquí harías el fetch:
-      /*
-      await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${RESEND_KEY}` },
-        body: JSON.stringify({
-          from: 'ServiAPP <noreply@serviapp.com>',
-          to: 'rodrigopepe281@gmail.com',
-          subject: 'Revisión Manual de Identidad Requerida',
-          html: `<p>El usuario ${userId} requiere verificación manual.</p><p>Links: ${frontImage}, ${selfieImage}</p>`
-        })
-      })
-      */
+      await supabaseAdmin.from('profiles').update({ verification_status: 'manual_review' }).eq('id', userId)
+
+      // Obtener datos del usuario para el correo
+      const { data: profile } = await supabaseAdmin.from('profiles').select('first_name, last_name, email').eq('id', userId).single();
+      const userName = profile ? `${profile.first_name} ${profile.last_name}` : 'Usuario Desconocido';
+
+      if (GMAIL_USER && GMAIL_APP_PASSWORD) {
+        try {
+          console.log("[verify-identity] Enviando correo vía Gmail...")
+          
+          const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+              user: GMAIL_USER,
+              pass: GMAIL_APP_PASSWORD,
+            },
+          });
+
+          const mailOptions = {
+            from: `"ServiAPP Bot" <${GMAIL_USER}>`,
+            to: 'rodrigopepe281@gmail.com', // Correo destino fijo
+            subject: `⚠️ Revisión Manual: ${userName}`,
+            html: `
+              <h1>Solicitud de Verificación Manual</h1>
+              <p>La IA no pudo verificar automáticamente a este usuario.</p>
+              <ul>
+                <li><strong>Usuario ID:</strong> ${userId}</li>
+                <li><strong>Nombre:</strong> ${userName}</li>
+                <li><strong>Razón IA:</strong> ${analysis.reason}</li>
+                <li><strong>Confianza IA:</strong> ${analysis.confidence}</li>
+              </ul>
+              <h2>Evidencias:</h2>
+              <p>Haz clic para ver las imágenes:</p>
+              <ul>
+                <li><a href="${frontImage}">Cédula Frontal</a></li>
+                <li><a href="${backImage}">Cédula Trasera</a></li>
+                <li><a href="${selfieImage}">Selfie</a></li>
+              </ul>
+              <hr/>
+              <p>Para aprobar, ve al panel de Supabase y cambia el estado a 'verified' y is_verified a TRUE.</p>
+            `,
+          };
+
+          await transporter.sendMail(mailOptions);
+          console.log("[verify-identity] Correo enviado exitosamente.");
+        
+        } catch (emailError) {
+          console.error("[verify-identity] Error enviando correo:", emailError);
+          // No fallamos la request completa si falla el email, solo logueamos
+        }
+      } else {
+        console.warn("[verify-identity] Credenciales GMAIL no configuradas. Correo omitido.");
+      }
 
       return new Response(
-        JSON.stringify({ success: false, status: 'manual_review', message: 'Tu verificación ha pasado a revisión manual por nuestro equipo.' }),
+        JSON.stringify({ success: false, status: 'manual_review', message: 'Pasado a revisión manual.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
