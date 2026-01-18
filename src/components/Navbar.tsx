@@ -28,13 +28,14 @@ export const Navbar = () => {
         {/* Logo Section - Collapses smoothly */}
         <div className={cn(
           "flex items-center gap-2 overflow-hidden transition-all duration-500 ease-in-out origin-top",
-          // Usamos max-h específico para permitir la animación CSS (h-auto no anima bien)
+          // Aumentamos max-h-32 a max-h-40 para acomodar el logo más grande
           isScrolled 
             ? "max-h-0 opacity-0 mb-0 translate-y-[-10px]" 
-            : "max-h-32 opacity-100 pt-2 mb-0 translate-y-0"
+            : "max-h-40 opacity-100 pt-2 mb-0 translate-y-0"
         )}>
-          <a href="/" className="flex-shrink-0 mr-2">
-            <img src="/logo.png" alt="ServiAPP" className="h-24 object-contain" />
+          <a href="/" className="flex-shrink-0 mr-2 w-full flex justify-start">
+            {/* Aumentado de h-24 a h-32 */}
+            <img src="/logo.png" alt="ServiAPP" className="h-32 object-contain" />
           </a>
         </div>
 

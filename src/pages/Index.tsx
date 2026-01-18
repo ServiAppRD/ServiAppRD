@@ -96,22 +96,23 @@ const Index = () => {
 
         <main className="flex-1 space-y-6 py-6">
           
-          {/* Banner Promocional */}
+          {/* Banner Promocional - Más Compacto */}
           <div className="px-4">
-              <div className="bg-gradient-to-r from-[#0F172A] to-[#1e293b] rounded-xl p-8 text-white relative overflow-hidden shadow-lg">
+              <div className="bg-gradient-to-r from-[#0F172A] to-[#1e293b] rounded-xl p-5 text-white relative overflow-hidden shadow-lg">
                 <div className="relative z-10 max-w-lg">
-                  <h3 className="text-2xl font-bold mb-2">¡Ofrece tus servicios gratis!</h3>
-                  <p className="text-gray-300 text-sm mb-6 max-w-[70%]">Llega a miles de clientes potenciales en tu zona publicando tu perfil profesional.</p>
+                  <h3 className="text-lg font-bold mb-1">¡Ofrece tus servicios gratis!</h3>
+                  <p className="text-gray-300 text-xs mb-3 max-w-[70%]">Llega a miles de clientes potenciales en tu zona.</p>
                   <Button 
                     onClick={() => navigate('/publish')}
-                    className="bg-[#F97316] text-white hover:bg-orange-600 font-bold border-0 shadow-lg hover:shadow-orange-500/20 transition-all"
+                    size="sm"
+                    className="bg-[#F97316] text-white hover:bg-orange-600 font-bold border-0 shadow-lg hover:shadow-orange-500/20 transition-all h-9 text-xs"
                   >
                       Publicar Servicio
                   </Button>
                 </div>
-                {/* Decorative Big Wrench */}
-                <div className="absolute -right-6 -bottom-12 opacity-20 transform rotate-[-15deg]">
-                  <Wrench className="w-48 h-48 text-[#F97316]" />
+                {/* Decorative Big Wrench - Smaller */}
+                <div className="absolute -right-4 -bottom-8 opacity-20 transform rotate-[-15deg]">
+                  <Wrench className="w-32 h-32 text-[#F97316]" />
                 </div>
               </div>
           </div>
