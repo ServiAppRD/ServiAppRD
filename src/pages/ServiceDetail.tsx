@@ -112,34 +112,35 @@ const ServiceDetail = () => {
       {/* Content Container */}
       <div className="px-5 -mt-6 relative z-10 bg-white rounded-t-3xl pt-6 space-y-6">
         
-        {/* Title & Price Section */}
+        {/* Title & Price Section Reordered */}
         <div>
-          <div className="flex justify-between items-start gap-4 mb-2">
-            <Badge className="bg-orange-50 text-[#F97316] hover:bg-orange-100 border-0">
-              {service.category}
-            </Badge>
-            <div className="text-right">
-              <span className="block text-2xl font-bold text-[#F97316]">
-                RD$ {service.price}
-              </span>
-              {service.price_unit && (
-                <span className="text-xs text-gray-400 font-medium">/{service.price_unit}</span>
-              )}
-            </div>
+          {/* Price First */}
+          <div className="flex items-baseline gap-2 mb-2">
+            <span className="text-3xl font-bold text-[#F97316]">
+              RD$ {service.price}
+            </span>
+            {service.price_unit && (
+              <span className="text-sm text-gray-400 font-medium">/{service.price_unit}</span>
+            )}
           </div>
-          
+
+          {/* Title */}
           <h1 className="text-2xl font-bold text-gray-900 leading-tight mb-3">
             {service.title}
           </h1>
           
-          <div className="flex flex-wrap gap-y-2 gap-x-4">
-            <div className="flex items-center text-gray-500 text-sm">
-              <MapPin className="h-4 w-4 mr-1.5 text-gray-400" />
+          {/* Mini Description / Metadata */}
+          <div className="flex flex-wrap items-center gap-y-2 gap-x-3 text-sm">
+             <Badge className="bg-orange-50 text-[#F97316] hover:bg-orange-100 border-0">
+              {service.category}
+            </Badge>
+            <div className="flex items-center text-gray-500">
+              <MapPin className="h-4 w-4 mr-1 text-gray-400" />
               {service.location || "Ubicación no especificada"}
             </div>
-            <div className="flex items-center text-gray-500 text-sm">
-              <Calendar className="h-4 w-4 mr-1.5 text-gray-400" />
-              Publicado el {formattedDate}
+            <div className="flex items-center text-gray-500">
+              <Calendar className="h-4 w-4 mr-1 text-gray-400" />
+              {formattedDate}
             </div>
           </div>
         </div>
