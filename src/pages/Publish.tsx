@@ -23,7 +23,7 @@ import {
   ArrowLeft, Check, ChevronRight, 
   DollarSign, Sparkles, UploadCloud, X, Loader2, Rocket, User, Zap,
   Facebook, Instagram, Globe, MapPin,
-  Wrench, Droplets, Car, Hammer, Leaf, Laptop, Scissors, HardHat, Truck, GraduationCap, Heart, Calendar, MoreHorizontal
+  Wrench, Droplets, Car, Hammer, Leaf, Laptop, Scissors, HardHat, Truck, GraduationCap, Heart, Calendar, MoreHorizontal, Crown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ServiceCard } from "@/components/ServiceCard";
@@ -44,6 +44,13 @@ const CATEGORIES = [
   { name: "Salud y Bienestar", icon: Heart },
   { name: "Eventos", icon: Calendar },
   { name: "Otros Servicios", icon: MoreHorizontal }
+];
+
+const BOOST_PLANS = [
+  { id: 'free', label: "Estándar", duration: 0, price: 0, popular: false },
+  { id: '1day', label: "Boost 1 Día", duration: 24, price: 299, popular: false },
+  { id: '3days', label: "Boost 3 Días", duration: 72, price: 499, popular: true },
+  { id: '7days', label: "Boost 7 Días", duration: 168, price: 999, popular: false },
 ];
 
 const DR_LOCATIONS: Record<string, string[]> = {
@@ -107,7 +114,10 @@ const Publish = () => {
     province: "", // Provincia seleccionada
     serviceAreas: [] as string[], // Sectores seleccionados
     features: [] as string[],
-    isPromoted: false,
+    
+    // Boost State
+    selectedPlanId: 'free',
+    
     imagePreview: "" as string | null,
     imageFile: null as File | null,
     facebook: "",
@@ -209,7 +219,10 @@ const Publish = () => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      if (formData.isPromoted && useBoostToPay) {
+      const selectedPlan = BOOST_PLANS.find(p => p.id === formData.selectedPlanId) || BOOST_PLANS[0];
+      const isPromoted = selectedPlan.id !== 'free';
+
+      if (isPromoted && useBoostToPay) {
         if (userBoosts > 0) {
            await supabase.from('user_stats').update({ boosts: userBoosts - 1 }).eq('user_id', session.user.id);
         } else {
@@ -229,17 +242,26 @@ const Publish = () => {
         throw new Error("Imagen requerida");
       }
 
+      // Calcular promoted_until
+      let promotedUntil = null;
+      if (isPromoted) {
+        const now = new Date();
+        const futureDate = new Date(now.getTime() + selectedPlan.duration * 60 * 60 * 1000);
+        promotedUntil = futureDate.toISOString();
+      }
+
       const { error } = await supabase.from('services').insert({
         user_id: session.user.id,
         title: formData.title,
         description: formData.description,
         category: formData.category,
         price: parseFloat(formData.price),
-        location: formData.province, // Guardamos la provincia como ubicación principal
-        service_areas: formData.serviceAreas, // Guardamos los sectores específicos
+        location: formData.province,
+        service_areas: formData.serviceAreas,
         image_url: imageUrl,
         features: formData.features,
-        is_promoted: formData.isPromoted,
+        is_promoted: isPromoted,
+        promoted_until: promotedUntil,
         social_media: {
           facebook: formData.facebook,
           instagram: formData.instagram,
@@ -418,58 +440,135 @@ const Publish = () => {
     <div className="space-y-6 animate-fade-in">
       <div className="text-center space-y-2">
         <h2 className="text-2xl font-bold text-gray-900">Impulsa tu anuncio</h2>
-        <p className="text-gray-500">Llega a más clientes potenciales</p>
+        <p className="text-gray-500">Selecciona el plan de visibilidad</p>
       </div>
 
-      <div className="grid gap-4 pt-4">
-        {/* FREE OPTION */}
-        <div onClick={() => {setFormData({ ...formData, isPromoted: false }); setUseBoostToPay(false);}} className={cn("p-5 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between", !formData.isPromoted ? "border-gray-900 bg-gray-900 text-white shadow-lg" : "border-gray-200 bg-white opacity-60")}>
-          <div><h3 className="font-bold text-lg">Gratis</h3><p className="text-sm opacity-80">Publicación estándar</p></div>
-          <div className="h-6 w-6 rounded-full border-2 border-current flex items-center justify-center">{!formData.isPromoted && <div className="h-3 w-3 rounded-full bg-white" />}</div>
-        </div>
+      <div className="grid gap-3 pt-4">
+        {BOOST_PLANS.map((plan) => {
+          const isSelected = formData.selectedPlanId === plan.id;
+          
+          return (
+            <div 
+              key={plan.id}
+              onClick={() => {
+                 setFormData({ ...formData, selectedPlanId: plan.id });
+                 // Resetear pago con boost si se cambia a gratis
+                 if(plan.id === 'free') setUseBoostToPay(false);
+              }}
+              className={cn(
+                "relative p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between group overflow-hidden",
+                isSelected 
+                  ? "border-[#F97316] bg-orange-50/50 shadow-md" 
+                  : "border-gray-100 bg-white hover:border-orange-100"
+              )}
+            >
+              {plan.popular && (
+                <div className="absolute top-0 right-0 bg-[#F97316] text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg z-10">
+                  POPULAR
+                </div>
+              )}
+              
+              <div className="flex items-center gap-3">
+                 <div className={cn(
+                   "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
+                   isSelected ? "bg-[#F97316] text-white" : "bg-gray-100 text-gray-400"
+                 )}>
+                    {plan.id === 'free' ? <Check className="h-5 w-5" /> : <Rocket className="h-5 w-5" />}
+                 </div>
+                 <div>
+                    <h3 className={cn("font-bold text-base", isSelected ? "text-gray-900" : "text-gray-700")}>{plan.label}</h3>
+                    <p className="text-xs text-gray-500">
+                      {plan.id === 'free' ? "Visibilidad estándar" : `Destacado por ${plan.duration} horas`}
+                    </p>
+                 </div>
+              </div>
 
-        {/* PROMOTED OPTION */}
-        <div onClick={() => setFormData({ ...formData, isPromoted: true })} className={cn("relative p-6 rounded-2xl border-2 cursor-pointer transition-all overflow-hidden", formData.isPromoted ? "border-[#F97316] bg-orange-50" : "border-gray-200 bg-white")}>
-          {formData.isPromoted && <div className="absolute top-0 right-0 bg-[#F97316] text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl">RECOMENDADO</div>}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="bg-gradient-to-br from-[#F97316] to-pink-500 p-2 rounded-lg text-white"><Sparkles className="h-5 w-5" /></div>
-              <div><h3 className="font-bold text-lg text-gray-900">Destacado</h3><p className="text-[#F97316] font-bold">RD$ 250.00</p></div>
+              <div className="text-right">
+                 <p className={cn("font-bold text-lg", isSelected ? "text-[#F97316]" : "text-gray-900")}>
+                    {plan.price === 0 ? "Gratis" : `RD$ ${plan.price}`}
+                 </p>
+              </div>
             </div>
-            <div className={cn("h-6 w-6 rounded-full border-2 flex items-center justify-center", formData.isPromoted ? "border-[#F97316]" : "border-gray-300")}>{formData.isPromoted && <div className="h-3 w-3 rounded-full bg-[#F97316]" />}</div>
-          </div>
-          {formData.isPromoted && userBoosts > 0 && (
-             <div onClick={(e) => { e.stopPropagation(); setUseBoostToPay(!useBoostToPay); }} className={`mt-3 p-3 rounded-xl border flex items-center justify-between ${useBoostToPay ? "bg-purple-100 border-purple-500" : "bg-white border-gray-200"}`}>
-                <div className="flex items-center gap-2"><div className="bg-purple-600 text-white p-1 rounded-full"><Zap className="h-4 w-4" /></div><div className="text-left"><p className="text-sm font-bold text-purple-900">Usar 1 Boost Gratis</p><p className="text-xs text-purple-600">Tienes {userBoosts} disponibles</p></div></div>
-                <div className={`h-5 w-5 rounded border ${useBoostToPay ? "bg-purple-600 border-purple-600" : "border-gray-300"} flex items-center justify-center`}>{useBoostToPay && <Check className="h-3 w-3 text-white" />}</div>
+          );
+        })}
+      </div>
+
+      {/* Pay with Boost Option - Only if a paid plan is selected */}
+      {formData.selectedPlanId !== 'free' && userBoosts > 0 && (
+          <div onClick={() => setUseBoostToPay(!useBoostToPay)} className={cn(
+             "mt-4 p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all animate-fade-in", 
+             useBoostToPay ? "bg-purple-50 border-purple-500" : "bg-white border-gray-200 hover:border-purple-200"
+          )}>
+             <div className="flex items-center gap-3">
+                <div className={cn("p-2 rounded-full", useBoostToPay ? "bg-purple-600 text-white" : "bg-purple-100 text-purple-600")}>
+                   <Zap className="h-5 w-5" />
+                </div>
+                <div>
+                   <p className="text-sm font-bold text-gray-900">Usar 1 Boost de mi cuenta</p>
+                   <p className="text-xs text-purple-600 font-medium">Tienes {userBoosts} disponibles</p>
+                </div>
              </div>
-          )}
-        </div>
-      </div>
+             <div className={cn(
+                "h-6 w-6 rounded border flex items-center justify-center transition-colors", 
+                useBoostToPay ? "bg-purple-600 border-purple-600" : "border-gray-300"
+             )}>
+                {useBoostToPay && <Check className="h-4 w-4 text-white" />}
+             </div>
+          </div>
+      )}
     </div>
   );
 
-  const renderStep5 = () => (
-    <div className="space-y-6 animate-fade-in">
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-gray-900">¡Todo listo!</h2>
-        <p className="text-gray-500">Revisa tu publicación</p>
-      </div>
+  const renderStep5 = () => {
+    const selectedPlan = BOOST_PLANS.find(p => p.id === formData.selectedPlanId) || BOOST_PLANS[0];
+    
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-bold text-gray-900">¡Todo listo!</h2>
+          <p className="text-gray-500">Revisa tu publicación</p>
+        </div>
 
-      <div className="bg-gray-50 p-6 rounded-3xl flex justify-center items-center py-10">
-        <div className="transform scale-110 pointer-events-none">
-          <ServiceCard title={formData.title} price={`RD$ ${formData.price}`} image={formData.imagePreview || ""} badge={formData.isPromoted ? { text: "Destacado", color: "orange" } : undefined} />
+        <div className="bg-gray-50 p-6 rounded-3xl flex justify-center items-center py-10">
+          <div className="transform scale-110 pointer-events-none">
+            <ServiceCard 
+              title={formData.title} 
+              price={`RD$ ${formData.price}`} 
+              image={formData.imagePreview || ""} 
+              badge={selectedPlan.id !== 'free' ? { text: "Destacado", color: "orange" } : undefined} 
+            />
+          </div>
+        </div>
+
+        <div className="bg-white border rounded-xl p-4 space-y-3">
+          <div className="flex justify-between text-sm"><span className="text-gray-500">Categoría</span><span className="font-medium text-gray-900">{formData.category}</span></div>
+          <div className="flex justify-between text-sm"><span className="text-gray-500">Provincia</span><span className="font-medium text-gray-900">{formData.province}</span></div>
+          <div className="flex justify-between text-sm items-start"><span className="text-gray-500">Sectores</span><span className="font-medium text-gray-900 text-right max-w-[60%]">{formData.serviceAreas.length > 3 ? `${formData.serviceAreas.slice(0,3).join(", ")}...` : formData.serviceAreas.join(", ")}</span></div>
+          <div className="flex justify-between text-sm pt-2 border-t mt-2">
+             <span className="text-gray-500">Plan seleccionado</span>
+             <span className="font-medium text-gray-900 flex items-center gap-1">
+                {selectedPlan.id !== 'free' && <Crown className="h-3 w-3 text-[#F97316]" />}
+                {selectedPlan.label}
+             </span>
+          </div>
+          <div className="flex justify-between text-sm pt-2 border-t">
+             <span className="text-gray-500 font-bold">Total a pagar</span>
+             <span className="font-bold text-[#F97316] text-lg">
+                {selectedPlan.price > 0 ? (
+                   useBoostToPay ? (
+                     <span className="text-purple-600 flex items-center gap-1"><Zap className="h-4 w-4"/> 1 Boost</span>
+                   ) : (
+                     `RD$ ${selectedPlan.price}`
+                   )
+                ) : (
+                   "Gratis"
+                )}
+             </span>
+          </div>
         </div>
       </div>
-
-      <div className="bg-white border rounded-xl p-4 space-y-3">
-        <div className="flex justify-between text-sm"><span className="text-gray-500">Categoría</span><span className="font-medium text-gray-900">{formData.category}</span></div>
-        <div className="flex justify-between text-sm"><span className="text-gray-500">Provincia</span><span className="font-medium text-gray-900">{formData.province}</span></div>
-        <div className="flex justify-between text-sm items-start"><span className="text-gray-500">Sectores</span><span className="font-medium text-gray-900 text-right max-w-[60%]">{formData.serviceAreas.length > 3 ? `${formData.serviceAreas.slice(0,3).join(", ")}...` : formData.serviceAreas.join(", ")}</span></div>
-        <div className="flex justify-between text-sm pt-2 border-t"><span className="text-gray-500">Total a pagar</span><span className="font-bold text-[#F97316]">{formData.isPromoted ? (useBoostToPay ? <span className="text-purple-600 flex items-center gap-1"><Zap className="h-3 w-3"/> 1 Boost</span> : "RD$ 250.00") : "Gratis"}</span></div>
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-white pb-safe">
