@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search as SearchIcon, MapPin, Filter, Star, X, Clock, ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -16,9 +16,23 @@ const CATEGORIES = [
 
 const SearchPage = () => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [activeCategory, setActiveCategory] = useState("Todos");
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Inicializar estado basado en URL params
+  const initialSearch = searchParams.get("q") || "";
+  const initialCategory = searchParams.get("category") || "Todos";
+
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [isFocused, setIsFocused] = useState(false);
+
+  // Actualizar URL cuando cambian los filtros (opcional, para mantener estado al recargar)
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchTerm) params.set("q", searchTerm);
+    if (activeCategory && activeCategory !== "Todos") params.set("category", activeCategory);
+    setSearchParams(params, { replace: true });
+  }, [searchTerm, activeCategory, setSearchParams]);
 
   // Fetch services from Supabase
   const { data: services, isLoading, error, refetch } = useQuery({
