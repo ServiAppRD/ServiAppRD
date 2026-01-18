@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { showSuccess, showError } from "@/utils/toast";
-import { Loader2, Mail, Lock, User, ArrowRight } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowRight, ArrowLeft } from "lucide-react";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -81,7 +81,18 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 pb-24">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 pb-24 relative">
+      
+      {/* Botón de Volver */}
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        className="absolute top-4 left-4 text-gray-500 hover:text-[#F97316] hover:bg-orange-50 transition-colors z-10"
+        onClick={() => navigate('/')}
+      >
+        <ArrowLeft className="h-6 w-6" />
+      </Button>
+
       <div className="w-full max-w-md animate-accordion-down">
         
         {/* Header/Logo Section */}
