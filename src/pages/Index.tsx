@@ -109,26 +109,24 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col pb-20 md:pb-10">
       
+      {/* Navbar fuera del PullToRefresh para mantener sticky behavior */}
+      <Navbar />
+
+      <AlertDialog open={showWelcomeDialog} onOpenChange={setShowWelcomeDialog}>
+        <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto">
+          <AlertDialogHeader className="text-center">
+            <div className="mx-auto bg-orange-100 w-12 h-12 rounded-full flex items-center justify-center mb-2"><Info className="h-6 w-6 text-[#F97316]" /></div>
+            <AlertDialogTitle className="text-xl font-bold text-center">¡Bienvenido a nuestra comunidad beta!</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-gray-600 mt-2">
+              <p className="mb-2">Estamos creciendo día a día.</p>
+              <p className="mt-2 text-xs bg-gray-50 p-2 rounded-lg border border-gray-100">Si publicas un servicio, ayudas a que la comunidad crezca.</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter><AlertDialogAction onClick={handleCloseWelcome} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl">Entendido</AlertDialogAction></AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <PullToRefresh onRefresh={handleRefresh}>
-        
-        {/* Navbar ahora dentro del PullToRefresh y es sticky */}
-        <Navbar />
-
-        <AlertDialog open={showWelcomeDialog} onOpenChange={setShowWelcomeDialog}>
-          <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto">
-            <AlertDialogHeader className="text-center">
-              <div className="mx-auto bg-orange-100 w-12 h-12 rounded-full flex items-center justify-center mb-2"><Info className="h-6 w-6 text-[#F97316]" /></div>
-              <AlertDialogTitle className="text-xl font-bold text-center">¡Bienvenido a nuestra comunidad beta!</AlertDialogTitle>
-              <AlertDialogDescription className="text-center text-gray-600 mt-2">
-                <p className="mb-2">Estamos creciendo día a día.</p>
-                <p className="mt-2 text-xs bg-gray-50 p-2 rounded-lg border border-gray-100">Si publicas un servicio, ayudas a que la comunidad crezca.</p>
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter><AlertDialogAction onClick={handleCloseWelcome} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl">Entendido</AlertDialogAction></AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        {/* Eliminado el margen superior mt-[115px] ya que la navbar ahora ocupa espacio (sticky) */}
         <main className="flex-1 space-y-8 py-6 md:mt-0">
           
           {/* 1. Destacados */}
