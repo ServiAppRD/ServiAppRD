@@ -14,6 +14,7 @@ import { DesktopNavbar } from "./components/DesktopNavbar";
 import { SplashScreen } from "@/components/SplashScreen";
 import { ActivityTracker } from "@/components/ActivityTracker";
 import { useState } from "react";
+import { Toaster } from "@/components/ui/sonner";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <Toaster />
         {/* SplashScreen se muestra sobre todo lo demás */}
         {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
         

@@ -43,7 +43,12 @@ const Login = () => {
       if (error) throw error;
       // Redirect handled by auth state change
     } catch (error: any) {
-      showError(error.message);
+      console.error("Login error:", error);
+      if (error.message.includes("Invalid login credentials")) {
+        showError("Correo o contraseña incorrectos");
+      } else {
+        showError(error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -59,7 +64,7 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -71,10 +76,19 @@ const Login = () => {
       
       if (error) throw error;
       
-      showSuccess("Cuenta creada exitosamente. ¡Bienvenido!");
+      if (data.user && !data.session) {
+        showSuccess("Cuenta creada. Por favor revisa tu correo para verificar la cuenta.");
+      } else {
+        showSuccess("Cuenta creada exitosamente. ¡Bienvenido!");
+      }
       
     } catch (error: any) {
-      showError(error.message);
+      console.error("Signup error:", error);
+      if (error.message.includes("User already registered")) {
+        showError("Este correo ya está registrado.");
+      } else {
+        showError(error.message);
+      }
     } finally {
       setLoading(false);
     }
