@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
+  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -20,13 +21,12 @@ import {
 import { showSuccess, showError } from "@/utils/toast";
 import { 
   ArrowLeft, Check, ChevronRight, 
-  DollarSign, Sparkles, UploadCloud, X, Loader2, Rocket, Zap,
+  DollarSign, Sparkles, UploadCloud, X, Loader2, Rocket, User, Zap,
   Facebook, Instagram, Globe, MapPin,
-  Car, Hammer, Leaf, Laptop, Scissors, HardHat, Truck, GraduationCap, Heart, Calendar, MoreHorizontal, Crown, Droplets
+  Wrench, Droplets, Car, Hammer, Leaf, Laptop, Scissors, HardHat, Truck, GraduationCap, Heart, Calendar, MoreHorizontal, Crown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ServiceCard } from "@/components/ServiceCard";
-import { EmailVerificationDialog } from "@/components/EmailVerificationDialog";
 
 // Constantes de Datos con Iconos
 const CATEGORIES = [
@@ -101,12 +101,9 @@ const Publish = () => {
   const [userBoosts, setUserBoosts] = useState(0);
   const [useBoostToPay, setUseBoostToPay] = useState(false);
   
-  // Estado para verificación de email
-  const [isEmailVerified, setIsEmailVerified] = useState(false);
-  
   // Dialogs State
   const [showPublishWelcome, setShowPublishWelcome] = useState(false);
-  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const [showIncompleteProfileDialog, setShowIncompleteProfileDialog] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -141,16 +138,18 @@ const Publish = () => {
       }
       setSession(session);
 
-      // Chequear si el email está confirmado
-      if (session.user.email_confirmed_at) {
-        setIsEmailVerified(true);
-      } else {
-        setIsEmailVerified(false);
-      }
-
       // Fetch user boosts
       const { data: stats } = await supabase.from('user_stats').select('boosts').eq('user_id', session.user.id).maybeSingle();
       if (stats) setUserBoosts(stats.boosts || 0);
+
+      // Verificar perfil
+      const { data: profile } = await supabase.from('profiles').select('first_name, last_name, phone, city').eq('id', session.user.id).single();
+      if (profile) {
+        if (!profile.first_name || !profile.last_name || !profile.phone || !profile.city) {
+          setShowIncompleteProfileDialog(true);
+          return;
+        }
+      }
 
       const hasSeenPublishMsg = localStorage.getItem("hasSeenPublishWelcome");
       if (!hasSeenPublishMsg) setTimeout(() => setShowPublishWelcome(true), 500);
@@ -165,7 +164,6 @@ const Publish = () => {
   };
 
   const handleNext = () => {
-    // Validaciones por paso
     if (step === 1 && !formData.category) return showError("Selecciona una categoría");
     if (step === 2 && !formData.imagePreview) return showError("Sube al menos una foto de portada");
     if (step === 3) {
@@ -174,7 +172,6 @@ const Publish = () => {
       if (!formData.province) return showError("Selecciona una provincia");
       if (formData.serviceAreas.length === 0) return showError("Selecciona al menos un sector");
     }
-
     setStep(s => s + 1);
     window.scrollTo(0, 0);
   };
@@ -217,15 +214,6 @@ const Publish = () => {
     } else {
       setFormData({ ...formData, serviceAreas: [...currentSectors] });
     }
-  };
-
-  // Esta función se llama cuando se intenta publicar
-  const checkVerificationBeforeSubmit = () => {
-    if (!isEmailVerified) {
-      setShowVerificationDialog(true);
-      return;
-    }
-    handleSubmit();
   };
 
   const handleSubmit = async () => {
@@ -291,14 +279,6 @@ const Publish = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const onVerifiedSuccess = () => {
-    setIsEmailVerified(true);
-    // Auto-enviar después de verificar
-    setTimeout(() => {
-       handleSubmit();
-    }, 500);
   };
 
   // --- RENDERS PER STEP ---
@@ -603,15 +583,12 @@ const Publish = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* DIÁLOGO DE VERIFICACIÓN DE EMAIL */}
-      {session && (
-        <EmailVerificationDialog
-          open={showVerificationDialog} 
-          onOpenChange={setShowVerificationDialog}
-          onVerified={onVerifiedSuccess}
-          email={session.user.email}
-        />
-      )}
+      <AlertDialog open={showIncompleteProfileDialog} onOpenChange={setShowIncompleteProfileDialog}>
+        <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto">
+          <AlertDialogHeader className="text-center"><div className="mx-auto bg-red-100 w-12 h-12 rounded-full flex items-center justify-center mb-2"><User className="h-6 w-6 text-red-500" /></div><AlertDialogTitle className="text-xl font-bold text-center">Perfil incompleto</AlertDialogTitle><AlertDialogDescription className="text-center text-gray-600 mt-2">Te falta: Teléfono o Ciudad.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 space-y-2"><AlertDialogAction onClick={() => navigate('/profile')} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl">Completar perfil</AlertDialogAction><AlertDialogCancel onClick={() => {setShowIncompleteProfileDialog(false);navigate('/');}} className="w-full mt-2 rounded-xl border-gray-200">Cancelar</AlertDialogCancel></AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="px-4 py-4 flex items-center justify-between sticky top-0 bg-white z-10">
         <Button variant="ghost" size="icon" onClick={step === 1 ? () => navigate(-1) : handleBack}><ArrowLeft className="h-6 w-6 text-gray-900" /></Button>
@@ -630,7 +607,7 @@ const Publish = () => {
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 pb-safe z-20">
         <div className="max-w-lg mx-auto flex gap-3">
             {step === 5 ? (
-              <Button onClick={checkVerificationBeforeSubmit} disabled={loading} className="w-full bg-[#F97316] hover:bg-orange-600 text-white h-14 rounded-2xl text-lg font-bold shadow-lg shadow-orange-200">
+              <Button onClick={handleSubmit} disabled={loading} className="w-full bg-[#F97316] hover:bg-orange-600 text-white h-14 rounded-2xl text-lg font-bold shadow-lg shadow-orange-200">
                 {loading ? <Loader2 className="animate-spin mr-2" /> : "Publicar Ahora"}
               </Button>
             ) : (
