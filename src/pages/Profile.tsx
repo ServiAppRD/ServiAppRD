@@ -124,6 +124,11 @@ const Profile = () => {
   const [showDeleteAccountDialog, setShowDeleteAccountDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Delete Service Logic with Boost Protection
+  const [showBoostDeleteWarning, setShowBoostDeleteWarning] = useState(false);
+  const [serviceToDelete, setServiceToDelete] = useState<string | null>(null);
+  const [deleteTimer, setDeleteTimer] = useState(5);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -155,6 +160,16 @@ const Profile = () => {
         fetchRealMetrics();
     }
   }, [view, metricsTimeRange, session]);
+
+  // Timer for Boost Delete Warning
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (showBoostDeleteWarning && deleteTimer > 0) {
+      timer = setTimeout(() => setDeleteTimer((prev) => prev - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [showBoostDeleteWarning, deleteTimer]);
+
 
   const fetchRealMetrics = async () => {
     setLoadingMetrics(true);
@@ -441,11 +456,38 @@ const Profile = () => {
     setReviews(data || []);
     setAverageRating(data && data.length > 0 ? data.reduce((a:any,b:any)=>a+b.rating,0)/data.length : 0);
   };
-  const handleDeleteService = async (id: string) => {
-    if (!confirm("¿Estás seguro de eliminar este servicio? Desaparecerá de las búsquedas, pero mantendrás tus métricas históricas.")) return;
-    const { error } = await supabase.from('services').update({ deleted_at: new Date().toISOString() }).eq('id', id);
-    if (error) { showError("Error al eliminar"); } else { setMyServices(prev => prev.filter(s => s.id !== id)); showSuccess("Servicio eliminado"); }
+  
+  // Logic to handle click on delete
+  const handleClickDelete = (service: any) => {
+    const isBoosted = service.is_promoted && service.promoted_until && new Date(service.promoted_until) > new Date();
+    
+    if (isBoosted) {
+      setServiceToDelete(service.id);
+      setDeleteTimer(5);
+      setShowBoostDeleteWarning(true);
+    } else {
+      handleConfirmDelete(service.id);
+    }
   };
+
+  const handleConfirmDelete = async (id: string | null) => {
+    if (!id) return;
+    
+    // Si NO es a través del modal de boost (es decir, flujo normal), pedimos confirmación simple
+    if (!showBoostDeleteWarning) {
+        if (!confirm("¿Estás seguro de eliminar este servicio? Desaparecerá de las búsquedas, pero mantendrás tus métricas históricas.")) return;
+    }
+
+    const { error } = await supabase.from('services').update({ deleted_at: new Date().toISOString() }).eq('id', id);
+    if (error) { 
+        showError("Error al eliminar"); 
+    } else { 
+        setMyServices(prev => prev.filter(s => s.id !== id)); 
+        showSuccess("Servicio eliminado"); 
+        setShowBoostDeleteWarning(false);
+    }
+  };
+
   const handleSignOut = async () => { await supabase.auth.signOut(); navigate("/"); };
   const handleOpenMyServices = () => { setView('my-services'); fetchMyServices(session.user.id); };
   const handleOpenFavorites = (uid?: string) => { setView('favorites'); fetchFavorites(uid); };
@@ -812,6 +854,38 @@ const Profile = () => {
   if (view === 'my-services') {
     return (
       <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
+        {/* Boost Protection Dialog */}
+        <AlertDialog open={showBoostDeleteWarning} onOpenChange={setShowBoostDeleteWarning}>
+          <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto border-red-100 shadow-2xl">
+            <AlertDialogHeader className="text-center">
+               <div className="mx-auto bg-red-100 w-12 h-12 rounded-full flex items-center justify-center mb-2 animate-pulse">
+                  <AlertTriangle className="h-6 w-6 text-red-600" />
+               </div>
+              <AlertDialogTitle className="text-xl font-bold text-center text-red-600">¡Servicio Destacado!</AlertDialogTitle>
+              <AlertDialogDescription className="text-center text-gray-600 mt-2 space-y-2">
+                <p>Este servicio tiene un Boost activo. Si lo eliminas ahora:</p>
+                <div className="bg-red-50 p-3 rounded-lg border border-red-100 text-left text-xs font-medium text-red-700">
+                    <ul className="list-disc pl-4 space-y-1">
+                        <li>Perderás el dinero o créditos invertidos.</li>
+                        <li>El tiempo restante de promoción se anulará.</li>
+                        <li>Esta acción NO se puede deshacer.</li>
+                    </ul>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setShowBoostDeleteWarning(false)} className="w-full rounded-xl border-gray-200 mt-2">Cancelar</AlertDialogCancel>
+                <AlertDialogAction 
+                    disabled={deleteTimer > 0} 
+                    onClick={() => handleConfirmDelete(serviceToDelete)} 
+                    className="w-full bg-red-600 hover:bg-red-700 rounded-xl font-bold h-12"
+                >
+                    {deleteTimer > 0 ? `Espera ${deleteTimer}s...` : "Sí, perder Boost y eliminar"}
+                </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         <Dialog open={boostModalOpen} onOpenChange={setBoostModalOpen}>
             <DialogContent className="sm:max-w-md rounded-3xl border-0 shadow-2xl">
                 <DialogHeader className="space-y-3 pb-2"><div className="mx-auto bg-gradient-to-br from-[#F97316] to-pink-500 w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/30"><Rocket className="h-7 w-7 text-white" /></div><DialogTitle className="text-center text-xl font-bold">Impulsa tu publicación</DialogTitle><DialogDescription className="text-center text-gray-500">Elige un plan para destacar tu servicio.</DialogDescription></DialogHeader>
@@ -835,7 +909,7 @@ const Profile = () => {
                    <div className="flex gap-4">
                        <div className="h-24 w-24 rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden cursor-pointer" onClick={()=>navigate(`/service/${s.id}`)}><img src={s.image_url || "/placeholder.svg"} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" /></div>
                        <div className="flex-1 min-w-0 flex flex-col justify-between">
-                           <div><div className="flex justify-between items-start pr-8"><h3 className="font-bold text-gray-900 truncate leading-tight">{s.title}</h3><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 -mr-2 text-gray-400"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end" className="rounded-xl"><DropdownMenuItem onClick={()=>navigate(`/service/${s.id}`)}><Check className="mr-2 h-4 w-4" /> Ver detalle</DropdownMenuItem><DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={()=>handleDeleteService(s.id)}><Trash2 className="mr-2 h-4 w-4" /> Eliminar</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div><p className="text-[#F97316] font-bold text-sm">RD$ {s.price}</p><div className="flex items-center gap-1 mt-1 text-xs text-gray-400"><CalendarRange className="h-3 w-3" />{new Date(s.created_at).toLocaleDateString()}</div></div>
+                           <div><div className="flex justify-between items-start pr-8"><h3 className="font-bold text-gray-900 truncate leading-tight">{s.title}</h3><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 -mr-2 text-gray-400"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end" className="rounded-xl"><DropdownMenuItem onClick={()=>navigate(`/service/${s.id}`)}><Check className="mr-2 h-4 w-4" /> Ver detalle</DropdownMenuItem><DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={()=>handleClickDelete(s)}><Trash2 className="mr-2 h-4 w-4" /> Eliminar</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div><p className="text-[#F97316] font-bold text-sm">RD$ {s.price}</p><div className="flex items-center gap-1 mt-1 text-xs text-gray-400"><CalendarRange className="h-3 w-3" />{new Date(s.created_at).toLocaleDateString()}</div></div>
                            <div className="flex items-center gap-2 mt-3">{!isPromoted ? (<Button size="sm" onClick={() => {setSelectedServiceToBoost(s);setSelectedBoostOption(72);setBoostModalOpen(true);}} className="flex-1 bg-gray-900 text-white hover:bg-gray-800 h-8 rounded-lg text-xs font-bold shadow-sm"><TrendingUp className="h-3 w-3 mr-1.5 text-yellow-400" /> Impulsar</Button>) : (<div className="flex-1 bg-orange-50 border border-orange-100 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-[#F97316]"><Clock className="h-3 w-3 mr-1.5" /> {remainingLabel || "Activo"}</div>)}</div>
                        </div>
                    </div>
