@@ -131,22 +131,7 @@ const Index = () => {
         {/* Añadido margen superior (mt-[115px]) para compensar la Navbar Fixed en móvil */}
         <main className="flex-1 space-y-8 py-6 mt-[115px] md:mt-0">
           
-          {/* Banner Promocional */}
-          <div className="px-4 md:px-0">
-              <div className="bg-gradient-to-r from-[#0F172A] to-[#1e293b] rounded-2xl p-6 md:p-10 text-white relative overflow-hidden shadow-lg flex items-center justify-between">
-                <div className="relative z-10 max-w-lg">
-                  <h3 className="text-xl md:text-3xl font-bold mb-2">¡Ofrece tus servicios gratis!</h3>
-                  <p className="text-gray-300 text-sm md:text-base mb-4 max-w-[90%]">Llega a miles de clientes potenciales en tu zona y construye tu reputación digital.</p>
-                  <Button onClick={() => navigate('/publish')} size="lg" className="bg-[#F97316] text-white hover:bg-orange-600 font-bold border-0 shadow-lg hover:shadow-orange-500/20 transition-all">Publicar Servicio</Button>
-                </div>
-                <div className="hidden md:block absolute right-10 bottom-[-20px] opacity-20 transform rotate-[-15deg]">
-                  <Wrench className="w-64 h-64 text-[#F97316]" />
-                </div>
-                <div className="md:hidden absolute -right-4 -bottom-8 opacity-20 transform rotate-[-15deg]">
-                  <Wrench className="w-32 h-32 text-[#F97316]" />
-                </div>
-              </div>
-          </div>
+          {/* Banner eliminado de aquí */}
 
           {/* 1. Destacados */}
           <section>

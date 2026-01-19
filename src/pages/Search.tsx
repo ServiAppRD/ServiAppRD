@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search as SearchIcon, MapPin, Filter, Star, X, Clock, ArrowRight, Loader2, AlertCircle } from "lucide-react";
+import { Search as SearchIcon, MapPin, Filter, Star, X, Clock, ArrowRight, Loader2, AlertCircle, Wrench } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -137,6 +137,19 @@ const SearchPage = () => {
         </div>
 
         <div className="p-5 space-y-6">
+
+          {/* Banner Promocional Movido Aquí */}
+          <div className="bg-gradient-to-r from-[#0F172A] to-[#1e293b] rounded-2xl p-6 text-white relative overflow-hidden shadow-lg flex items-center justify-between">
+            <div className="relative z-10 max-w-lg">
+              <h3 className="text-xl font-bold mb-2">¡Ofrece tus servicios gratis!</h3>
+              <p className="text-gray-300 text-xs mb-4 max-w-[90%]">Llega a miles de clientes potenciales.</p>
+              <Button onClick={() => navigate('/publish')} size="sm" className="bg-[#F97316] text-white hover:bg-orange-600 font-bold border-0 shadow-lg hover:shadow-orange-500/20 transition-all">Publicar Servicio</Button>
+            </div>
+            <div className="absolute -right-4 -bottom-6 opacity-20 transform rotate-[-15deg]">
+              <Wrench className="w-32 h-32 text-[#F97316]" />
+            </div>
+          </div>
+
           <div className="flex justify-between items-center">
             <h2 className="font-bold text-gray-800 text-lg">
               {isLoading ? (
