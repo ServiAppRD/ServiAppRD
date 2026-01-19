@@ -48,8 +48,6 @@ const ServiceDetail = () => {
   };
 
   // Crear funciones RPC si no existen (fallback manual si falla RPC)
-  // Nota: Para simplificar en este entorno, hacemos update directo si el RPC no existe,
-  // pero lo ideal es el RPC para concurrencia. Aquí usaremos un update simple como fallback.
   const incrementCounterManual = async (field: 'views' | 'clicks') => {
       const { data } = await supabase.from('services').select(field).eq('id', id).single();
       if (data) {
@@ -94,7 +92,8 @@ const ServiceDetail = () => {
     }
   }, [service]);
 
-  const { data: reviews, isLoading: isLoadingReviews } = useQuery({
+  // Modificado: extraemos 'refetch' como 'refetchReviews'
+  const { data: reviews, isLoading: isLoadingReviews, refetch: refetchReviews } = useQuery({
     queryKey: ['reviews', id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -177,11 +176,13 @@ const ServiceDetail = () => {
 
        if (error) throw error;
 
+       // Modificado: Forzamos la recarga inmediata de las reseñas
+       await refetchReviews();
+       
        showSuccess("¡Gracias por tu opinión!");
        setIsReviewOpen(false);
        setNewRating(0);
        setNewComment("");
-       queryClient.invalidateQueries({ queryKey: ['reviews', id] });
 
     } catch (error: any) {
        showError(error.message);
