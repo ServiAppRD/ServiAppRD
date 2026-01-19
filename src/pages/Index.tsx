@@ -107,26 +107,24 @@ const Index = () => {
   };
 
   return (
-    <PullToRefresh onRefresh={handleRefresh}>
-      <div className="min-h-screen bg-white flex flex-col pb-20 md:pb-10">
-        <Navbar /> {/* Solo visible en móvil */}
+    <div className="min-h-screen bg-white flex flex-col pb-20 md:pb-10">
+      
+      {/* Navbar fuera del PullToRefresh para que funcione el sticky */}
+      <Navbar />
 
+      <PullToRefresh onRefresh={handleRefresh}>
+        
         <AlertDialog open={showWelcomeDialog} onOpenChange={setShowWelcomeDialog}>
-          <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto border-0 shadow-2xl">
+          <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto">
             <AlertDialogHeader className="text-center">
-              <div className="mx-auto bg-orange-100 w-12 h-12 rounded-full flex items-center justify-center mb-3"><Info className="h-6 w-6 text-[#F97316]" /></div>
-              <AlertDialogTitle className="text-xl font-bold text-center text-gray-900">¡Bienvenido a ServiAPP!</AlertDialogTitle>
-              <AlertDialogDescription className="text-center text-gray-600 mt-2 space-y-3">
-                <p>Somos una plataforma nueva y estamos construyendo esta comunidad juntos.</p>
-                <p className="font-medium text-gray-800">
-                  Es posible que aún no encuentres muchos servicios o usuarios, ¡pero pronto llegarán más!
-                </p>
-                <div className="bg-orange-50 p-3 rounded-xl border border-orange-100 text-xs text-orange-800 font-medium">
-                  Tu ayuda es vital: Si publicas un servicio hoy, ayudas a que la comunidad arranque con fuerza.
-                </div>
+              <div className="mx-auto bg-orange-100 w-12 h-12 rounded-full flex items-center justify-center mb-2"><Info className="h-6 w-6 text-[#F97316]" /></div>
+              <AlertDialogTitle className="text-xl font-bold text-center">¡Bienvenido a nuestra comunidad beta!</AlertDialogTitle>
+              <AlertDialogDescription className="text-center text-gray-600 mt-2">
+                <p className="mb-2">Estamos creciendo día a día.</p>
+                <p className="mt-2 text-xs bg-gray-50 p-2 rounded-lg border border-gray-100">Si publicas un servicio, ayudas a que la comunidad crezca.</p>
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter className="mt-2"><AlertDialogAction onClick={handleCloseWelcome} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl font-bold h-12">Entendido, ¡Apoyaré!</AlertDialogAction></AlertDialogFooter>
+            <AlertDialogFooter><AlertDialogAction onClick={handleCloseWelcome} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl">Entendido</AlertDialogAction></AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
 
@@ -186,8 +184,8 @@ const Index = () => {
           </section>
 
         </main>
-      </div>
-    </PullToRefresh>
+      </PullToRefresh>
+    </div>
   );
 };
 
