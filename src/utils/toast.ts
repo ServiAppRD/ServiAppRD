@@ -1,7 +1,8 @@
 import { toast } from "sonner";
 
 export const showSuccess = (message: string) => {
-  toast.success(message);
+  // Silenciado por configuración de usuario: solo mostrar errores.
+  console.log("Acción exitosa:", message);
 };
 
 export const showError = (message: string) => {

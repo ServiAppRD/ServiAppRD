@@ -71,8 +71,8 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {/* Notificaciones movidas arriba para no tapar la navegación */}
-        <Toaster position="top-center" />
+        {/* Notificaciones estándar (abajo-derecha por defecto), solo para errores */}
+        <Toaster />
         
         {/* SplashScreen se muestra sobre todo lo demás */}
         {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
