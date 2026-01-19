@@ -11,7 +11,7 @@ import {
   HelpCircle, ChevronRight, Star, 
   ArrowLeft, Settings, Edit2, Briefcase, Trash2, Camera, Gift, Zap, Check,
   Clock, TrendingUp, Crown, BarChart3, ShieldCheck, Eye, MousePointerClick, CalendarRange,
-  UploadCloud, AlertTriangle, FileCheck, Hammer, Lock, Shield
+  UploadCloud, AlertTriangle, FileCheck, Hammer, Lock, Shield, MoreHorizontal
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
