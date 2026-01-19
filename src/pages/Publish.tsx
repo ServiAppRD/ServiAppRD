@@ -593,10 +593,13 @@ const Publish = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="px-4 py-4 flex items-center justify-between sticky top-0 bg-white z-10">
-        <Button variant="ghost" size="icon" onClick={step === 1 ? () => navigate(-1) : handleBack}><ArrowLeft className="h-6 w-6 text-gray-900" /></Button>
-        <div className="flex gap-1">{[1, 2, 3, 4, 5].map((s) => (<div key={s} className={cn("h-1.5 rounded-full transition-all duration-300",s === step ? "w-8 bg-[#F97316]" : s < step ? "w-4 bg-[#F97316]/40" : "w-2 bg-gray-100")} />))}</div>
-        <div className="w-10" />
+      {/* Header Sticky con Safe Area */}
+      <div className="sticky top-0 bg-white z-10 pt-safe shadow-sm">
+        <div className="px-4 py-4 flex items-center justify-between">
+          <Button variant="ghost" size="icon" onClick={step === 1 ? () => navigate(-1) : handleBack}><ArrowLeft className="h-6 w-6 text-gray-900" /></Button>
+          <div className="flex gap-1">{[1, 2, 3, 4, 5].map((s) => (<div key={s} className={cn("h-1.5 rounded-full transition-all duration-300",s === step ? "w-8 bg-[#F97316]" : s < step ? "w-4 bg-[#F97316]/40" : "w-2 bg-gray-100")} />))}</div>
+          <div className="w-10" />
+        </div>
       </div>
 
       <div className="px-5 pb-32 pt-2 max-w-lg mx-auto">

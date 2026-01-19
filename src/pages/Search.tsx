@@ -81,61 +81,63 @@ const SearchPage = () => {
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
-      <div className="min-h-screen bg-gray-50 pb-24 pt-safe animate-fade-in">
+      <div className="min-h-screen bg-gray-50 pb-24 animate-fade-in">
         
-        {/* Sticky Header */}
-        <div className="bg-white sticky top-0 z-20 shadow-sm rounded-b-[1.5rem] pb-4 px-4 pt-4">
-          <h1 className="text-2xl font-bold mb-4 text-[#0F172A] px-1">Explorar Servicios</h1>
-          
-          <div className="flex gap-3 items-center">
-            <div className={cn(
-              "relative flex-1 transition-all duration-300 transform",
-              isFocused ? "scale-[1.02]" : "scale-100"
-            )}>
-              <SearchIcon className={cn(
-                "absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 transition-colors",
-                isFocused ? "text-[#F97316]" : "text-gray-400"
-              )} />
-              <Input 
-                placeholder="¿Qué necesitas arreglar hoy?" 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                className="pl-12 h-12 text-base rounded-2xl border-gray-200 bg-gray-50 focus:bg-white focus:border-[#F97316] focus:ring-[#F97316]/20 transition-all shadow-sm"
-              />
-              {searchTerm && (
-                <button 
-                  onClick={() => setSearchTerm("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 bg-gray-200 rounded-full hover:bg-gray-300 text-gray-600 transition-colors"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className="flex gap-2 overflow-x-auto no-scrollbar mt-4 pb-1 px-1 -mx-1">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={cn(
-                  "whitespace-nowrap px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 border",
-                  activeCategory === cat
-                    ? "bg-[#F97316] border-[#F97316] text-white shadow-md shadow-orange-200 scale-105"
-                    : "bg-white border-gray-100 text-gray-500 hover:border-[#F97316] hover:text-[#F97316]"
+        {/* Sticky Header with Safe Area */}
+        <div className="bg-white sticky top-0 z-20 shadow-sm rounded-b-[1.5rem] pt-safe">
+          <div className="pb-4 px-4 pt-4">
+            <h1 className="text-2xl font-bold mb-4 text-[#0F172A] px-1">Explorar Servicios</h1>
+            
+            <div className="flex gap-3 items-center">
+              <div className={cn(
+                "relative flex-1 transition-all duration-300 transform",
+                isFocused ? "scale-[1.02]" : "scale-100"
+              )}>
+                <SearchIcon className={cn(
+                  "absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 transition-colors",
+                  isFocused ? "text-[#F97316]" : "text-gray-400"
+                )} />
+                <Input 
+                  placeholder="¿Qué necesitas arreglar hoy?" 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  className="pl-12 h-12 text-base rounded-2xl border-gray-200 bg-gray-50 focus:bg-white focus:border-[#F97316] focus:ring-[#F97316]/20 transition-all shadow-sm"
+                />
+                {searchTerm && (
+                  <button 
+                    onClick={() => setSearchTerm("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 bg-gray-200 rounded-full hover:bg-gray-300 text-gray-600 transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
                 )}
-              >
-                {cat}
-              </button>
-            ))}
+              </div>
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto no-scrollbar mt-4 pb-1 px-1 -mx-1">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={cn(
+                    "whitespace-nowrap px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 border",
+                    activeCategory === cat
+                      ? "bg-[#F97316] border-[#F97316] text-white shadow-md shadow-orange-200 scale-105"
+                      : "bg-white border-gray-100 text-gray-500 hover:border-[#F97316] hover:text-[#F97316]"
+                  )}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
         <div className="p-5 space-y-6">
 
-          {/* Banner Promocional Movido Aquí */}
+          {/* Banner Promocional */}
           <div className="bg-gradient-to-r from-[#0F172A] to-[#1e293b] rounded-2xl p-6 text-white relative overflow-hidden shadow-lg flex items-center justify-between">
             <div className="relative z-10 max-w-lg">
               <h3 className="text-xl font-bold mb-2">¡Ofrece tus servicios gratis!</h3>

@@ -224,8 +224,11 @@ const ServiceDetail = () => {
       <div className="relative w-full bg-black min-h-[300px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 opacity-50 blur-xl scale-110" style={{ backgroundImage: `url(${service.image_url || "/placeholder.svg"})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
         <img src={service.image_url || "/placeholder.svg"} alt={service.title} className="relative z-10 w-full h-auto max-h-[60vh] object-contain" />
-        <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start z-20 pt-safe">
-          <Button size="icon" variant="ghost" className="rounded-full bg-black/20 backdrop-blur-md text-white hover:bg-black/40" onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6" /></Button>
+        {/* Safe Area Wrapper for Buttons */}
+        <div className="absolute top-0 left-0 right-0 z-20 pt-safe">
+            <div className="p-4 flex justify-between items-start">
+              <Button size="icon" variant="ghost" className="rounded-full bg-black/20 backdrop-blur-md text-white hover:bg-black/40" onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6" /></Button>
+            </div>
         </div>
       </div>
 
