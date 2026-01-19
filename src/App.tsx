@@ -9,8 +9,11 @@ import Search from "./pages/Search";
 import Publish from "./pages/Publish";
 import ServiceDetail from "./pages/ServiceDetail"; 
 import NotFound from "./pages/NotFound";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 import { MobileNavbar } from "./components/MobileNavbar";
 import { DesktopNavbar } from "./components/DesktopNavbar";
+import { Footer } from "./components/Footer";
 import { SplashScreen } from "@/components/SplashScreen";
 import { ActivityTracker } from "@/components/ActivityTracker";
 import { useState, useEffect } from "react";
@@ -34,7 +37,7 @@ const AppLayout = () => {
   const hideDesktopNav = ["/login"].includes(location.pathname);
 
   return (
-    <div className="min-h-screen bg-white overflow-x-hidden w-full">
+    <div className="min-h-screen bg-white overflow-x-hidden w-full flex flex-col">
       {/* Tracker global */}
       <ActivityTracker />
 
@@ -43,7 +46,7 @@ const AppLayout = () => {
       
       {/* Contenedor Principal: En móvil es full width, en desktop es centrado */}
       <div className={`
-         w-full 
+         w-full flex-1
          ${!hideMobileNav ? "pb-24 md:pb-0" : ""} 
          md:max-w-7xl md:mx-auto md:px-6 md:pt-6
       `}>
@@ -54,10 +57,15 @@ const AppLayout = () => {
           <Route path="/user/:id" element={<PublicProfile />} /> 
           <Route path="/search" element={<Search />} />
           <Route path="/publish" element={<Publish />} />
-          <Route path="/service/:id" element={<ServiceDetail />} /> 
+          <Route path="/service/:id" element={<ServiceDetail />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
+
+      {/* Footer solo visible en Desktop */}
+      <Footer />
 
       {/* Navbar Inferior (Solo Móvil) */}
       <MobileNavbar />
