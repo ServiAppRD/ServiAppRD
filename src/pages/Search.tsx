@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search as SearchIcon, MapPin, Filter, Star, X, Clock, ArrowRight, Loader2, AlertCircle, Wrench } from "lucide-react";
+import { Search as SearchIcon, MapPin, Star, X, ArrowRight, Loader2, AlertCircle, Wrench } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -113,9 +113,6 @@ const SearchPage = () => {
                 </button>
               )}
             </div>
-            <Button variant="outline" size="icon" className="h-12 w-12 rounded-2xl border-gray-200 hover:border-[#F97316] hover:text-[#F97316] hover:bg-orange-50 transition-colors shadow-sm bg-white">
-              <Filter className="h-5 w-5" />
-            </Button>
           </div>
 
           <div className="flex gap-2 overflow-x-auto no-scrollbar mt-4 pb-1 px-1 -mx-1">

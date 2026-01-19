@@ -1,5 +1,4 @@
-import { Search, SlidersHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -53,9 +52,6 @@ export const Navbar = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button type="button" onClick={() => handleSearch()} variant="ghost" size="icon" className="text-[#F97316] hover:bg-orange-50 shrink-0">
-            <SlidersHorizontal className="h-6 w-6" />
-          </Button>
         </form>
 
         {/* Categories / Tags Scroll - Collapses smoothly */}
