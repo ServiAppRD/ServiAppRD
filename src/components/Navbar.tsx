@@ -37,7 +37,7 @@ export const Navbar = () => {
 
   return (
     <div className={cn(
-      "md:hidden bg-white sticky top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out w-full border-b border-gray-100",
+      "md:hidden bg-white fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out w-full border-b border-gray-100",
       isScrolled ? "py-2 shadow-md" : "py-3 shadow-sm"
     )}>
       <div className="container mx-auto px-4">

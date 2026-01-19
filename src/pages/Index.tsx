@@ -109,7 +109,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col pb-20 md:pb-10">
       
-      {/* Navbar fuera del PullToRefresh para mantener sticky behavior */}
+      {/* Navbar fija */}
       <Navbar />
 
       <AlertDialog open={showWelcomeDialog} onOpenChange={setShowWelcomeDialog}>
@@ -126,47 +126,50 @@ const Index = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <PullToRefresh onRefresh={handleRefresh}>
-        <main className="flex-1 space-y-8 py-6 md:mt-0">
-          
-          {/* 1. Destacados */}
-          <section>
-            <SectionHeader title="Profesionales Destacados" icon={Crown} />
-            <ResponsiveGrid isLoading={loadingFeatured} emptyMessage="Espacio disponible para destacar" icon={Crown}>
-              {featuredServices?.map((item) => (
-                  <div key={item.id} onClick={() => navigate(`/service/${item.id}`)} className="h-full">
-                    <ServiceCard id={item.id} title={item.title} price={`RD$ ${item.price}`} image={item.image_url || "/placeholder.svg"} badge={{ text: "Top", color: "orange" }} />
-                  </div>
-              ))}
-            </ResponsiveGrid>
-          </section>
+      {/* Padding superior de 120px para que el contenido no quede debajo de la navbar fija en móvil */}
+      <div className="pt-[120px] md:pt-0">
+        <PullToRefresh onRefresh={handleRefresh}>
+          <main className="flex-1 space-y-8 py-6 md:mt-0">
+            
+            {/* 1. Destacados */}
+            <section>
+              <SectionHeader title="Profesionales Destacados" icon={Crown} />
+              <ResponsiveGrid isLoading={loadingFeatured} emptyMessage="Espacio disponible para destacar" icon={Crown}>
+                {featuredServices?.map((item) => (
+                    <div key={item.id} onClick={() => navigate(`/service/${item.id}`)} className="h-full">
+                      <ServiceCard id={item.id} title={item.title} price={`RD$ ${item.price}`} image={item.image_url || "/placeholder.svg"} badge={{ text: "Top", color: "orange" }} />
+                    </div>
+                ))}
+              </ResponsiveGrid>
+            </section>
 
-          {/* 2. Recientes */}
-          <section className="-mt-2 md:mt-0">
-            <SectionHeader title="Recién Publicados" icon={Clock} />
-            <ResponsiveGrid isLoading={loadingRecent} emptyMessage="No hay publicaciones nuevas en las últimas 24h." icon={Clock}>
-              {recentServices?.map((item) => (
-                  <div key={item.id} onClick={() => navigate(`/service/${item.id}`)} className="h-full">
-                    <ServiceCard id={item.id} title={item.title} price={`RD$ ${item.price}`} image={item.image_url || "/placeholder.svg"} badge={{ text: "Nuevo", color: "blue" }} />
-                  </div>
-              ))}
-            </ResponsiveGrid>
-          </section>
+            {/* 2. Recientes */}
+            <section className="-mt-2 md:mt-0">
+              <SectionHeader title="Recién Publicados" icon={Clock} />
+              <ResponsiveGrid isLoading={loadingRecent} emptyMessage="No hay publicaciones nuevas en las últimas 24h." icon={Clock}>
+                {recentServices?.map((item) => (
+                    <div key={item.id} onClick={() => navigate(`/service/${item.id}`)} className="h-full">
+                      <ServiceCard id={item.id} title={item.title} price={`RD$ ${item.price}`} image={item.image_url || "/placeholder.svg"} badge={{ text: "Nuevo", color: "blue" }} />
+                    </div>
+                ))}
+              </ResponsiveGrid>
+            </section>
 
-          {/* 3. Recomendados */}
-          <section className="-mt-2 md:mt-0">
-            <SectionHeader title={recommendedCategory ? `Porque buscaste: ${recommendedCategory}` : "Recomendados para ti"} icon={Sparkles} />
-            <ResponsiveGrid isLoading={loadingRecommended} emptyMessage={recommendedCategory ? "No encontramos más servicios de esta categoría." : "Explora categorías para recibir recomendaciones."} icon={Sparkles}>
-              {recommendedServices?.map((item) => (
-                  <div key={item.id} onClick={() => navigate(`/service/${item.id}`)} className="h-full">
-                    <ServiceCard id={item.id} title={item.title} price={`RD$ ${item.price}`} image={item.image_url} />
-                  </div>
-              ))}
-            </ResponsiveGrid>
-          </section>
+            {/* 3. Recomendados */}
+            <section className="-mt-2 md:mt-0">
+              <SectionHeader title={recommendedCategory ? `Porque buscaste: ${recommendedCategory}` : "Recomendados para ti"} icon={Sparkles} />
+              <ResponsiveGrid isLoading={loadingRecommended} emptyMessage={recommendedCategory ? "No encontramos más servicios de esta categoría." : "Explora categorías para recibir recomendaciones."} icon={Sparkles}>
+                {recommendedServices?.map((item) => (
+                    <div key={item.id} onClick={() => navigate(`/service/${item.id}`)} className="h-full">
+                      <ServiceCard id={item.id} title={item.title} price={`RD$ ${item.price}`} image={item.image_url} />
+                    </div>
+                ))}
+              </ResponsiveGrid>
+            </section>
 
-        </main>
-      </PullToRefresh>
+          </main>
+        </PullToRefresh>
+      </div>
     </div>
   );
 };
