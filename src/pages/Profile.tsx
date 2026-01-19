@@ -122,6 +122,7 @@ const Profile = () => {
   const [newPassword, setNewPassword] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [showDeleteAccountDialog, setShowDeleteAccountDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -392,13 +393,25 @@ const Profile = () => {
   };
 
   const handleDeleteAccount = async () => {
-    const { error } = await supabase.from('profiles').delete().eq('id', session.user.id);
-    if (error) {
-       showError("Error al eliminar datos. Contacta soporte.");
-    } else {
+    setIsDeleting(true);
+    try {
+       // Invocamos la Edge Function para que borre al usuario de auth.users (y cascada)
+       const { error } = await supabase.functions.invoke('delete-user');
+       
+       if (error) {
+         console.error(error);
+         throw new Error("No se pudo completar la eliminación.");
+       }
+
        await supabase.auth.signOut();
        navigate('/');
-       showSuccess("Tu cuenta ha sido eliminada.");
+       showSuccess("Tu cuenta y datos han sido eliminados permanentemente.");
+       
+    } catch (error: any) {
+       console.error("Error eliminando cuenta:", error);
+       showError("Hubo un error al eliminar tu cuenta. Intenta de nuevo.");
+    } finally {
+       setIsDeleting(false);
     }
   };
 
@@ -562,8 +575,10 @@ const Profile = () => {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="rounded-xl border-gray-200">Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteAccount} className="bg-red-600 hover:bg-red-700 rounded-xl">Sí, eliminar cuenta</AlertDialogAction>
+              <AlertDialogCancel disabled={isDeleting} className="rounded-xl border-gray-200">Cancelar</AlertDialogCancel>
+              <AlertDialogAction disabled={isDeleting} onClick={handleDeleteAccount} className="bg-red-600 hover:bg-red-700 rounded-xl">
+                  {isDeleting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : "Sí, eliminar cuenta"}
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
