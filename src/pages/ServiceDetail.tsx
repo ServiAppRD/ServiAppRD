@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, ArrowLeft, MapPin, Check, Phone, Calendar, Star, MessageCircle, Send, Facebook, Instagram, Globe, AlertCircle } from "lucide-react";
+import { Loader2, ArrowLeft, MapPin, Check, Phone, Calendar, Star, MessageCircle, Send, Facebook, Instagram, Globe, AlertCircle, Flag, MoreVertical } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { showSuccess, showError } from "@/utils/toast";
 import { useState, useEffect, useRef } from "react";
@@ -16,16 +16,47 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const REPORT_REASONS = [
+  "Contenido inapropiado",
+  "Estafa o fraude",
+  "Servicio ilegal",
+  "Información falsa",
+  "Spam",
+  "Otro"
+];
 
 const ServiceDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
   const [newRating, setNewRating] = useState(0);
   const [newComment, setNewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  
+  // Report State
+  const [reportReason, setReportReason] = useState("");
+  const [reportDetails, setReportDetails] = useState("");
+  const [reporting, setReporting] = useState(false);
+
   const viewTracked = useRef(false);
 
   // --- TRACKING ---
@@ -199,6 +230,38 @@ const ServiceDetail = () => {
     }
   };
 
+  const handleReport = async () => {
+    if (!reportReason) return showError("Selecciona una razón");
+    
+    setReporting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        showError("Inicia sesión para reportar");
+        navigate("/login");
+        return;
+      }
+
+      const { error } = await supabase.from('reports').insert({
+        reporter_id: session.user.id,
+        reported_service_id: id,
+        reason: reportReason,
+        details: reportDetails
+      });
+
+      if (error) throw error;
+      showSuccess("Reporte enviado. Revisaremos el caso.");
+      setIsReportOpen(false);
+      setReportReason("");
+      setReportDetails("");
+    } catch (error: any) {
+      console.error(error);
+      showError("Error al enviar reporte");
+    } finally {
+      setReporting(false);
+    }
+  };
+
   if (isLoadingService) {
     return <div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="h-8 w-8 animate-spin text-[#F97316]" /></div>;
   }
@@ -220,6 +283,49 @@ const ServiceDetail = () => {
 
   return (
     <div className="min-h-screen bg-white pb-32 animate-fade-in">
+      {/* Report Dialog */}
+      <Dialog open={isReportOpen} onOpenChange={setIsReportOpen}>
+        <DialogContent className="sm:max-w-md rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Flag className="h-5 w-5" /> Reportar Publicación
+            </DialogTitle>
+            <DialogDescription>
+              Ayúdanos a mantener la comunidad segura. Este reporte es anónimo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Motivo</label>
+              <Select value={reportReason} onValueChange={setReportReason}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona un motivo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {REPORT_REASONS.map((r) => (
+                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Detalles adicionales (Opcional)</label>
+              <Textarea 
+                placeholder="Describe el problema..."
+                value={reportDetails}
+                onChange={(e) => setReportDetails(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsReportOpen(false)}>Cancelar</Button>
+            <Button variant="destructive" onClick={handleReport} disabled={reporting}>
+              {reporting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar Reporte"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Header Image */}
       <div className="relative w-full bg-black min-h-[300px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 opacity-50 blur-xl scale-110" style={{ backgroundImage: `url(${service.image_url || "/placeholder.svg"})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
@@ -228,6 +334,19 @@ const ServiceDetail = () => {
         <div className="absolute top-0 left-0 right-0 z-20 pt-safe">
             <div className="p-4 flex justify-between items-start">
               <Button size="icon" variant="ghost" className="rounded-full bg-black/20 backdrop-blur-md text-white hover:bg-black/40" onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6" /></Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="icon" variant="ghost" className="rounded-full bg-black/20 backdrop-blur-md text-white hover:bg-black/40">
+                    <MoreVertical className="h-6 w-6" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="rounded-xl">
+                  <DropdownMenuItem onClick={() => setIsReportOpen(true)} className="text-red-600 focus:text-red-600">
+                    <Flag className="mr-2 h-4 w-4" /> Reportar
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
         </div>
       </div>

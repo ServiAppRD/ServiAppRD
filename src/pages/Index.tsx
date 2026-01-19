@@ -71,11 +71,24 @@ const Index = () => {
     localStorage.setItem("hasSeenAppWelcome", "true");
   };
 
+  // Helper para obtener IDs bloqueados
+  const getBlockedIds = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return [];
+    const { data } = await supabase.from('blocked_users').select('blocked_user_id').eq('blocker_id', session.user.id);
+    return data?.map(b => b.blocked_user_id) || [];
+  };
+
   const { data: featuredServices, isLoading: loadingFeatured, refetch: refetchFeatured } = useQuery({
     queryKey: ['featuredServices'],
     queryFn: async () => {
+      const blockedIds = await getBlockedIds();
       const now = new Date().toISOString();
-      const { data, error } = await supabase.from('services').select('*').eq('is_promoted', true).gt('promoted_until', now).is('deleted_at', null).order('promoted_until', { ascending: true }).limit(10);
+      let query = supabase.from('services').select('*').eq('is_promoted', true).gt('promoted_until', now).is('deleted_at', null).order('promoted_until', { ascending: true }).limit(10);
+      
+      if (blockedIds.length > 0) query = query.not('user_id', 'in', `(${blockedIds.join(',')})`);
+      
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     }
@@ -84,8 +97,13 @@ const Index = () => {
   const { data: recentServices, isLoading: loadingRecent, refetch: refetchRecent } = useQuery({
     queryKey: ['recentServices'],
     queryFn: async () => {
+      const blockedIds = await getBlockedIds();
       const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-      const { data, error } = await supabase.from('services').select('*').gt('created_at', yesterday.toISOString()).is('deleted_at', null).order('created_at', { ascending: false }).limit(10);
+      let query = supabase.from('services').select('*').gt('created_at', yesterday.toISOString()).is('deleted_at', null).order('created_at', { ascending: false }).limit(10);
+      
+      if (blockedIds.length > 0) query = query.not('user_id', 'in', `(${blockedIds.join(',')})`);
+
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     }
@@ -95,7 +113,12 @@ const Index = () => {
     queryKey: ['recommendedServices', recommendedCategory],
     queryFn: async () => {
       if (!recommendedCategory) return [];
-      const { data, error } = await supabase.from('services').select('*').eq('category', recommendedCategory).is('deleted_at', null).limit(10);
+      const blockedIds = await getBlockedIds();
+      let query = supabase.from('services').select('*').eq('category', recommendedCategory).is('deleted_at', null).limit(10);
+      
+      if (blockedIds.length > 0) query = query.not('user_id', 'in', `(${blockedIds.join(',')})`);
+
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },

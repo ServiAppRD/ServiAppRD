@@ -43,7 +43,17 @@ const SearchPage = () => {
   const { data: services, isLoading, error, refetch } = useQuery({
     queryKey: ['services'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // 1. Obtener lista de bloqueados
+      const { data: { session } } = await supabase.auth.getSession();
+      let blockedIds: string[] = [];
+      
+      if (session) {
+          const { data: blocked } = await supabase.from('blocked_users').select('blocked_user_id').eq('blocker_id', session.user.id);
+          if (blocked) blockedIds = blocked.map(b => b.blocked_user_id);
+      }
+
+      // 2. Fetch servicios
+      let query = supabase
         .from('services')
         .select(`
           *,
@@ -54,6 +64,15 @@ const SearchPage = () => {
         `)
         .is('deleted_at', null) // Filtrar borrados
         .order('created_at', { ascending: false });
+
+      // Filtrar bloqueados si existen
+      if (blockedIds.length > 0) {
+        // Usamos una sintaxis compatible para excluir IDs
+        // "not.user_id.in.(id1,id2)"
+        query = query.not('user_id', 'in', `(${blockedIds.join(',')})`);
+      }
+      
+      const { data, error } = await query;
       
       if (error) throw error;
       return data;

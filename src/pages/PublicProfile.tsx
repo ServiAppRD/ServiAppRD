@@ -3,9 +3,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Loader2, MapPin, Phone, Star, ArrowLeft, MessageCircle } from "lucide-react";
+import { Loader2, MapPin, Phone, Star, ArrowLeft, MessageCircle, MoreVertical, Ban } from "lucide-react";
 import { ServiceCard } from "@/components/ServiceCard";
-import { showError } from "@/utils/toast";
+import { showError, showSuccess } from "@/utils/toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const PublicProfile = () => {
   const { id } = useParams();
@@ -15,6 +21,7 @@ const PublicProfile = () => {
   const [loading, setLoading] = useState(true);
   const [reviews, setReviews] = useState<any[]>([]);
   const [stats, setStats] = useState({ rating: 0, count: 0 });
+  const [isBlocked, setIsBlocked] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -23,7 +30,19 @@ const PublicProfile = () => {
       try {
         setLoading(true);
 
-        // 1. Fetch Profile
+        const { data: { session } } = await supabase.auth.getSession();
+
+        // 1. Check if blocked
+        if (session) {
+           const { data: blockData } = await supabase.from('blocked_users')
+             .select('id')
+             .eq('blocker_id', session.user.id)
+             .eq('blocked_user_id', id)
+             .maybeSingle();
+           if (blockData) setIsBlocked(true);
+        }
+
+        // 2. Fetch Profile
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -33,7 +52,7 @@ const PublicProfile = () => {
         if (profileError) throw profileError;
         setProfile(profileData);
 
-        // 2. Fetch User Services
+        // 3. Fetch User Services
         const { data: servicesData } = await supabase
           .from('services')
           .select('*')
@@ -43,7 +62,7 @@ const PublicProfile = () => {
         
         setServices(servicesData || []);
 
-        // 3. Fetch Reviews & Calculate Stats
+        // 4. Fetch Reviews & Calculate Stats
         const { data: reviewsData } = await supabase
           .from('reviews')
           .select('*')
@@ -77,6 +96,42 @@ const PublicProfile = () => {
     }
   };
 
+  const handleBlockUser = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        showError("Inicia sesión para bloquear");
+        navigate("/login");
+        return;
+      }
+
+      if (isBlocked) {
+        // Unblock
+        const { error } = await supabase.from('blocked_users')
+          .delete()
+          .eq('blocker_id', session.user.id)
+          .eq('blocked_user_id', id);
+        
+        if (error) throw error;
+        setIsBlocked(false);
+        showSuccess("Usuario desbloqueado");
+      } else {
+        // Block
+        const { error } = await supabase.from('blocked_users')
+          .insert({ blocker_id: session.user.id, blocked_user_id: id });
+        
+        if (error) throw error;
+        setIsBlocked(true);
+        showSuccess("Usuario bloqueado. No verás sus publicaciones.");
+        // Opcional: Volver atrás después de bloquear
+        navigate(-1);
+      }
+    } catch (error: any) {
+      console.error(error);
+      showError("Error al actualizar bloqueo");
+    }
+  };
+
   if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-[#F97316] h-8 w-8" /></div>;
   if (!profile) return <div className="h-screen flex items-center justify-center">Usuario no encontrado</div>;
 
@@ -95,6 +150,22 @@ const PublicProfile = () => {
          >
             <ArrowLeft className="h-6 w-6" />
          </Button>
+
+         <div className="absolute top-4 right-4">
+            <DropdownMenu>
+               <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
+                     <MoreVertical className="h-6 w-6" />
+                  </Button>
+               </DropdownMenuTrigger>
+               <DropdownMenuContent align="end" className="rounded-xl">
+                  <DropdownMenuItem onClick={handleBlockUser} className={isBlocked ? "text-gray-700" : "text-red-600 focus:text-red-600"}>
+                     <Ban className="mr-2 h-4 w-4" />
+                     {isBlocked ? "Desbloquear usuario" : "Bloquear usuario"}
+                  </DropdownMenuItem>
+               </DropdownMenuContent>
+            </DropdownMenu>
+         </div>
       </div>
 
       <div className="px-5 -mt-16 pb-20">
@@ -128,37 +199,45 @@ const PublicProfile = () => {
               )}
            </div>
 
-           <div className="mt-6 w-full grid grid-cols-2 gap-3">
-              <Button variant="outline" className="w-full rounded-xl" onClick={handleWhatsApp}>
-                 <MessageCircle className="mr-2 h-4 w-4" /> Chat
-              </Button>
-              <Button className="w-full rounded-xl bg-[#F97316] hover:bg-orange-600" onClick={handleWhatsApp}>
-                 Contratar
-              </Button>
-           </div>
-        </div>
-
-        {/* Services Section */}
-        <div className="mt-8">
-           <h2 className="text-lg font-bold mb-4 text-gray-900">Servicios Publicados ({services.length})</h2>
-           {services.length > 0 ? (
-             <div className="grid grid-cols-2 gap-4">
-               {services.map((service) => (
-                 <div key={service.id} onClick={() => navigate(`/service/${service.id}`)}>
-                    <ServiceCard 
-                       title={service.title} 
-                       price={`RD$ ${service.price}`} 
-                       image={service.image_url} 
-                    />
-                 </div>
-               ))}
+           {isBlocked ? (
+             <div className="mt-6 w-full p-4 bg-red-50 text-red-600 rounded-xl text-sm font-medium border border-red-100">
+                Has bloqueado a este usuario.
              </div>
            ) : (
-             <div className="text-center py-10 text-gray-400 bg-white rounded-2xl border border-dashed">
-               Este usuario aún no tiene servicios activos.
+             <div className="mt-6 w-full grid grid-cols-2 gap-3">
+                <Button variant="outline" className="w-full rounded-xl" onClick={handleWhatsApp}>
+                   <MessageCircle className="mr-2 h-4 w-4" /> Chat
+                </Button>
+                <Button className="w-full rounded-xl bg-[#F97316] hover:bg-orange-600" onClick={handleWhatsApp}>
+                   Contratar
+                </Button>
              </div>
            )}
         </div>
+
+        {/* Services Section - Hidden if blocked */}
+        {!isBlocked && (
+          <div className="mt-8">
+             <h2 className="text-lg font-bold mb-4 text-gray-900">Servicios Publicados ({services.length})</h2>
+             {services.length > 0 ? (
+               <div className="grid grid-cols-2 gap-4">
+                 {services.map((service) => (
+                   <div key={service.id} onClick={() => navigate(`/service/${service.id}`)}>
+                      <ServiceCard 
+                         title={service.title} 
+                         price={`RD$ ${service.price}`} 
+                         image={service.image_url} 
+                      />
+                   </div>
+                 ))}
+               </div>
+             ) : (
+               <div className="text-center py-10 text-gray-400 bg-white rounded-2xl border border-dashed">
+                 Este usuario aún no tiene servicios activos.
+               </div>
+             )}
+          </div>
+        )}
       </div>
     </div>
   );
