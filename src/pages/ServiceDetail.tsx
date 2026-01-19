@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, ArrowLeft, MapPin, Check, Phone, Calendar, Star, MessageCircle, Send, Facebook, Instagram, Globe } from "lucide-react";
+import { Loader2, ArrowLeft, MapPin, Check, Phone, Calendar, Star, MessageCircle, Send, Facebook, Instagram, Globe, AlertCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { showSuccess, showError } from "@/utils/toast";
 import { useState, useEffect, useRef } from "react";
@@ -92,8 +92,13 @@ const ServiceDetail = () => {
     }
   }, [service]);
 
-  // Modificado: extraemos 'refetch' como 'refetchReviews'
-  const { data: reviews, isLoading: isLoadingReviews, refetch: refetchReviews } = useQuery({
+  // Modificado: extraemos 'refetch' como 'refetchReviews' y 'isError'
+  const { 
+    data: reviews, 
+    isLoading: isLoadingReviews, 
+    refetch: refetchReviews,
+    isError: isErrorReviews 
+  } = useQuery({
     queryKey: ['reviews', id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -109,7 +114,10 @@ const ServiceDetail = () => {
         .eq('service_id', id)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching reviews:", error);
+        throw error;
+      }
       return data || [];
     }
   });
@@ -365,6 +373,11 @@ const ServiceDetail = () => {
            {/* Review List */}
            {isLoadingReviews ? (
               <Loader2 className="h-6 w-6 animate-spin mx-auto text-gray-300" />
+           ) : isErrorReviews ? (
+              <div className="bg-red-50 p-4 rounded-xl flex items-center gap-3 text-red-600 text-sm">
+                 <AlertCircle className="h-5 w-5" />
+                 Error cargando reseñas. Intenta refrescar.
+              </div>
            ) : reviews && reviews.length > 0 ? (
               <div className="space-y-4">
                  {reviews.map((review: any) => (
