@@ -109,7 +109,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col pb-20 md:pb-10">
       
-      {/* Navbar fuera del PullToRefresh para que funcione el sticky */}
+      {/* Navbar Fixed */}
       <Navbar />
 
       <PullToRefresh onRefresh={handleRefresh}>
@@ -128,7 +128,8 @@ const Index = () => {
           </AlertDialogContent>
         </AlertDialog>
 
-        <main className="flex-1 space-y-8 py-6">
+        {/* Añadido margen superior (mt-[115px]) para compensar la Navbar Fixed en móvil */}
+        <main className="flex-1 space-y-8 py-6 mt-[115px] md:mt-0">
           
           {/* Banner Promocional */}
           <div className="px-4 md:px-0">
