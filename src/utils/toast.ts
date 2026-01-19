@@ -1,18 +1,19 @@
-import { toast } from "sonner";
+// Sistema de notificaciones deshabilitado por solicitud.
+// Los mensajes solo se registrarán en la consola.
 
 export const showSuccess = (message: string) => {
-  // Silenciado por configuración de usuario: solo mostrar errores.
-  console.log("Acción exitosa:", message);
+  console.log("[Success]:", message);
 };
 
 export const showError = (message: string) => {
-  toast.error(message);
+  console.error("[Error]:", message);
 };
 
 export const showLoading = (message: string) => {
-  return toast.loading(message);
+  console.log("[Loading]:", message);
+  return "dummy-id"; // Retornamos un ID ficticio para mantener compatibilidad de tipos
 };
 
 export const dismissToast = (toastId: string) => {
-  toast.dismiss(toastId);
+  // No hacer nada
 };

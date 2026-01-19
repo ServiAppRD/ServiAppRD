@@ -17,7 +17,6 @@ import { Footer } from "./components/Footer";
 import { SplashScreen } from "@/components/SplashScreen";
 import { ActivityTracker } from "@/components/ActivityTracker";
 import { useState, useEffect } from "react";
-import { Toaster } from "@/components/ui/sonner";
 
 const queryClient = new QueryClient();
 
@@ -79,8 +78,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {/* Notificaciones estándar (abajo-derecha por defecto), solo para errores */}
-        <Toaster />
+        {/* Notificaciones visuales eliminadas */}
         
         {/* SplashScreen se muestra sobre todo lo demás */}
         {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
