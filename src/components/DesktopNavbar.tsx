@@ -39,9 +39,8 @@ export const DesktopNavbar = () => {
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between gap-8">
         
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-          <img src="/logo.png" alt="ServiAPP" className="h-10 w-auto" />
-          <span className="font-bold text-xl tracking-tight text-gray-900">ServiAPP</span>
+        <Link to="/" className="flex items-center gap-2 flex-shrink-0 hover:opacity-90 transition-opacity">
+          <img src="/logo.png" alt="ServiAPP" className="h-14 w-auto object-contain" />
         </Link>
 
         {/* Search Bar - Centered */}
