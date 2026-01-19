@@ -9,15 +9,14 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { showSuccess, showError, showLoading, dismissToast } from "@/utils/toast";
-import { Loader2, Phone, ShieldCheck, ArrowRight, MessageSquare } from "lucide-react";
+import { showSuccess, showError } from "@/utils/toast";
+import { Loader2, Phone, ShieldCheck } from "lucide-react";
 
 interface PhoneVerificationDialogProps {
   open: boolean;
@@ -37,50 +36,75 @@ export const PhoneVerificationDialog = ({
   const [step, setStep] = useState<'input' | 'verify'>('input');
   const [phone, setPhone] = useState(currentPhone);
   const [code, setCode] = useState("");
-  const [generatedCode, setGeneratedCode] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Helper para formatear a E.164 (Asumiendo RD +1 si son 10 dígitos)
+  const formatPhone = (input: string) => {
+    const numbers = input.replace(/\D/g, '');
+    if (numbers.length === 10) return `+1${numbers}`;
+    return `+${numbers}`;
+  };
+
   const handleSendCode = async () => {
-    if (!phone || phone.length < 10) {
+    const cleanNumber = phone.replace(/\D/g, '');
+    if (cleanNumber.length < 10) {
       showError("Ingresa un número válido (mínimo 10 dígitos)");
       return;
     }
 
     setLoading(true);
-    // SIMULACIÓN DE ENVÍO SMS
-    // En producción, aquí llamarías a tu Edge Function con Twilio/MessageBird
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const mockCode = Math.floor(100000 + Math.random() * 900000).toString();
-    setGeneratedCode(mockCode);
-    setLoading(false);
-    setStep('verify');
-    
-    // MOSTRAR EL CÓDIGO AL USUARIO (Para simulación)
-    showSuccess(`Tu código de verificación es: ${mockCode}`);
-    console.log("SMS Code Sent:", mockCode);
+    try {
+      const formattedPhone = formatPhone(phone);
+      console.log("Enviando código a:", formattedPhone);
+
+      // Enviar OTP real vía Supabase (SMS provider configurado)
+      const { error } = await supabase.auth.updateUser({
+        phone: formattedPhone
+      });
+
+      if (error) throw error;
+
+      showSuccess("Código SMS enviado. Revisa tu celular.");
+      setStep('verify');
+      
+    } catch (error: any) {
+      console.error(error);
+      showError(error.message || "Error al enviar el SMS. Intenta más tarde.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleVerify = async () => {
-    if (code !== generatedCode) {
-      showError("Código incorrecto. Intenta de nuevo.");
-      setCode("");
+    if (code.length < 6) {
+      showError("El código debe tener 6 dígitos");
       return;
     }
 
     setLoading(true);
     try {
-      // 1. Actualizar el perfil con el teléfono y el estado verificado
-      const { error } = await supabase
+      const formattedPhone = formatPhone(phone);
+
+      // Verificar el OTP real
+      const { error } = await supabase.auth.verifyOtp({
+        phone: formattedPhone,
+        token: code,
+        type: 'phone_change'
+      });
+
+      if (error) throw error;
+
+      // Actualizar el perfil público en la base de datos
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({ 
-          phone: phone,
+          phone: formattedPhone,
           phone_verified: true,
           updated_at: new Date().toISOString()
         })
         .eq('id', userId);
 
-      if (error) throw error;
+      if (profileError) throw profileError;
 
       showSuccess("¡Teléfono verificado exitosamente!");
       onVerified();
@@ -88,7 +112,7 @@ export const PhoneVerificationDialog = ({
       
     } catch (error: any) {
       console.error(error);
-      showError("Error al guardar la verificación");
+      showError(error.message || "Código inválido o expirado.");
     } finally {
       setLoading(false);
     }
@@ -108,7 +132,7 @@ export const PhoneVerificationDialog = ({
           </div>
           <DialogTitle className="text-xl font-bold">Verificación de Seguridad</DialogTitle>
           <DialogDescription className="text-center">
-            Para mantener la comunidad segura, necesitamos verificar tu número antes de publicar.
+            Para publicar servicios, necesitamos verificar que tu número es real mediante un SMS.
           </DialogDescription>
         </DialogHeader>
 
@@ -127,21 +151,21 @@ export const PhoneVerificationDialog = ({
                       type="tel"
                    />
                 </div>
-                <p className="text-xs text-gray-500">Te enviaremos un código por SMS.</p>
+                <p className="text-xs text-gray-500">Recibirás un código de 6 dígitos.</p>
               </div>
               <Button 
                 onClick={handleSendCode} 
                 className="w-full bg-[#F97316] hover:bg-orange-600 h-12 text-base font-bold"
                 disabled={loading}
               >
-                {loading ? <Loader2 className="animate-spin" /> : "Enviar Código"}
+                {loading ? <Loader2 className="animate-spin" /> : "Enviar SMS"}
               </Button>
             </div>
           ) : (
             <div className="space-y-6 animate-fade-in flex flex-col items-center">
                <div className="text-center space-y-1">
-                  <p className="text-sm text-gray-600">Hemos enviado un código al</p>
-                  <p className="font-bold text-gray-900">{phone} <span onClick={handleBack} className="text-[#F97316] text-xs underline cursor-pointer ml-1">Cambiar</span></p>
+                  <p className="text-sm text-gray-600">Ingresa el código enviado a</p>
+                  <p className="font-bold text-gray-900">{formatPhone(phone)} <span onClick={handleBack} className="text-[#F97316] text-xs underline cursor-pointer ml-1">Cambiar</span></p>
                </div>
 
                <InputOTP maxLength={6} value={code} onChange={setCode}>
@@ -160,11 +184,11 @@ export const PhoneVerificationDialog = ({
                 className="w-full bg-[#F97316] hover:bg-orange-600 h-12 text-base font-bold"
                 disabled={loading || code.length < 6}
               >
-                {loading ? <Loader2 className="animate-spin" /> : "Verificar Teléfono"}
+                {loading ? <Loader2 className="animate-spin" /> : "Verificar Código"}
               </Button>
               
               <button onClick={handleSendCode} disabled={loading} className="text-xs text-gray-500 hover:text-gray-900 underline">
-                 Reenviar código
+                 ¿No llegó? Reenviar código
               </button>
             </div>
           )}
