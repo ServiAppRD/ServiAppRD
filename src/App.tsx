@@ -27,7 +27,7 @@ const AppLayout = () => {
   const hideDesktopNav = ["/login"].includes(location.pathname);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white overflow-x-hidden w-full">
       {/* Tracker global */}
       <ActivityTracker />
 
