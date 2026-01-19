@@ -13,7 +13,7 @@ import { MobileNavbar } from "./components/MobileNavbar";
 import { DesktopNavbar } from "./components/DesktopNavbar";
 import { SplashScreen } from "@/components/SplashScreen";
 import { ActivityTracker } from "@/components/ActivityTracker";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 
 const queryClient = new QueryClient();
@@ -21,6 +21,12 @@ const queryClient = new QueryClient();
 // Componente Layout para manejar el padding condicionalmente
 const AppLayout = () => {
   const location = useLocation();
+  
+  // Scroll automático hacia arriba al cambiar de ruta
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   // Ocultamos navbar móvil en publicar, login y detalles
   const hideMobileNav = ["/publish", "/login"].includes(location.pathname) || location.pathname.startsWith("/service/") || location.pathname.startsWith("/user/");
   
