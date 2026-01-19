@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ServiceCard } from "@/components/ServiceCard";
-import { PhoneVerificationDialog } from "@/components/PhoneVerificationDialog";
+import { EmailVerificationDialog } from "@/components/EmailVerificationDialog";
 
 // Constantes de Datos con Iconos
 const CATEGORIES = [
@@ -100,8 +100,9 @@ const Publish = () => {
   const [session, setSession] = useState<any>(null);
   const [userBoosts, setUserBoosts] = useState(0);
   const [useBoostToPay, setUseBoostToPay] = useState(false);
-  const [userPhone, setUserPhone] = useState("");
-  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+  
+  // Estado para verificación de email
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
   
   // Dialogs State
   const [showPublishWelcome, setShowPublishWelcome] = useState(false);
@@ -140,23 +141,16 @@ const Publish = () => {
       }
       setSession(session);
 
+      // Chequear si el email está confirmado
+      if (session.user.email_confirmed_at) {
+        setIsEmailVerified(true);
+      } else {
+        setIsEmailVerified(false);
+      }
+
       // Fetch user boosts
       const { data: stats } = await supabase.from('user_stats').select('boosts').eq('user_id', session.user.id).maybeSingle();
       if (stats) setUserBoosts(stats.boosts || 0);
-
-      // Verificar estado del teléfono
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('phone, phone_verified')
-        .eq('id', session.user.id)
-        .single();
-      
-      if (profile) {
-        setUserPhone(profile.phone || "");
-        setIsPhoneVerified(profile.phone_verified || false);
-        
-        // Si no está verificado, bloquear navegación hasta que lo haga (lo haremos al intentar publicar)
-      }
 
       const hasSeenPublishMsg = localStorage.getItem("hasSeenPublishWelcome");
       if (!hasSeenPublishMsg) setTimeout(() => setShowPublishWelcome(true), 500);
@@ -227,7 +221,7 @@ const Publish = () => {
 
   // Esta función se llama cuando se intenta publicar
   const checkVerificationBeforeSubmit = () => {
-    if (!isPhoneVerified) {
+    if (!isEmailVerified) {
       setShowVerificationDialog(true);
       return;
     }
@@ -300,11 +294,8 @@ const Publish = () => {
   };
 
   const onVerifiedSuccess = () => {
-    setIsPhoneVerified(true);
-    // Auto-submit after verification success if desired, or let user click publish again
-    // For better UX, let's just close modal and user clicks Publish again to confirm intent
-    // But we can also trigger handleSubmit immediately. Let's let them click.
-    // Actually, triggering submit is better UX.
+    setIsEmailVerified(true);
+    // Auto-enviar después de verificar
     setTimeout(() => {
        handleSubmit();
     }, 500);
@@ -612,14 +603,13 @@ const Publish = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* DIÁLOGO DE VERIFICACIÓN DE TELÉFONO */}
+      {/* DIÁLOGO DE VERIFICACIÓN DE EMAIL */}
       {session && (
-        <PhoneVerificationDialog 
+        <EmailVerificationDialog
           open={showVerificationDialog} 
           onOpenChange={setShowVerificationDialog}
           onVerified={onVerifiedSuccess}
-          userId={session.user.id}
-          currentPhone={userPhone}
+          email={session.user.email}
         />
       )}
 
