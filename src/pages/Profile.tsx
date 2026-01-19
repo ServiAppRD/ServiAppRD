@@ -227,8 +227,9 @@ const Profile = () => {
   };
 
   const calculateCompletion = (data: any) => {
+    // Eliminada 'city' de los campos requeridos para completar el perfil
     const fields = [
-      { key: 'first_name' }, { key: 'last_name' }, { key: 'phone' }, { key: 'city' }
+      { key: 'first_name' }, { key: 'last_name' }, { key: 'phone' }
     ];
     const completed = fields.filter(f => data[f.key] && String(data[f.key]).trim() !== '').length;
     setTotalSteps(fields.length);

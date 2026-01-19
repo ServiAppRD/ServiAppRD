@@ -142,10 +142,10 @@ const Publish = () => {
       const { data: stats } = await supabase.from('user_stats').select('boosts').eq('user_id', session.user.id).maybeSingle();
       if (stats) setUserBoosts(stats.boosts || 0);
 
-      // Verificar perfil
-      const { data: profile } = await supabase.from('profiles').select('first_name, last_name, phone, city').eq('id', session.user.id).single();
+      // Verificar perfil - Eliminada validación de 'city'
+      const { data: profile } = await supabase.from('profiles').select('first_name, last_name, phone').eq('id', session.user.id).single();
       if (profile) {
-        if (!profile.first_name || !profile.last_name || !profile.phone || !profile.city) {
+        if (!profile.first_name || !profile.last_name || !profile.phone) {
           setShowIncompleteProfileDialog(true);
           return;
         }
@@ -588,7 +588,7 @@ const Publish = () => {
 
       <AlertDialog open={showIncompleteProfileDialog} onOpenChange={setShowIncompleteProfileDialog}>
         <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto">
-          <AlertDialogHeader className="text-center"><div className="mx-auto bg-red-100 w-12 h-12 rounded-full flex items-center justify-center mb-2"><User className="h-6 w-6 text-red-500" /></div><AlertDialogTitle className="text-xl font-bold text-center">Perfil incompleto</AlertDialogTitle><AlertDialogDescription className="text-center text-gray-600 mt-2">Te falta: Teléfono o Ciudad.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogHeader className="text-center"><div className="mx-auto bg-red-100 w-12 h-12 rounded-full flex items-center justify-center mb-2"><User className="h-6 w-6 text-red-500" /></div><AlertDialogTitle className="text-xl font-bold text-center">Perfil incompleto</AlertDialogTitle><AlertDialogDescription className="text-center text-gray-600 mt-2">Te falta: Teléfono.</AlertDialogDescription></AlertDialogHeader>
           <AlertDialogFooter className="flex-col gap-2 space-y-2"><AlertDialogAction onClick={() => navigate('/profile')} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl">Completar perfil</AlertDialogAction><AlertDialogCancel onClick={() => {setShowIncompleteProfileDialog(false);navigate('/');}} className="w-full mt-2 rounded-xl border-gray-200">Cancelar</AlertDialogCancel></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
