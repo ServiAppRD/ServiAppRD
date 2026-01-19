@@ -11,7 +11,7 @@ import {
   HelpCircle, ChevronRight, Star, 
   ArrowLeft, Settings, Edit2, Briefcase, Trash2, Camera, Gift, Zap, Check,
   Clock, TrendingUp, Crown, BarChart3, ShieldCheck, Eye, MousePointerClick, CalendarRange,
-  UploadCloud, AlertTriangle, FileCheck, Hammer
+  UploadCloud, AlertTriangle, FileCheck, Hammer, Lock
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -30,6 +30,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
@@ -64,7 +74,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'dashboard' | 'edit' | 'preview' | 'my-services' | 'reputation' | 'favorites' | 'rewards' | 'metrics' | 'verification'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'edit' | 'preview' | 'my-services' | 'reputation' | 'favorites' | 'rewards' | 'metrics' | 'verification' | 'account-settings'>('dashboard');
   const [session, setSession] = useState<any>(null);
   
   // Profile Data
@@ -107,6 +117,11 @@ const Profile = () => {
   const [selectedServiceToBoost, setSelectedServiceToBoost] = useState<any>(null);
   const [selectedBoostOption, setSelectedBoostOption] = useState<number | null>(null);
   const [processingBoost, setProcessingBoost] = useState(false);
+
+  // Account Settings Logic
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [showDeleteAccountDialog, setShowDeleteAccountDialog] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -363,6 +378,29 @@ const Profile = () => {
     }
   };
 
+  const handleUpdatePassword = async () => {
+    if (newPassword.length < 6) return showError("La contraseña debe tener al menos 6 caracteres");
+    setPasswordLoading(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setPasswordLoading(false);
+    if (error) showError(error.message);
+    else {
+      showSuccess("Contraseña actualizada");
+      setNewPassword("");
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const { error } = await supabase.from('profiles').delete().eq('id', session.user.id);
+    if (error) {
+       showError("Error al eliminar datos. Contacta soporte.");
+    } else {
+       await supabase.auth.signOut();
+       navigate('/');
+       showSuccess("Tu cuenta ha sido eliminada.");
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
@@ -410,6 +448,84 @@ const Profile = () => {
   };
 
   if (loading) return <div className="min-h-screen bg-white flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[#F97316]" /></div>;
+
+  // --- ACCOUNT SETTINGS VIEW ---
+  if (view === 'account-settings') {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
+         <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+               <Button variant="ghost" size="icon" onClick={() => setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button>
+               <h1 className="text-lg font-bold">Administrar Cuenta</h1>
+            </div>
+         </div>
+
+         <div className="p-4 space-y-6">
+            
+            {/* Change Password */}
+            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+               <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Lock className="h-5 w-5"/></div>
+                  <h3 className="font-bold text-gray-900">Seguridad</h3>
+               </div>
+               <div className="space-y-3">
+                  <Label>Nueva Contraseña</Label>
+                  <div className="flex gap-2">
+                     <Input 
+                        type="password" 
+                        placeholder="Mínimo 6 caracteres" 
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                     />
+                     <Button onClick={handleUpdatePassword} disabled={passwordLoading || !newPassword}>
+                        {passwordLoading ? <Loader2 className="animate-spin" /> : "Actualizar"}
+                     </Button>
+                  </div>
+               </div>
+            </div>
+
+            {/* Danger Zone */}
+            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+               <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-red-50 rounded-lg text-red-600"><AlertTriangle className="h-5 w-5"/></div>
+                  <h3 className="font-bold text-gray-900">Zona de Peligro</h3>
+               </div>
+               
+               <Button 
+                  variant="outline" 
+                  className="w-full justify-start text-gray-700 h-12 rounded-xl"
+                  onClick={handleSignOut}
+               >
+                  <LogOut className="mr-2 h-4 w-4" /> Cerrar Sesión
+               </Button>
+
+               <Button 
+                  variant="destructive" 
+                  className="w-full justify-start h-12 bg-red-50 text-red-600 hover:bg-red-100 border border-red-100 shadow-none rounded-xl"
+                  onClick={() => setShowDeleteAccountDialog(true)}
+               >
+                  <Trash2 className="mr-2 h-4 w-4" /> Eliminar mi cuenta
+               </Button>
+            </div>
+         </div>
+
+         <AlertDialog open={showDeleteAccountDialog} onOpenChange={setShowDeleteAccountDialog}>
+          <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-red-600">¿Estás absolutamente seguro?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta acción no se puede deshacer. Esto eliminará permanentemente tu perfil, servicios publicados y datos asociados de nuestros servidores.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="rounded-xl border-gray-200">Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteAccount} className="bg-red-600 hover:bg-red-700 rounded-xl">Sí, eliminar cuenta</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    )
+  }
 
   // --- VERIFICATION VIEW (COMING SOON) ---
   if (view === 'verification') {
@@ -659,7 +775,7 @@ const Profile = () => {
                    <div className="flex gap-4">
                        <div className="h-24 w-24 rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden cursor-pointer" onClick={()=>navigate(`/service/${s.id}`)}><img src={s.image_url || "/placeholder.svg"} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" /></div>
                        <div className="flex-1 min-w-0 flex flex-col justify-between">
-                           <div><div className="flex justify-between items-start pr-8"><h3 className="font-bold text-gray-900 truncate leading-tight">{s.title}</h3><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 -mr-2 text-gray-400"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end" className="rounded-xl"><DropdownMenuItem onClick={()=>navigate(`/service/${s.id}`)}><Check className="mr-2 h-4 w-4" /> Ver detalle</DropdownMenuItem><DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={()=>handleDeleteService(s.id)}><Trash2 className="mr-2 h-4 w-4" /> Eliminar</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div><p className="text-[#F97316] font-bold text-sm">RD$ {s.price}</p><div className="flex items-center gap-1 mt-1 text-xs text-gray-400"><CalendarRange className="h-3 w-3" />{new Date(s.created_at).toLocaleDateString()}</div></div>
+                           <div><div className="flex justify-between items-start pr-8"><h3 className="font-bold text-gray-900 truncate leading-tight">{s.title}</h3><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 -mr-2 text-gray-400"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end" className="rounded-xl"><DropdownMenuItem onClick={()=>navigate(`/service/${s.id}`)}><Check className="mr-2 h-4 w-4" /> Ver detalle</DropdownMenuItem><DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={()=>handleDeleteService(s.id)}><Trash2 className="mr-2 h-4 w-4" /> Eliminar</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div><p className="text-[#F97316] font-bold text-sm">RD$ {s.price}</p><div className="flex items-center gap-1 mt-1 text-xs text-gray-400"><CalendarRange className="h-3 w-3" />{new Date(s.created_at).toLocaleDateString()}</div></div>
                            <div className="flex items-center gap-2 mt-3">{!isPromoted ? (<Button size="sm" onClick={() => {setSelectedServiceToBoost(s);setSelectedBoostOption(72);setBoostModalOpen(true);}} className="flex-1 bg-gray-900 text-white hover:bg-gray-800 h-8 rounded-lg text-xs font-bold shadow-sm"><TrendingUp className="h-3 w-3 mr-1.5 text-yellow-400" /> Impulsar</Button>) : (<div className="flex-1 bg-orange-50 border border-orange-100 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-[#F97316]"><Clock className="h-3 w-3 mr-1.5" /> {remainingLabel || "Activo"}</div>)}</div>
                        </div>
                    </div>
@@ -766,8 +882,7 @@ const Profile = () => {
           </MenuSection>
 
           <MenuSection title="Preferencias">
-            <MenuItem icon={Settings} label="Configuración" onClick={() => setView('edit')} />
-            <MenuItem icon={LogOut} label="Cerrar Sesión" onClick={handleSignOut} isDestructive />
+            <MenuItem icon={Settings} label="Administrar Cuenta" onClick={() => setView('account-settings')} />
           </MenuSection>
         </div>
       </div>
