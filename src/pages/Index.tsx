@@ -109,11 +109,11 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col pb-20 md:pb-10">
       
-      {/* Navbar Fixed */}
-      <Navbar />
-
       <PullToRefresh onRefresh={handleRefresh}>
         
+        {/* Navbar ahora dentro del PullToRefresh y es sticky */}
+        <Navbar />
+
         <AlertDialog open={showWelcomeDialog} onOpenChange={setShowWelcomeDialog}>
           <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto">
             <AlertDialogHeader className="text-center">
@@ -128,11 +128,9 @@ const Index = () => {
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Añadido margen superior (mt-[115px]) para compensar la Navbar Fixed en móvil */}
-        <main className="flex-1 space-y-8 py-6 mt-[115px] md:mt-0">
+        {/* Eliminado el margen superior mt-[115px] ya que la navbar ahora ocupa espacio (sticky) */}
+        <main className="flex-1 space-y-8 py-6 md:mt-0">
           
-          {/* Banner eliminado de aquí */}
-
           {/* 1. Destacados */}
           <section>
             <SectionHeader title="Profesionales Destacados" icon={Crown} />
