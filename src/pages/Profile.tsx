@@ -11,7 +11,7 @@ import {
   HelpCircle, ChevronRight, Star, 
   ArrowLeft, Settings, Edit2, Briefcase, Trash2, Camera, Gift, Zap, Check,
   Clock, TrendingUp, Crown, BarChart3, ShieldCheck, Eye, MousePointerClick, CalendarRange,
-  UploadCloud, AlertTriangle, FileCheck, Hammer, Lock, Shield, MoreHorizontal
+  UploadCloud, AlertTriangle, FileCheck, Hammer, Lock, Shield, MoreHorizontal, Edit
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -489,6 +489,10 @@ const Profile = () => {
     }
   };
 
+  const handleEditService = (serviceId: string) => {
+     showSuccess("Edición próximamente");
+  };
+
   const handleSignOut = async () => { await supabase.auth.signOut(); navigate("/"); };
   const handleOpenMyServices = () => { setView('my-services'); fetchMyServices(session.user.id); };
   const handleOpenFavorites = (uid?: string) => { setView('favorites'); fetchFavorites(uid); };
@@ -895,7 +899,7 @@ const Profile = () => {
             </DialogContent>
         </Dialog>
         <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Publicaciones</h1></div><Button size="sm" variant="default" className="bg-[#0F172A] rounded-full px-4 text-xs font-bold" onClick={()=>navigate('/publish')}>+ Nueva</Button></div>
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-6">
            {myServices.length === 0 ? <div className="flex flex-col items-center justify-center py-20 text-center"><div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4"><Briefcase className="h-8 w-8 text-gray-400" /></div><h3 className="font-bold text-gray-900">No tienes servicios</h3><p className="text-gray-500 text-sm mb-6 max-w-[200px]">Publica tu primer servicio para empezar a ganar clientes.</p><Button onClick={()=>navigate('/publish')} className="bg-[#F97316] rounded-xl">Crear Servicio</Button></div> : (
              myServices.map(s => {
                 const isPromoted = s.is_promoted && s.promoted_until && new Date(s.promoted_until) > new Date();
@@ -905,13 +909,68 @@ const Profile = () => {
                     if (diffDays > 1) remainingLabel = `${diffDays} días restantes`; else remainingLabel = `${diffHrs}h restantes`;
                 }
                 return (
-                 <div key={s.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 relative group overflow-hidden">
-                   {isPromoted && (<div className="absolute top-0 right-0 bg-[#F97316] text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl z-10 flex items-center gap-1"><Crown className="h-3 w-3 fill-white" /> DESTACADO</div>)}
-                   <div className="flex gap-4">
-                       <div className="h-24 w-24 rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden cursor-pointer" onClick={()=>navigate(`/service/${s.id}`)}><img src={s.image_url || "/placeholder.svg"} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" /></div>
-                       <div className="flex-1 min-w-0 flex flex-col justify-between">
-                           <div><div className="flex justify-between items-start pr-8"><h3 className="font-bold text-gray-900 truncate leading-tight">{s.title}</h3><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 -mr-2 text-gray-400"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end" className="rounded-xl"><DropdownMenuItem onClick={()=>navigate(`/service/${s.id}`)}><Check className="mr-2 h-4 w-4" /> Ver detalle</DropdownMenuItem><DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={()=>handleClickDelete(s)}><Trash2 className="mr-2 h-4 w-4" /> Eliminar</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div><p className="text-[#F97316] font-bold text-sm">RD$ {s.price}</p><div className="flex items-center gap-1 mt-1 text-xs text-gray-400"><CalendarRange className="h-3 w-3" />{new Date(s.created_at).toLocaleDateString()}</div></div>
-                           <div className="flex items-center gap-2 mt-3">{!isPromoted ? (<Button size="sm" onClick={() => {setSelectedServiceToBoost(s);setSelectedBoostOption(72);setBoostModalOpen(true);}} className="flex-1 bg-gray-900 text-white hover:bg-gray-800 h-8 rounded-lg text-xs font-bold shadow-sm"><TrendingUp className="h-3 w-3 mr-1.5 text-yellow-400" /> Impulsar</Button>) : (<div className="flex-1 bg-orange-50 border border-orange-100 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-[#F97316]"><Clock className="h-3 w-3 mr-1.5" /> {remainingLabel || "Activo"}</div>)}</div>
+                 <div key={s.id} className="bg-white rounded-3xl p-0 shadow-sm border border-gray-100 overflow-hidden mb-6 group relative">
+                   {isPromoted && (
+                     <div className="absolute top-3 left-3 bg-[#F97316] text-white text-xs font-bold px-3 py-1.5 rounded-full z-10 flex items-center gap-1 shadow-lg shadow-orange-500/20">
+                       <Crown className="h-3 w-3 fill-white" /> DESTACADO
+                     </div>
+                   )}
+                   
+                   {/* Imagen Grande Full Width */}
+                   <div className="w-full h-48 relative bg-gray-100">
+                      <img 
+                        src={s.image_url || "/placeholder.svg"} 
+                        className="w-full h-full object-cover cursor-pointer" 
+                        onClick={()=>navigate(`/service/${s.id}`)}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
+                      <div className="absolute bottom-3 left-4 text-white">
+                        <p className="text-2xl font-bold">RD$ {s.price}</p>
+                      </div>
+                   </div>
+
+                   <div className="p-5">
+                       <div className="flex justify-between items-start mb-3">
+                           <h3 className="font-bold text-gray-900 text-lg leading-tight flex-1 mr-4">{s.title}</h3>
+                           <DropdownMenu>
+                             <DropdownMenuTrigger asChild>
+                               <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-gray-400">
+                                 <MoreHorizontal className="h-5 w-5" />
+                               </Button>
+                             </DropdownMenuTrigger>
+                             <DropdownMenuContent align="end" className="rounded-xl w-48 p-2">
+                               <DropdownMenuItem onClick={()=>navigate(`/service/${s.id}`)} className="rounded-lg h-10">
+                                 <Check className="mr-2 h-4 w-4" /> Ver detalle
+                               </DropdownMenuItem>
+                               <DropdownMenuItem onClick={()=>handleEditService(s.id)} className="rounded-lg h-10">
+                                 <Edit2 className="mr-2 h-4 w-4" /> Editar
+                               </DropdownMenuItem>
+                               <DropdownMenuItem className="text-red-600 focus:text-red-600 rounded-lg h-10 hover:bg-red-50" onClick={()=>handleClickDelete(s)}>
+                                 <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+                               </DropdownMenuItem>
+                             </DropdownMenuContent>
+                           </DropdownMenu>
+                       </div>
+
+                       <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-5">
+                          <CalendarRange className="h-3.5 w-3.5" />
+                          Publicado el {new Date(s.created_at).toLocaleDateString()}
+                       </div>
+
+                       {/* Botones de Acción Grandes */}
+                       <div className="flex items-center gap-3">
+                          {!isPromoted ? (
+                            <Button 
+                              onClick={() => {setSelectedServiceToBoost(s);setSelectedBoostOption(72);setBoostModalOpen(true);}} 
+                              className="flex-1 bg-gray-900 text-white hover:bg-gray-800 h-11 rounded-xl text-sm font-bold shadow-sm"
+                            >
+                              <TrendingUp className="h-4 w-4 mr-2 text-yellow-400" /> Impulsar
+                            </Button>
+                          ) : (
+                            <div className="flex-1 bg-orange-50 border border-orange-100 h-11 rounded-xl flex items-center justify-center text-sm font-bold text-[#F97316]">
+                              <Clock className="h-4 w-4 mr-2" /> {remainingLabel || "Activo"}
+                            </div>
+                          )}
                        </div>
                    </div>
                  </div>
