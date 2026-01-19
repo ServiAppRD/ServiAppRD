@@ -34,7 +34,7 @@ const ResponsiveGrid = ({ children, isLoading, emptyMessage, icon: Icon }: any) 
   
   if (!children || children.length === 0) {
      return (
-        <div className="w-full text-center py-8 text-gray-400 bg-gray-50 rounded-xl mx-4 md:mx-0 border border-dashed flex flex-col items-center">
+        <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-xl mx-4 md:mx-0 border border-dashed flex flex-col items-center justify-center">
            {Icon && <Icon className="h-8 w-8 text-gray-300 mb-2" />}
            <p className="text-sm">{emptyMessage}</p>
         </div>
