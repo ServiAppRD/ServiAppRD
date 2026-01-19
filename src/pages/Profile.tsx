@@ -11,7 +11,7 @@ import {
   HelpCircle, ChevronRight, Star, 
   ArrowLeft, Settings, Edit2, Briefcase, Trash2, Camera, Gift, Zap, Check,
   Clock, TrendingUp, Crown, BarChart3, ShieldCheck, Eye, MousePointerClick, CalendarRange,
-  UploadCloud, AlertTriangle, FileCheck, Hammer, Lock
+  UploadCloud, AlertTriangle, FileCheck, Hammer, Lock, Shield
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -74,7 +74,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'dashboard' | 'edit' | 'preview' | 'my-services' | 'reputation' | 'favorites' | 'rewards' | 'metrics' | 'verification' | 'account-settings'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'edit' | 'preview' | 'my-services' | 'reputation' | 'favorites' | 'rewards' | 'metrics' | 'verification' | 'account-settings' | 'change-password'>('dashboard');
   const [session, setSession] = useState<any>(null);
   
   // Profile Data
@@ -385,8 +385,9 @@ const Profile = () => {
     setPasswordLoading(false);
     if (error) showError(error.message);
     else {
-      showSuccess("Contraseña actualizada");
+      showSuccess("Contraseña actualizada exitosamente");
       setNewPassword("");
+      setView('account-settings');
     }
   };
 
@@ -449,6 +450,48 @@ const Profile = () => {
 
   if (loading) return <div className="min-h-screen bg-white flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[#F97316]" /></div>;
 
+  // --- CHANGE PASSWORD VIEW ---
+  if (view === 'change-password') {
+    return (
+        <div className="min-h-screen bg-white pb-20 pt-safe animate-fade-in">
+           <div className="p-4 flex items-center gap-3">
+               <Button variant="ghost" size="icon" onClick={() => setView('account-settings')}><ArrowLeft className="h-6 w-6" /></Button>
+               <h1 className="text-xl font-bold">Cambiar Contraseña</h1>
+           </div>
+           
+           <div className="p-6 space-y-6">
+               <div className="flex justify-center mb-6">
+                   <div className="h-24 w-24 bg-blue-50 rounded-full flex items-center justify-center">
+                       <Lock className="h-10 w-10 text-blue-500" />
+                   </div>
+               </div>
+               
+               <div className="space-y-4">
+                   <div className="space-y-2">
+                       <Label>Nueva Contraseña</Label>
+                       <Input 
+                            type="password" 
+                            placeholder="Mínimo 6 caracteres" 
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white"
+                        />
+                   </div>
+                   <p className="text-xs text-gray-500">
+                       Utiliza una contraseña segura que puedas recordar.
+                   </p>
+               </div>
+
+               <div className="pt-4">
+                   <Button onClick={handleUpdatePassword} disabled={passwordLoading || !newPassword} className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-200">
+                        {passwordLoading ? <Loader2 className="animate-spin" /> : "Actualizar Contraseña"}
+                   </Button>
+               </div>
+           </div>
+        </div>
+    )
+  }
+
   // --- ACCOUNT SETTINGS VIEW ---
   if (view === 'account-settings') {
     return (
@@ -460,52 +503,53 @@ const Profile = () => {
             </div>
          </div>
 
-         <div className="p-4 space-y-6">
+         <div className="p-5 space-y-6">
             
-            {/* Change Password */}
-            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-               <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Lock className="h-5 w-5"/></div>
-                  <h3 className="font-bold text-gray-900">Seguridad</h3>
-               </div>
-               <div className="space-y-3">
-                  <Label>Nueva Contraseña</Label>
-                  <div className="flex gap-2">
-                     <Input 
-                        type="password" 
-                        placeholder="Mínimo 6 caracteres" 
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                     />
-                     <Button onClick={handleUpdatePassword} disabled={passwordLoading || !newPassword}>
-                        {passwordLoading ? <Loader2 className="animate-spin" /> : "Actualizar"}
-                     </Button>
-                  </div>
-               </div>
+            <div className="space-y-2">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-2">Seguridad</h3>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <button 
+                        onClick={() => setView('change-password')}
+                        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                                <Lock className="h-5 w-5" />
+                            </div>
+                            <span className="font-semibold text-gray-700">Cambiar Contraseña</span>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-gray-300" />
+                    </button>
+                </div>
             </div>
 
-            {/* Danger Zone */}
-            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-               <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-red-50 rounded-lg text-red-600"><AlertTriangle className="h-5 w-5"/></div>
-                  <h3 className="font-bold text-gray-900">Zona de Peligro</h3>
-               </div>
-               
-               <Button 
-                  variant="outline" 
-                  className="w-full justify-start text-gray-700 h-12 rounded-xl"
-                  onClick={handleSignOut}
-               >
-                  <LogOut className="mr-2 h-4 w-4" /> Cerrar Sesión
-               </Button>
+            <div className="space-y-2">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-2">Sesión</h3>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">
+                    <button 
+                        onClick={handleSignOut}
+                        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="p-2 bg-gray-100 text-gray-600 rounded-xl">
+                                <LogOut className="h-5 w-5" />
+                            </div>
+                            <span className="font-semibold text-gray-700">Cerrar Sesión</span>
+                        </div>
+                    </button>
 
-               <Button 
-                  variant="destructive" 
-                  className="w-full justify-start h-12 bg-red-50 text-red-600 hover:bg-red-100 border border-red-100 shadow-none rounded-xl"
-                  onClick={() => setShowDeleteAccountDialog(true)}
-               >
-                  <Trash2 className="mr-2 h-4 w-4" /> Eliminar mi cuenta
-               </Button>
+                     <button 
+                        onClick={() => setShowDeleteAccountDialog(true)}
+                        className="w-full flex items-center justify-between p-4 hover:bg-red-50 transition-colors group"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="p-2 bg-red-50 text-red-500 rounded-xl group-hover:bg-red-100 transition-colors">
+                                <Trash2 className="h-5 w-5" />
+                            </div>
+                            <span className="font-semibold text-red-600">Eliminar mi cuenta</span>
+                        </div>
+                    </button>
+                </div>
             </div>
          </div>
 
