@@ -13,7 +13,7 @@ import {
   ArrowLeft, Settings, Edit2, Briefcase, Trash2, Camera, Zap, Check,
   Clock, TrendingUp, Crown, BarChart3, ShieldCheck, Eye, MousePointerClick, CalendarRange,
   AlertTriangle, Hammer, Lock, Shield, MoreHorizontal, FileText, Bell, CreditCard, Sparkles, X,
-  Plus, Bike, TicketPercent, Wallet
+  Plus, Megaphone, Infinity, Headphones
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -470,121 +470,103 @@ const Profile = () => {
       return (
           // Usamos fixed inset-0 z-[1000] para que cubra toda la pantalla
           <div className="fixed inset-0 z-[1000] bg-white flex flex-col animate-fade-in">
-             {/* Header Section - COLOR MORADO DE LA CAPTURA */}
-             <div className="relative bg-[#2A004E] text-white rounded-b-[40px] overflow-hidden pb-8 shrink-0">
+             {/* Header Section - COLOR ACTUALIZADO #0F172A (Gris Oscuro Premium) */}
+             <div className="relative bg-[#0F172A] text-white rounded-b-[40px] overflow-hidden pb-8 shrink-0">
+                 {/* Background decoration */}
+                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#1e293b] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50"></div>
+                 <div className="absolute bottom-0 left-0 w-40 h-40 bg-[#F97316] rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 opacity-20"></div>
                  
                  {/* Navbar part */}
-                 <div className="relative z-10 px-6 pt-safe flex items-center justify-between h-20">
-                    <button onClick={() => setView('dashboard')} className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors shadow-sm">
-                        <X className="h-6 w-6 text-[#2A004E]" />
+                 <div className="relative z-10 px-4 pt-safe flex items-center justify-between h-16">
+                    <button onClick={() => setView('dashboard')} className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/20 transition-colors">
+                        <X className="h-6 w-6 text-white" />
                     </button>
-                    <div className="bg-white px-5 py-1.5 rounded-full shadow-sm">
-                        <span className="font-bold italic text-[#2A004E] text-lg">plus</span>
+                    <div className="bg-white/10 backdrop-blur-md px-4 py-1 rounded-full border border-white/20">
+                        <span className="font-black italic text-sm tracking-wider text-[#F97316]">PLUS</span>
                     </div>
                     <div className="w-10" /> {/* Spacer */}
                  </div>
 
                  {/* Hero Content */}
-                 <div className="relative z-10 px-6 pt-2 pb-8 flex justify-between items-center">
-                     <div className="space-y-3 max-w-[65%]">
-                         <p className="text-white/90 font-medium text-sm">Suscríbete y empieza a ahorrar</p>
-                         <h1 className="text-3xl font-black leading-tight tracking-tight text-white">
-                             Envíos gratis y<br/>
-                             beneficios<br/>
-                             exclusivos
+                 <div className="relative z-10 px-6 pt-4 pb-6 flex flex-col md:flex-row md:items-center gap-6">
+                     <div className="space-y-3 flex-1">
+                         <p className="text-gray-300 font-medium text-sm">Suscríbete y destaca tu perfil</p>
+                         <h1 className="text-4xl font-black leading-[1.1] tracking-tight text-white">
+                             Verificación y<br/>
+                             ventajas<br/>
+                             exclusivas
                          </h1>
                      </div>
-                     <div className="w-32 h-32 relative">
-                        {/* Placeholder for Person Image */}
-                        <div className="absolute right-0 bottom-0 w-28 h-28 bg-gradient-to-tr from-[#FF0055] to-[#FF5500] rounded-full flex items-center justify-center shadow-lg border-4 border-[#2A004E]">
-                           <User className="h-16 w-16 text-white" />
-                        </div>
-                        {/* Decorative Plus icons */}
-                        <div className="absolute -top-2 left-0 text-pink-500 font-black text-xl">+</div>
-                        <div className="absolute bottom-0 right-full text-pink-500 font-black text-xl">+</div>
+                     <div className="hidden md:block w-32 h-32 bg-white/10 rounded-full flex items-center justify-center">
+                        <Crown className="h-16 w-16 text-[#F97316]" />
                      </div>
                  </div>
              </div>
 
-             {/* Scrollable Content */}
+             {/* Scrollable Content - Added heavy padding bottom to clear the fixed footer */}
              <div className="flex-1 overflow-y-auto px-6 py-8 space-y-8 pb-[180px]">
-                 
-                 {/* Benefits List - Styled like Screenshot */}
+                 {/* Benefits List - CLEANED UP & RELEVANT */}
                  <div className="space-y-6">
-                     <div className="flex items-center gap-4">
-                         <Bike className="h-6 w-6 text-gray-900 shrink-0" strokeWidth={2} />
-                         <span className="font-bold text-gray-900 text-sm md:text-base">Envío gratis ilimitados en miles de locales</span>
+                     <div className="flex items-start gap-4">
+                         <div className="mt-1"><Megaphone className="h-6 w-6 text-[#F97316]" strokeWidth={2.5} /></div>
+                         <div>
+                             <h3 className="font-bold text-gray-900 text-sm md:text-base">Más Visibilidad para tus Servicios</h3>
+                             <p className="text-xs text-gray-500 mt-0.5">Tus anuncios aparecen primero en las búsquedas.</p>
+                         </div>
                      </div>
 
-                     <div className="flex items-center gap-4">
-                         <TicketPercent className="h-6 w-6 text-gray-900 shrink-0" strokeWidth={2} />
-                         <span className="font-bold text-gray-900 text-sm md:text-base">Descuentos en restaurantes y súper</span>
+                     <div className="flex items-start gap-4">
+                         <div className="mt-1"><ShieldCheck className="h-6 w-6 text-[#F97316]" strokeWidth={2.5} /></div>
+                         <div>
+                             <h3 className="font-bold text-gray-900 text-sm md:text-base">Insignia de Verificación</h3>
+                             <p className="text-xs text-gray-500 mt-0.5">Transmite confianza inmediata a tus clientes.</p>
+                         </div>
                      </div>
 
-                     <div className="flex items-center gap-4">
-                         <Wallet className="h-6 w-6 text-gray-900 shrink-0" strokeWidth={2} />
-                         <span className="font-bold text-gray-900 text-sm md:text-base">Promos bancarias en tus pedidos</span>
+                     <div className="flex items-start gap-4">
+                         <div className="mt-1"><Infinity className="h-6 w-6 text-[#F97316]" strokeWidth={2.5} /></div>
+                         <div>
+                             <h3 className="font-bold text-gray-900 text-sm md:text-base">Publicaciones Ilimitadas</h3>
+                             <p className="text-xs text-gray-500 mt-0.5">Publica todos los servicios que ofreces sin límites.</p>
+                         </div>
                      </div>
 
-                     <div className="flex items-center gap-4">
-                         <X className="h-6 w-6 text-gray-900 shrink-0 border-2 border-gray-900 rounded-md p-0.5" strokeWidth={3} />
-                         <span className="font-bold text-gray-900 text-sm md:text-base">Cancela tu suscripción cuando quieras</span>
+                      <div className="flex items-start gap-4">
+                         <div className="mt-1"><Headphones className="h-6 w-6 text-[#F97316]" strokeWidth={2.5} /></div>
+                         <div>
+                             <h3 className="font-bold text-gray-900 text-sm md:text-base">Soporte Prioritario VIP</h3>
+                             <p className="text-xs text-gray-500 mt-0.5">Atención personalizada y resolución rápida.</p>
+                         </div>
                      </div>
                  </div>
 
-                 {/* Card Selection */}
-                 <div className="space-y-4 pt-4">
-                     <h3 className="font-bold text-xl text-gray-900">¿Con qué tarjeta te suscribes?</h3>
-                     
-                     <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-6 px-6">
-                         {/* Card 1 */}
-                         <div className="min-w-[280px] h-44 rounded-2xl bg-gradient-to-br from-[#0239c7] to-[#3b82f6] p-5 text-white flex flex-col justify-between shadow-lg relative overflow-hidden group border-2 border-transparent hover:border-[#F97316] transition-all cursor-pointer">
-                             <div className="flex justify-between items-start z-10">
-                                <span className="bg-[#fbce07] text-black text-[10px] font-bold px-2 py-0.5 rounded">1 mes gratis + 6 al 62% OFF</span>
-                             </div>
-                             <div className="z-10">
-                                <p className="font-bold text-sm mb-4">BANCO MULTIPLE SANTA CR...</p>
-                                <div className="flex justify-between items-end">
-                                    <div>
-                                        <p className="text-xs opacity-80">**** 0458</p>
-                                        <p className="text-xs uppercase">Rodrigo Damian</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="font-bold italic text-lg">VISA</p>
-                                        <p className="text-[10px]">Débito</p>
-                                    </div>
-                                </div>
-                             </div>
-                         </div>
-
-                         {/* Add Card Button */}
-                         <div className="min-w-[100px] h-44 rounded-2xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-2 text-gray-400 cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors">
-                             <Plus className="h-8 w-8" />
-                             <span className="text-xs font-bold">Agregar</span>
-                         </div>
-                     </div>
+                 {/* Question Text */}
+                 <div className="pt-4 border-t border-gray-50">
+                     <h3 className="font-bold text-lg text-gray-900">¿Listo para crecer?</h3>
+                     <p className="text-gray-500 text-sm mt-1">Cancela tu suscripción cuando quieras sin compromiso.</p>
                  </div>
              </div>
 
              {/* Sticky Footer */}
-             <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 pb-safe z-20 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)]">
-                 <div className="px-6 py-4">
-                     <p className="text-xs text-gray-500 mb-4 text-center">
-                         Al continuar, aceptas <span className="underline font-bold text-gray-900">términos y condiciones</span>.
-                     </p>
-                     
-                     <div className="flex justify-between items-center mb-4">
-                        <span className="text-xl font-bold text-gray-900">Total</span>
+             <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100 pb-safe z-20 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)]">
+                 <div className="max-w-md mx-auto flex flex-col gap-3">
+                     <div className="flex justify-between items-end mb-1">
+                        <span className="text-sm font-medium text-gray-500">Total a pagar</span>
                         <div className="text-right">
-                             <span className="bg-[#fbce07] text-black text-[10px] font-bold px-1.5 py-0.5 rounded mr-2">1 mes gratis + 6 al 62% OFF</span>
-                             <span className="text-xs text-gray-400 line-through mr-1">RD$ 395</span>
-                             <span className="text-xl font-black text-gray-900">RD$ 0</span>
+                             <span className="text-xs text-gray-400 line-through mr-2">RD$ 899</span>
+                             <span className="text-2xl font-black text-gray-900">RD$ 499</span>
+                             <span className="text-xs font-bold text-[#F97316] ml-1">/mes</span>
                         </div>
                      </div>
-
-                     <Button className="w-full h-12 bg-[#F97316] hover:bg-orange-600 text-white rounded-full font-bold text-lg shadow-lg shadow-orange-500/20">
-                         Probar Plus gratis
+                     
+                     {/* BOTON CON COLOR NARANJA PARA CTA */}
+                     <Button className="w-full h-14 bg-[#F97316] hover:bg-orange-600 text-white rounded-xl font-bold text-lg shadow-xl shadow-orange-500/20">
+                         Suscribirme a Plus
                      </Button>
+                     
+                     <p className="text-center text-[10px] text-gray-400">
+                         Al continuar, aceptas los <span className="underline cursor-pointer">términos y condiciones</span>.
+                     </p>
                  </div>
              </div>
           </div>
@@ -628,7 +610,7 @@ const Profile = () => {
                  </div>
 
                  {/* Banner Upgrade - Updated Gradient */}
-                 <div onClick={() => setView('serviapp-plus')} className="bg-gradient-to-r from-[#2A004E] to-[#4c1d95] rounded-3xl p-6 text-white cursor-pointer hover:shadow-xl transition-shadow relative overflow-hidden group">
+                 <div onClick={() => setView('serviapp-plus')} className="bg-gradient-to-r from-[#0F172A] to-[#334155] rounded-3xl p-6 text-white cursor-pointer hover:shadow-xl transition-shadow relative overflow-hidden group">
                      <div className="relative z-10 flex justify-between items-center">
                          <div>
                              <h3 className="font-bold text-lg mb-1 flex items-center gap-2"><Crown className="h-5 w-5 text-yellow-400" /> Pásate a Plus</h3>
