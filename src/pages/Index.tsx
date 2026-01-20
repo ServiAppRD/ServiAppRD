@@ -244,8 +244,8 @@ const Index = () => {
                       </button>
                     </div>
 
-                    {/* Imagen a la Derecha - Pegada al fondo */}
-                    <div className="absolute right-0 bottom-0 w-[55%] h-[110%] flex items-end justify-end pointer-events-none z-10">
+                    {/* Imagen a la Derecha - Pegada al fondo y Ajustada */}
+                    <div className="absolute -right-4 -bottom-8 w-[60%] h-[120%] flex items-end justify-end pointer-events-none z-10">
                       <img 
                         src={slide.image} 
                         className="w-full h-full object-contain object-bottom drop-shadow-2xl" 
