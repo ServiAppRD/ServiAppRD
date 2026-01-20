@@ -20,6 +20,11 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* 
+  Ajuste para Android: 
+  Usamos max() para asegurar al menos 35px de espacio arriba, 
+  o el valor del sistema (notch) si es mayor.
+*/
 .pt-safe {
-  padding-top: env(safe-area-inset-top);
+  padding-top: max(35px, env(safe-area-inset-top));
 }
