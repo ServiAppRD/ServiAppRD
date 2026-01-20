@@ -11,7 +11,7 @@ import {
   HelpCircle, ChevronRight, Star, 
   ArrowLeft, Settings, Edit2, Briefcase, Trash2, Camera, Gift, Zap, Check,
   Clock, TrendingUp, Crown, BarChart3, ShieldCheck, Eye, MousePointerClick, CalendarRange,
-  UploadCloud, AlertTriangle, FileCheck, Hammer, Lock, Shield, MoreHorizontal, Edit
+  UploadCloud, AlertTriangle, FileCheck, Hammer, Lock, Shield, MoreHorizontal, Edit, FileText
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -585,6 +585,37 @@ const Profile = () => {
             </div>
 
             <div className="space-y-2">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-2">Información Legal</h3>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">
+                    <button 
+                        onClick={() => navigate('/terms')}
+                        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="p-2 bg-orange-50 text-[#F97316] rounded-xl">
+                                <FileText className="h-5 w-5" />
+                            </div>
+                            <span className="font-semibold text-gray-700">Términos y Condiciones</span>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-gray-300" />
+                    </button>
+
+                     <button 
+                        onClick={() => navigate('/privacy')}
+                        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                                <Shield className="h-5 w-5" />
+                            </div>
+                            <span className="font-semibold text-gray-700">Política de Privacidad</span>
+                        </div>
+                         <ChevronRight className="h-5 w-5 text-gray-300" />
+                    </button>
+                </div>
+            </div>
+
+            <div className="space-y-2">
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-2">Sesión</h3>
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">
                     <button 
@@ -802,7 +833,7 @@ const Profile = () => {
                 {reviews.length === 0 ? <div className="text-center py-8 text-gray-400 bg-white rounded-2xl border border-dashed">Aún no tienes reseñas.</div> : (
                     reviews.map((r, i) => (
                         <div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                            <div className="flex justify-between items-start mb-2"><div className="flex gap-1">{[...Array(5)].map((_, i) => (<Star key={i} className={cn("h-3 w-3", i < r.rating ? "fill-[#F97316] text-[#F97316]" : "text-gray-200")} />))}</div><span className="text-[10px] text-gray-400">{new Date(r.created_at).toLocaleDateString()}</span></div>
+                            <div className="flex justify-between items-start mb-2"><div className="flex gap-1">{[...Array(5)].map((_, i) => (<Star key={i} className={cn("h-3 w-3", i < r.rating ? "fill-[#F97316] text-[#F97316]" : "text-gray-200")} />))}</div><span className="text-[10px] text-gray-400">{new Date(r.created_at).toLocaleDateString()}</p></div>
                             <p className="text-gray-700 text-sm leading-relaxed">"{r.comment}"</p>
                         </div>
                     ))
