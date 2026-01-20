@@ -229,7 +229,7 @@ const Index = () => {
                 <CarouselItem key={slide.id} className="h-full">
                   <div className="relative px-6 pb-2 pt-4 flex items-center justify-between h-[220px]">
                     {/* Texto a la Izquierda */}
-                    <div className="text-white space-y-3 max-w-[55%] z-20 relative flex flex-col justify-center h-full">
+                    <div className="text-white space-y-3 max-w-[55%] z-20 relative flex flex-col justify-center h-full pb-4">
                       <h1 className="text-3xl font-black leading-[1.1] tracking-tight whitespace-pre-line drop-shadow-sm">
                         {slide.title}
                       </h1>
@@ -244,8 +244,8 @@ const Index = () => {
                       </button>
                     </div>
 
-                    {/* Imagen a la Derecha - Pegada al fondo y Ajustada */}
-                    <div className="absolute -right-4 -bottom-8 w-[60%] h-[120%] flex items-end justify-end pointer-events-none z-10">
+                    {/* Imagen a la Derecha - Pegada al fondo EXACTAMENTE */}
+                    <div className="absolute right-0 bottom-0 w-[50%] h-[100%] pointer-events-none z-10 flex items-end justify-end">
                       <img 
                         src={slide.image} 
                         className="w-full h-full object-contain object-bottom drop-shadow-2xl" 
