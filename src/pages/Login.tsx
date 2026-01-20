@@ -7,13 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { showSuccess, showError } from "@/utils/toast";
-import { Loader2, Mail, Lock, User, ArrowRight, ArrowLeft, ExternalLink, AlertTriangle, Info } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowRight, ArrowLeft, ExternalLink, AlertTriangle, Info, Settings } from "lucide-react";
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-
-// --- CONFIGURACIÓN DE GOOGLE ---
-const GOOGLE_CLIENT_ID = '679855184605-fuv9vrv8jldmi9ge17795opc1e4odnnf.apps.googleusercontent.com'; 
-// -------------------------------
 
 const Login = () => {
   const navigate = useNavigate();
@@ -23,26 +19,32 @@ const Login = () => {
   const [googleErrorDetail, setGoogleErrorDetail] = useState<string | null>(null);
   const [isIframe, setIsIframe] = useState(false);
 
+  // ID DE CLIENTE (Cárgalo desde localStorage para no perderlo al recargar)
+  const [clientId, setClientId] = useState(() => localStorage.getItem("custom_google_client_id") || "");
+  const [showIdInput, setShowIdInput] = useState(false);
+
   // Form states
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
 
   useEffect(() => {
-    // Detectar si estamos en un iframe (editor)
-    try {
-      if (window.self !== window.top) {
-        setIsIframe(true);
-      }
-    } catch (e) {
-      setIsIframe(true);
-    }
+    // Detectar iframe
+    try { if (window.self !== window.top) setIsIframe(true); } catch (e) { setIsIframe(true); }
 
-    GoogleAuth.initialize({
-      clientId: GOOGLE_CLIENT_ID,
-      scopes: ['profile', 'email'],
-      grantOfflineAccess: false,
-    });
+    // Inicializar Google Auth si hay un ID
+    if (clientId) {
+      try {
+        GoogleAuth.initialize({
+          clientId: clientId,
+          scopes: ['profile', 'email'],
+          grantOfflineAccess: false,
+        });
+        console.log("Google Auth inicializado con ID:", clientId);
+      } catch (e) {
+        console.error("Error inicializando Google:", e);
+      }
+    }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) navigate("/profile");
@@ -53,25 +55,39 @@ const Login = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, clientId]);
+
+  const saveClientId = (id: string) => {
+    setClientId(id);
+    localStorage.setItem("custom_google_client_id", id);
+    // Reinicializar
+    GoogleAuth.initialize({
+      clientId: id,
+      scopes: ['profile', 'email'],
+      grantOfflineAccess: false,
+    });
+  };
 
   const handleGoogleLogin = async () => {
-    // Si estamos en iframe, forzamos alerta
     if (isIframe) {
-      setGoogleErrorDetail(`
-        Google bloquea el inicio de sesión dentro del editor por seguridad.
-        
-        👉 Por favor, abre la app en una PESTAÑA NUEVA usando el botón de arriba a la derecha (↗).
-      `);
+      setGoogleErrorDetail(`Estás en modo editor. Abre la app en una pestaña nueva (botón ↗ arriba a la derecha).`);
+      return;
+    }
+
+    if (!clientId) {
+      setGoogleErrorDetail("Falta el Client ID. Haz clic en el engranaje ⚙️ abajo y pega tu ID de Google Cloud.");
+      setShowIdInput(true);
       return;
     }
 
     setGoogleErrorDetail(null);
     try {
       setGoogleLoading(true);
-      console.log("Iniciando login con Google...");
+      console.log("Intentando login con ID:", clientId);
       
       const response = await GoogleAuth.signIn();
+      console.log("Respuesta Google:", response);
+      
       const { idToken } = response.authentication;
 
       if (idToken) {
@@ -89,21 +105,19 @@ const Login = () => {
           const googlePicture = metadata.picture || metadata.avatar_url || "";
           
           const nameParts = googleName.split(" ");
-          const firstName = nameParts[0] || "";
-          const lastName = nameParts.slice(1).join(" ") || "";
+          const fName = nameParts[0] || "";
+          const lName = nameParts.slice(1).join(" ") || "";
 
-          console.log("Sincronizando perfil:", { firstName, lastName, googlePicture });
+          console.log("Guardando perfil:", { fName, lName });
 
           await supabase.from('profiles').upsert({
              id: data.user.id,
-             first_name: firstName,
-             last_name: lastName,
+             first_name: fName,
+             last_name: lName,
              avatar_url: googlePicture,
              updated_at: new Date().toISOString()
           }, { onConflict: 'id' });
         }
-        // --------------------------------
-
       } else {
         throw new Error("No se recibió el token de Google.");
       }
@@ -114,11 +128,12 @@ const Login = () => {
       
       if (msg.includes('popup_closed_by_user')) {
          setGoogleErrorDetail(`
-           La ventana de Google se cerró inesperadamente.
-           Esto suele pasar por bloqueadores de popups o por estar en modo incógnito estricto.
+           Ventana cerrada inesperadamente.
+           1. Verifica que tu URL (${window.location.origin}) esté en "Authorized JavaScript origins" en Google Cloud.
+           2. Verifica que el Client ID sea el correcto.
          `);
       } else if (msg.includes('Not a valid origin')) {
-         setGoogleErrorDetail(`URL no autorizada en Google Cloud.\nRevisa la configuración de tu Client ID.`);
+         setGoogleErrorDetail(`URL no autorizada. Agrega ${window.location.origin} a tu Google Client ID.`);
       } else {
         showError(`Error: ${msg}`);
       }
@@ -131,17 +146,10 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
     } catch (error: any) {
-      if (error.message.includes("Invalid login credentials")) {
-        showError("Credenciales incorrectas");
-      } else {
-        showError(error.message);
-      }
+      showError(error.message.includes("Invalid login") ? "Credenciales incorrectas" : error.message);
     } finally {
       setLoading(false);
     }
@@ -150,7 +158,6 @@ const Login = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!firstName.trim()) return showError("Nombre obligatorio");
-
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -158,15 +165,11 @@ const Login = () => {
         password,
         options: { data: { first_name: firstName } },
       });
-      
       if (error) throw error;
-      
-      if (data.user && !data.session) showSuccess("Revisa tu correo para verificar la cuenta.");
+      if (data.user && !data.session) showSuccess("Verifica tu correo.");
       else showSuccess("¡Bienvenido!");
-      
     } catch (error: any) {
-      if (error.message.includes("User already registered")) showError("Correo ya registrado.");
-      else showError(error.message);
+      showError(error.message);
     } finally {
       setLoading(false);
     }
@@ -174,17 +177,8 @@ const Login = () => {
 
   const GoogleButton = ({ text }: { text: string }) => (
     <div className="space-y-4">
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-gray-200" /></div>
-        <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-gray-500">O continúa con</span></div>
-      </div>
-      <Button 
-        type="button" 
-        variant="outline" 
-        className="w-full h-11 border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-medium relative shadow-sm"
-        onClick={handleGoogleLogin}
-        disabled={googleLoading || loading}
-      >
+      <div className="relative"><div className="absolute inset-0 flex items-center"><span className="w-full border-t border-gray-200" /></div><div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-gray-500">O continúa con</span></div></div>
+      <Button type="button" variant="outline" className="w-full h-11 border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-medium relative shadow-sm" onClick={handleGoogleLogin} disabled={googleLoading || loading}>
         {googleLoading ? <Loader2 className="h-5 w-5 animate-spin text-gray-500" /> : <><img src="/google-logo.png" alt="Google" className="h-5 w-5 absolute left-4" />{text}</>}
       </Button>
     </div>
@@ -192,56 +186,38 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 pb-24 relative">
-      
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        className="absolute top-4 left-4 text-gray-500 hover:text-[#F97316] hover:bg-orange-50 transition-colors z-10"
-        onClick={() => navigate('/')}
-      >
-        <ArrowLeft className="h-6 w-6" />
-      </Button>
-
-      {/* Botón flotante siempre visible para abrir en nueva pestaña */}
-      <a 
-        href={window.location.href} 
-        target="_blank" 
-        rel="noreferrer"
-        className="absolute top-4 right-4 bg-white p-2 rounded-full shadow-md text-gray-600 hover:text-[#F97316] transition-all z-50 flex items-center gap-2 px-3 text-xs font-bold border border-gray-100"
-        title="Abrir en nueva pestaña para probar Google Login"
-      >
-        <span>Probar Google</span>
-        <ExternalLink className="h-4 w-4" />
-      </a>
+      <Button variant="ghost" size="icon" className="absolute top-4 left-4 text-gray-500" onClick={() => navigate('/')}><ArrowLeft className="h-6 w-6" /></Button>
+      <a href={window.location.href} target="_blank" rel="noreferrer" className="absolute top-4 right-4 md:hidden text-xs text-gray-400 flex items-center gap-1"><ExternalLink className="h-4 w-4" /></a>
 
       <div className="w-full max-w-md animate-accordion-down space-y-4">
-        <div className="text-center space-y-2 mb-4">
-          <div className="flex justify-center mb-6">
-            <img src="/logo.png" alt="ServiAPP" className="h-32 object-contain drop-shadow-sm" />
-          </div>
+        <div className="text-center mb-6"><img src="/logo.png" alt="ServiAPP" className="h-32 mx-auto object-contain" /></div>
+
+        {/* --- CONFIGURACIÓN ID (SOLO DEV) --- */}
+        <div className="flex justify-end mb-2">
+            <button onClick={() => setShowIdInput(!showIdInput)} className="text-xs text-gray-400 flex items-center gap-1 hover:text-[#F97316]">
+                <Settings className="h-3 w-3" /> {clientId ? "ID Configurado" : "Configurar ID"}
+            </button>
         </div>
-
-        {/* Alerta si está en Iframe */}
-        {isIframe && (
-           <Alert className="bg-blue-50 border-blue-200 text-blue-800">
-             <Info className="h-4 w-4" />
-             <AlertTitle>Modo Previsualización</AlertTitle>
-             <AlertDescription className="text-xs mt-1">
-               Google Login no funciona dentro de esta previsualización. 
-               <strong>Usa el botón "Probar Google" arriba a la derecha.</strong>
-             </AlertDescription>
-           </Alert>
+        
+        {showIdInput && (
+            <div className="bg-white p-3 rounded-xl border border-orange-200 shadow-sm mb-4 animate-fade-in">
+                <Label className="text-xs font-bold text-gray-500">Google Client ID (De tu consola Google Cloud)</Label>
+                <div className="flex gap-2 mt-1">
+                    <Input 
+                        value={clientId} 
+                        onChange={(e) => saveClientId(e.target.value)} 
+                        placeholder="Pegar ID aquí..." 
+                        className="h-8 text-xs font-mono"
+                    />
+                    <Button size="sm" variant="outline" onClick={() => setShowIdInput(false)} className="h-8">OK</Button>
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1">Este ID se guardará en tu navegador localmente.</p>
+            </div>
         )}
+        {/* ----------------------------------- */}
 
-        {googleErrorDetail && (
-          <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>No se pudo iniciar sesión</AlertTitle>
-            <AlertDescription className="text-xs whitespace-pre-line mt-2 font-mono break-all">
-              {googleErrorDetail}
-            </AlertDescription>
-          </Alert>
-        )}
+        {isIframe && <Alert className="bg-blue-50 border-blue-200 text-blue-800"><Info className="h-4 w-4" /><AlertTitle>Modo Editor</AlertTitle><AlertDescription className="text-xs">Abre en pestaña nueva para probar Google Login.</AlertDescription></Alert>}
+        {googleErrorDetail && <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800"><AlertTriangle className="h-4 w-4" /><AlertTitle>Error</AlertTitle><AlertDescription className="text-xs mt-1">{googleErrorDetail}</AlertDescription></Alert>}
 
         <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4 h-14 p-1 bg-white border border-gray-200 rounded-xl shadow-sm">
@@ -251,12 +227,12 @@ const Login = () => {
 
           <TabsContent value="login">
             <Card className="border-gray-100 shadow-xl bg-white/80 backdrop-blur-sm">
-              <CardHeader className="space-y-1 pb-4"><CardTitle className="text-xl font-bold text-center">¡Hola de nuevo!</CardTitle><CardDescription className="text-center">Ingresa a tu cuenta para gestionar tus servicios</CardDescription></CardHeader>
+              <CardHeader className="space-y-1 pb-4"><CardTitle className="text-xl font-bold text-center">Bienvenido</CardTitle><CardDescription className="text-center">Gestiona tus servicios profesionales</CardDescription></CardHeader>
               <CardContent>
                 <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2"><Label htmlFor="email">Correo electrónico</Label><div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /><Input id="email" type="email" placeholder="correo@ejemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="pl-10 h-11 bg-white border-gray-200 focus:border-[#F97316]" /></div></div>
-                  <div className="space-y-2"><div className="flex items-center justify-between"><Label htmlFor="password">Contraseña</Label><a href="#" className="text-xs text-[#F97316] hover:underline">¿Olvidaste tu contraseña?</a></div><div className="relative"><Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /><Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="pl-10 h-11 bg-white border-gray-200 focus:border-[#F97316]" /></div></div>
-                  <Button type="submit" className="w-full bg-[#F97316] hover:bg-orange-600 text-white h-11 text-base font-semibold mt-4 shadow-md" disabled={loading || googleLoading}>{loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <span className="flex items-center gap-2">Ingresar <ArrowRight className="h-4 w-4" /></span>}</Button>
+                  <div className="space-y-2"><Label>Correo</Label><div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="pl-10 h-11" /></div></div>
+                  <div className="space-y-2"><Label>Contraseña</Label><div className="relative"><Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="pl-10 h-11" /></div></div>
+                  <Button type="submit" className="w-full bg-[#F97316] hover:bg-orange-600 text-white h-11 mt-4" disabled={loading || googleLoading}>{loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Ingresar"}</Button>
                   <GoogleButton text="Iniciar con Google" />
                 </form>
               </CardContent>
@@ -265,15 +241,14 @@ const Login = () => {
 
           <TabsContent value="register">
             <Card className="border-gray-100 shadow-xl bg-white/80 backdrop-blur-sm">
-              <CardHeader className="space-y-1 pb-4"><CardTitle className="text-xl font-bold text-center">Crear Cuenta</CardTitle><CardDescription className="text-center">Únete hoy y conecta con profesionales</CardDescription></CardHeader>
+              <CardHeader className="space-y-1 pb-4"><CardTitle className="text-xl font-bold text-center">Crear Cuenta</CardTitle><CardDescription className="text-center">Únete a la comunidad ServiAPP</CardDescription></CardHeader>
               <CardContent>
                 <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2"><Label htmlFor="reg-name">Nombre completo <span className="text-[#F97316]">*</span></Label><div className="relative"><User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /><Input id="reg-name" placeholder="Ej. Juan Pérez" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="pl-10 h-11 bg-white border-gray-200 focus:border-[#F97316]" /></div></div>
-                  <div className="space-y-2"><Label htmlFor="reg-email">Correo electrónico <span className="text-[#F97316]">*</span></Label><div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /><Input id="reg-email" type="email" placeholder="correo@ejemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="pl-10 h-11 bg-white border-gray-200 focus:border-[#F97316]" /></div></div>
-                  <div className="space-y-2"><Label htmlFor="reg-password">Contraseña <span className="text-[#F97316]">*</span></Label><div className="relative"><Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /><Input id="reg-password" type="password" placeholder="Mínimo 6 caracteres" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="pl-10 h-11 bg-white border-gray-200 focus:border-[#F97316]" /></div></div>
-                  <Button type="submit" className="w-full bg-[#F97316] hover:bg-orange-600 text-white h-11 text-base font-semibold mt-4 shadow-md" disabled={loading || googleLoading}>{loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Crear cuenta gratis"}</Button>
+                  <div className="space-y-2"><Label>Nombre</Label><div className="relative"><User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /><Input value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="pl-10 h-11" /></div></div>
+                  <div className="space-y-2"><Label>Correo</Label><div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="pl-10 h-11" /></div></div>
+                  <div className="space-y-2"><Label>Contraseña</Label><div className="relative"><Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="pl-10 h-11" /></div></div>
+                  <Button type="submit" className="w-full bg-[#F97316] hover:bg-orange-600 text-white h-11 mt-4" disabled={loading || googleLoading}>{loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Crear cuenta"}</Button>
                   <GoogleButton text="Registrarse con Google" />
-                  <p className="text-xs text-center text-gray-500 mt-4 px-4">Al registrarte, aceptas nuestros <a href="#" className="underline hover:text-[#F97316]">Términos</a> y <a href="#" className="underline hover:text-[#F97316]">Política de Privacidad</a>.</p>
                 </form>
               </CardContent>
             </Card>
