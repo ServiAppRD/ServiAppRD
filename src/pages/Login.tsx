@@ -7,9 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { showSuccess, showError } from "@/utils/toast";
-import { Loader2, Mail, Lock, User, ArrowRight, ArrowLeft, ExternalLink, AlertTriangle, Info, Settings } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowRight, ArrowLeft, ExternalLink, AlertTriangle, Info } from "lucide-react";
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+// ID PROPORCIONADO POR EL USUARIO
+const GOOGLE_CLIENT_ID = '679855184605-fuv9vrv8jldmi9ge17795opc1e4odnnf.apps.googleusercontent.com';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -18,10 +21,6 @@ const Login = () => {
   const [activeTab, setActiveTab] = useState("login");
   const [googleErrorDetail, setGoogleErrorDetail] = useState<string | null>(null);
   const [isIframe, setIsIframe] = useState(false);
-
-  // ID DE CLIENTE (Cárgalo desde localStorage para no perderlo al recargar)
-  const [clientId, setClientId] = useState(() => localStorage.getItem("custom_google_client_id") || "");
-  const [showIdInput, setShowIdInput] = useState(false);
 
   // Form states
   const [email, setEmail] = useState("");
@@ -32,18 +31,16 @@ const Login = () => {
     // Detectar iframe
     try { if (window.self !== window.top) setIsIframe(true); } catch (e) { setIsIframe(true); }
 
-    // Inicializar Google Auth si hay un ID
-    if (clientId) {
-      try {
-        GoogleAuth.initialize({
-          clientId: clientId,
-          scopes: ['profile', 'email'],
-          grantOfflineAccess: false,
-        });
-        console.log("Google Auth inicializado con ID:", clientId);
-      } catch (e) {
-        console.error("Error inicializando Google:", e);
-      }
+    // Inicializar Google Auth
+    try {
+      GoogleAuth.initialize({
+        clientId: GOOGLE_CLIENT_ID,
+        scopes: ['profile', 'email'],
+        grantOfflineAccess: false,
+      });
+      console.log("Google Auth inicializado.");
+    } catch (e) {
+      console.error("Error inicializando Google:", e);
     }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -55,35 +52,18 @@ const Login = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, clientId]);
-
-  const saveClientId = (id: string) => {
-    setClientId(id);
-    localStorage.setItem("custom_google_client_id", id);
-    // Reinicializar
-    GoogleAuth.initialize({
-      clientId: id,
-      scopes: ['profile', 'email'],
-      grantOfflineAccess: false,
-    });
-  };
+  }, [navigate]);
 
   const handleGoogleLogin = async () => {
     if (isIframe) {
-      setGoogleErrorDetail(`Estás en modo editor. Abre la app en una pestaña nueva (botón ↗ arriba a la derecha).`);
-      return;
-    }
-
-    if (!clientId) {
-      setGoogleErrorDetail("Falta el Client ID. Haz clic en el engranaje ⚙️ abajo y pega tu ID de Google Cloud.");
-      setShowIdInput(true);
+      setGoogleErrorDetail(`Estás en modo editor. Abre la app en una pestaña nueva (botón ↗ arriba a la derecha) para probar el Login con Google.`);
       return;
     }
 
     setGoogleErrorDetail(null);
     try {
       setGoogleLoading(true);
-      console.log("Intentando login con ID:", clientId);
+      console.log("Iniciando login con Google...");
       
       const response = await GoogleAuth.signIn();
       console.log("Respuesta Google:", response);
@@ -128,12 +108,11 @@ const Login = () => {
       
       if (msg.includes('popup_closed_by_user')) {
          setGoogleErrorDetail(`
-           Ventana cerrada inesperadamente.
-           1. Verifica que tu URL (${window.location.origin}) esté en "Authorized JavaScript origins" en Google Cloud.
-           2. Verifica que el Client ID sea el correcto.
+           Ventana cerrada.
+           Asegúrate de que la URL actual (${window.location.origin}) esté agregada en los "Orígenes de JavaScript autorizados" de tu Google Cloud Console.
          `);
       } else if (msg.includes('Not a valid origin')) {
-         setGoogleErrorDetail(`URL no autorizada. Agrega ${window.location.origin} a tu Google Client ID.`);
+         setGoogleErrorDetail(`URL no autorizada: ${window.location.origin}. Agrégala en Google Cloud Console.`);
       } else {
         showError(`Error: ${msg}`);
       }
@@ -191,30 +170,6 @@ const Login = () => {
 
       <div className="w-full max-w-md animate-accordion-down space-y-4">
         <div className="text-center mb-6"><img src="/logo.png" alt="ServiAPP" className="h-32 mx-auto object-contain" /></div>
-
-        {/* --- CONFIGURACIÓN ID (SOLO DEV) --- */}
-        <div className="flex justify-end mb-2">
-            <button onClick={() => setShowIdInput(!showIdInput)} className="text-xs text-gray-400 flex items-center gap-1 hover:text-[#F97316]">
-                <Settings className="h-3 w-3" /> {clientId ? "ID Configurado" : "Configurar ID"}
-            </button>
-        </div>
-        
-        {showIdInput && (
-            <div className="bg-white p-3 rounded-xl border border-orange-200 shadow-sm mb-4 animate-fade-in">
-                <Label className="text-xs font-bold text-gray-500">Google Client ID (De tu consola Google Cloud)</Label>
-                <div className="flex gap-2 mt-1">
-                    <Input 
-                        value={clientId} 
-                        onChange={(e) => saveClientId(e.target.value)} 
-                        placeholder="Pegar ID aquí..." 
-                        className="h-8 text-xs font-mono"
-                    />
-                    <Button size="sm" variant="outline" onClick={() => setShowIdInput(false)} className="h-8">OK</Button>
-                </div>
-                <p className="text-[10px] text-gray-400 mt-1">Este ID se guardará en tu navegador localmente.</p>
-            </div>
-        )}
-        {/* ----------------------------------- */}
 
         {isIframe && <Alert className="bg-blue-50 border-blue-200 text-blue-800"><Info className="h-4 w-4" /><AlertTitle>Modo Editor</AlertTitle><AlertDescription className="text-xs">Abre en pestaña nueva para probar Google Login.</AlertDescription></Alert>}
         {googleErrorDetail && <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800"><AlertTriangle className="h-4 w-4" /><AlertTitle>Error</AlertTitle><AlertDescription className="text-xs mt-1">{googleErrorDetail}</AlertDescription></Alert>}
