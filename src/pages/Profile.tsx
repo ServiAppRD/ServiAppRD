@@ -488,24 +488,31 @@ const Profile = () => {
                  </div>
 
                  {/* Hero Content */}
-                 <div className="relative z-10 px-6 pt-4 pb-6 flex flex-col md:flex-row md:items-center gap-6">
-                     <div className="space-y-3 flex-1">
+                 <div className="relative z-10 px-6 pt-4 pb-6 flex items-center justify-between gap-1">
+                     <div className="space-y-3 flex-1 z-10">
                          <p className="text-blue-100 font-medium text-sm">Suscríbete y destaca tu perfil</p>
-                         <h1 className="text-4xl font-black leading-[1.1] tracking-tight text-white">
+                         <h1 className="text-3xl md:text-4xl font-black leading-[1.1] tracking-tight text-white">
                              Verificación y<br/>
                              beneficios<br/>
                              exclusivos
                          </h1>
                      </div>
-                     <div className="hidden md:block w-32 h-32 bg-white/10 rounded-full flex items-center justify-center">
-                        <Crown className="h-16 w-16 text-[#F97316]" />
+                     <div className="w-28 h-28 md:w-40 md:h-40 flex items-center justify-center relative flex-shrink-0">
+                        <video 
+                            src="/Card.mp4" 
+                            autoPlay 
+                            loop 
+                            muted 
+                            playsInline 
+                            className="w-[140%] h-[140%] object-contain max-w-none"
+                        />
                      </div>
                  </div>
              </div>
 
              {/* Scrollable Content - Added heavy padding bottom to clear the fixed footer */}
              <div className="flex-1 overflow-y-auto px-6 py-8 space-y-8 pb-[180px]">
-                 {/* Benefits List - CLEANED UP */}
+                 {/* Benefits List - CLEANED UP (Solo los principales) */}
                  <div className="space-y-6">
                      <div className="flex items-start gap-4">
                          <div className="mt-1"><ShieldCheck className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div>
@@ -541,7 +548,7 @@ const Profile = () => {
                  </div>
 
                  {/* Question Text */}
-                 <div className="pt-4">
+                 <div className="pt-4 h-32"> {/* Espacio extra vacío solicitado */}
                      <h3 className="font-bold text-lg text-gray-900">¿Listo para crecer?</h3>
                      <p className="text-gray-500 text-sm mt-1">Cancela tu suscripción cuando quieras.</p>
                  </div>
@@ -1143,6 +1150,7 @@ const Profile = () => {
                      </div>
                    )}
                    
+                   {/* Imagen Grande Full Width */}
                    <div className="w-full h-48 relative bg-gray-100">
                       <img 
                         src={s.image_url || "/placeholder.svg"} 
@@ -1183,6 +1191,7 @@ const Profile = () => {
                           Publicado el {new Date(s.created_at).toLocaleDateString()}
                        </div>
 
+                       {/* Botones de Acción Grandes */}
                        <div className="flex items-center gap-3">
                           {!isPromoted ? (
                             <Button 
