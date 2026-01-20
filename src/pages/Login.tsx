@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { showSuccess, showError } from "@/utils/toast";
-import { Loader2, Mail, Lock, User, ArrowRight, ArrowLeft } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowRight, ArrowLeft, ExternalLink } from "lucide-react";
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 const Login = () => {
@@ -22,11 +22,11 @@ const Login = () => {
   const [firstName, setFirstName] = useState("");
 
   useEffect(() => {
-    // Inicializar Google Auth (Simplificado)
+    // Inicializar Google Auth
     GoogleAuth.initialize({
       clientId: '679855184605-fuv9vrv8jldmi9ge17795opc1e4odnnf.apps.googleusercontent.com',
       scopes: ['profile', 'email'],
-      grantOfflineAccess: false, // Cambiado a false para priorizar idToken
+      grantOfflineAccess: false,
     });
 
     // Check if user is already logged in
@@ -59,22 +59,24 @@ const Login = () => {
 
         if (error) throw error;
       } else {
-        // Fallback: A veces en web viene directo en response, no en authentication
-        // Dependiendo de la versión de la librería
         throw new Error("No se recibió el token de Google (idToken vacío)");
       }
       
     } catch (error: any) {
       console.error("Google Auth Error Full:", error);
       
-      // Intentar extraer el mensaje más claro posible
       let msg = "Error desconocido";
       if (typeof error === 'string') msg = error;
       else if (error?.message) msg = error.message;
       else if (error?.error) msg = JSON.stringify(error.error);
       
-      // Ignorar cancelaciones del usuario
-      if (msg.includes('popup_closed_by_user') || msg.includes('cancelled')) {
+      // Manejo específico para el error de popup cerrado (común en iframes)
+      if (msg.includes('popup_closed_by_user')) {
+        showError("⚠️ Google cerró la ventana. Si estás en el editor, abre la app en una PESTAÑA NUEVA para probar.");
+        return;
+      }
+
+      if (msg.includes('cancelled')) {
         return;
       }
 
@@ -93,7 +95,6 @@ const Login = () => {
         password,
       });
       if (error) throw error;
-      // Redirect handled by auth state change
     } catch (error: any) {
       console.error("Login error:", error);
       if (error.message.includes("Invalid login credentials")) {
@@ -146,7 +147,7 @@ const Login = () => {
     }
   };
 
-  // Componente del botón de Google para reutilizar
+  // Componente del botón de Google
   const GoogleButton = ({ text }: { text: string }) => (
     <div className="space-y-4">
       <div className="relative">
@@ -180,7 +181,6 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 pb-24 relative">
       
-      {/* Botón de Volver */}
       <Button 
         variant="ghost" 
         size="icon" 
@@ -190,9 +190,19 @@ const Login = () => {
         <ArrowLeft className="h-6 w-6" />
       </Button>
 
+      {/* Botón flotante para abrir en nueva pestaña si falla mucho */}
+      <a 
+        href={window.location.href} 
+        target="_blank" 
+        rel="noreferrer"
+        className="absolute top-4 right-4 md:hidden text-xs text-gray-400 flex items-center gap-1 hover:text-[#F97316]"
+        title="Abrir en nueva pestaña"
+      >
+        <ExternalLink className="h-4 w-4" />
+      </a>
+
       <div className="w-full max-w-md animate-accordion-down">
         
-        {/* Header/Logo Section */}
         <div className="text-center space-y-2 mb-8">
           <div className="flex justify-center mb-6">
             <img src="/logo.png" alt="ServiAPP" className="h-32 object-contain drop-shadow-sm" />
@@ -215,7 +225,6 @@ const Login = () => {
             </TabsTrigger>
           </TabsList>
 
-          {/* LOGIN FORM */}
           <TabsContent value="login">
             <Card className="border-gray-100 shadow-xl bg-white/80 backdrop-blur-sm">
               <CardHeader className="space-y-1 pb-4">
@@ -265,7 +274,6 @@ const Login = () => {
                     {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <span className="flex items-center gap-2">Ingresar <ArrowRight className="h-4 w-4" /></span>}
                   </Button>
 
-                  {/* Google Login Button */}
                   <GoogleButton text="Iniciar con Google" />
 
                 </form>
@@ -273,7 +281,6 @@ const Login = () => {
             </Card>
           </TabsContent>
 
-          {/* REGISTER FORM */}
           <TabsContent value="register">
             <Card className="border-gray-100 shadow-xl bg-white/80 backdrop-blur-sm">
               <CardHeader className="space-y-1 pb-4">
@@ -338,7 +345,6 @@ const Login = () => {
                     {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Crear cuenta gratis"}
                   </Button>
                   
-                  {/* Google Login Button */}
                   <GoogleButton text="Registrarse con Google" />
 
                   <p className="text-xs text-center text-gray-500 mt-4 px-4">
