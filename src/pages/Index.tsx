@@ -19,7 +19,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
+import Autoplay from "embla-carousel-autoplay";
 
 const SectionHeader = ({ title, icon: Icon }: { title: string, icon?: any }) => (
   <div className="flex justify-between items-center mb-4 px-5 md:px-0">
@@ -46,7 +53,7 @@ const ResponsiveGrid = ({ children, isLoading, emptyMessage, icon: Icon }: any) 
 
   return (
     <div className={cn(
-       "flex overflow-x-auto gap-4 px-5 pb-4 no-scrollbar min-h-[100px]", // Mobile Styles: Padding updated to px-5
+       "flex overflow-x-auto gap-4 px-5 pb-4 no-scrollbar min-h-[100px]", // Mobile Styles
        "md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:overflow-visible md:px-0 md:pb-0 md:gap-6" // Desktop Styles
     )}>
        {children}
@@ -54,11 +61,53 @@ const ResponsiveGrid = ({ children, isLoading, emptyMessage, icon: Icon }: any) 
   );
 };
 
+// Datos del Carrusel Hero
+const HERO_SLIDES = [
+  {
+    id: 1,
+    title: "Expertos en\nElectricidad",
+    subtitle: "Instalaciones seguras y rápidas",
+    image: "/hero-electrician.png",
+    cta: "Buscar Electricista",
+    category: "Electricidad"
+  },
+  {
+    id: 2,
+    title: "Carpintería\nde Primera",
+    subtitle: "Muebles y reparaciones a medida",
+    image: "/hero-carpenter.png",
+    cta: "Ver Carpinteros",
+    category: "Carpintería"
+  },
+  {
+    id: 3,
+    title: "Plomería\n24 Horas",
+    subtitle: "Soluciones para tu hogar",
+    image: "/hero-plumber.png",
+    cta: "Encontrar Plomero",
+    category: "Plomería"
+  }
+];
+
 const Index = () => {
   const navigate = useNavigate();
   const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
   const [recommendedCategory, setRecommendedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Carousel State
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    if (!api) return;
+
+    setCurrent(api.selectedScrollSnap());
+
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap());
+    });
+  }, [api]);
 
   useEffect(() => {
     const hasSeenWelcome = localStorage.getItem("hasSeenAppWelcome");
@@ -146,12 +195,12 @@ const Index = () => {
     <div className="min-h-screen bg-white flex flex-col pb-24">
       
       {/* 
-        HERO SECTION - ASYMMETRICAL BORDER
-        Rounded bottom-right ONLY (80px), Square bottom-left.
+        HERO SECTION - ASYMMETRICAL BORDER & CAROUSEL
       */}
       <div className="relative bg-[#F97316] rounded-bl-[0px] rounded-br-[70px] pt-safe shadow-lg overflow-hidden">
-        {/* Search Bar */}
-        <div className="px-5 pt-2 pb-4 relative z-20">
+        
+        {/* Search Bar (Fixed at top of Hero) */}
+        <div className="px-5 pt-2 pb-2 relative z-20">
             <form onSubmit={handleSearch} className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 bg-[#F97316] p-1.5 rounded-full">
                     <Search className="h-4 w-4 text-white" strokeWidth={3} />
@@ -165,34 +214,63 @@ const Index = () => {
             </form>
         </div>
 
-        {/* Banner Content */}
-        <div className="px-6 pb-12 pt-2 relative z-10 flex items-center justify-between">
-            <div className="text-white space-y-2 max-w-[60%]">
-                <h1 className="text-2xl font-bold leading-tight tracking-tight">
-                    Soluciones<br/>
-                    al instante
-                </h1>
-                <p className="text-orange-100 text-xs font-medium">¡Miles de expertos listos!</p>
-                <button onClick={() => navigate('/publish')} className="mt-2 bg-white text-[#F97316] px-4 py-2 rounded-full text-xs font-bold shadow-sm hover:bg-orange-50 transition-colors">
-                    Publicar Gratis
-                </button>
-            </div>
-            {/* Professional Image from Unsplash */}
-            <div className="absolute -right-4 bottom-0 w-44 h-44 opacity-100">
-                <img 
-                    src="https://images.unsplash.com/photo-1581578731117-104f2a41272c?q=80&w=300&auto=format&fit=crop" 
-                    className="w-full h-full object-cover mask-image-linear-gradient rounded-tl-3xl" 
-                    alt="Professional" 
-                    style={{ maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)' }}
-                />
-            </div>
+        {/* Swipeable Carousel */}
+        <div className="relative z-10 pb-8">
+          <Carousel 
+            setApi={setApi} 
+            className="w-full"
+            plugins={[
+              Autoplay({
+                delay: 4000,
+              }),
+            ]}
+          >
+            <CarouselContent>
+              {HERO_SLIDES.map((slide) => (
+                <CarouselItem key={slide.id}>
+                  <div className="px-6 pb-4 pt-2 flex items-center justify-between min-h-[180px]">
+                    {/* Texto */}
+                    <div className="text-white space-y-2 max-w-[55%] z-20">
+                      <h1 className="text-2xl font-bold leading-tight tracking-tight whitespace-pre-line">
+                        {slide.title}
+                      </h1>
+                      <p className="text-orange-100 text-xs font-medium">
+                        {slide.subtitle}
+                      </p>
+                      <button 
+                        onClick={() => navigate(`/search?category=${slide.category}`)} 
+                        className="mt-3 bg-white text-[#F97316] px-4 py-2 rounded-full text-xs font-bold shadow-sm hover:bg-orange-50 transition-colors"
+                      >
+                        {slide.cta}
+                      </button>
+                    </div>
+
+                    {/* Imagen */}
+                    <div className="absolute -right-4 bottom-0 w-48 h-48 md:w-56 md:h-56">
+                      <img 
+                        src={slide.image} 
+                        className="w-full h-full object-contain drop-shadow-xl transform translate-y-2 object-bottom" 
+                        alt={slide.title}
+                      />
+                    </div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
         </div>
 
-        {/* Carousel Dots Mockup */}
-        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-20 pr-12">
-            <div className="w-6 h-1.5 bg-white rounded-full opacity-100"></div>
-            <div className="w-1.5 h-1.5 bg-white rounded-full opacity-40"></div>
-            <div className="w-1.5 h-1.5 bg-white rounded-full opacity-40"></div>
+        {/* Carousel Dots */}
+        <div className="absolute bottom-4 left-6 flex gap-1.5 z-20">
+            {HERO_SLIDES.map((_, index) => (
+              <div 
+                key={index}
+                className={cn(
+                  "h-1.5 rounded-full transition-all duration-300",
+                  current === index ? "w-6 bg-white opacity-100" : "w-1.5 bg-white opacity-40"
+                )}
+              />
+            ))}
         </div>
       </div>
 
