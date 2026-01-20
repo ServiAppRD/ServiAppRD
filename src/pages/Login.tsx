@@ -11,6 +11,15 @@ import { Loader2, Mail, Lock, User, ArrowRight, ArrowLeft, ExternalLink, AlertTr
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
+// --- CONFIGURACIÓN DE GOOGLE ---
+// 1. Ve a https://console.cloud.google.com/
+// 2. Crea un proyecto y ve a "APIs & Services" > "Credentials"
+// 3. Crea un "OAuth Client ID" (Tipo: Web Application)
+// 4. En "Authorized JavaScript origins", PEGA TU URL ACTUAL: https://tudominio.com (sin barra al final)
+// 5. Copia el Client ID y pégalo abajo:
+const GOOGLE_CLIENT_ID = '679855184605-fuv9vrv8jldmi9ge17795opc1e4odnnf.apps.googleusercontent.com'; 
+// -------------------------------
+
 const Login = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -26,7 +35,7 @@ const Login = () => {
   useEffect(() => {
     // Inicializar Google Auth
     GoogleAuth.initialize({
-      clientId: '679855184605-fuv9vrv8jldmi9ge17795opc1e4odnnf.apps.googleusercontent.com',
+      clientId: GOOGLE_CLIENT_ID,
       scopes: ['profile', 'email'],
       grantOfflineAccess: false,
     });
@@ -73,18 +82,29 @@ const Login = () => {
       else if (error?.message) msg = error.message;
       else if (error?.error) msg = JSON.stringify(error.error);
       
-      // Diagnóstico específico para el usuario
+      // --- MANEJO DE ERRORES COMUNES ---
+
+      // 1. Popup cerrado (común en iframes)
       if (msg.includes('popup_closed_by_user')) {
          setGoogleErrorDetail(`
-           Google cerró la ventana porque detectó un problema de seguridad.
+           Google cerró la ventana por seguridad (posiblemente por estar en un iframe).
+           INTENTA ABRIR LA APP EN UNA PESTAÑA NUEVA.
+         `);
+         return;
+      }
+
+      // 2. Origen no autorizado (El error que tienes ahora)
+      if (msg.includes('Not a valid origin') || msg.includes('registered origin')) {
+         setGoogleErrorDetail(`
+           TU URL NO ESTÁ AUTORIZADA EN GOOGLE CLOUD.
            
-           CAUSA MÁS PROBABLE:
-           La URL actual (${window.location.origin}) NO está autorizada en la consola de Google Cloud.
+           URL Actual: ${window.location.origin}
            
            SOLUCIÓN:
-           1. Necesitas tu propio 'Google Client ID'.
-           2. En Google Cloud Console > APIs & Services > Credentials.
+           1. Necesitas tu propio CLIENT ID (el actual es de ejemplo y no puedes editarlo).
+           2. Crea uno en Google Cloud Console.
            3. Agrega "${window.location.origin}" en "Authorized JavaScript origins".
+           4. Reemplaza la variable GOOGLE_CLIENT_ID en este archivo.
          `);
          return;
       }
@@ -156,7 +176,6 @@ const Login = () => {
     }
   };
 
-  // Componente del botón de Google
   const GoogleButton = ({ text }: { text: string }) => (
     <div className="space-y-4">
       <div className="relative">
@@ -199,7 +218,6 @@ const Login = () => {
         <ArrowLeft className="h-6 w-6" />
       </Button>
 
-      {/* Botón flotante para abrir en nueva pestaña si falla mucho */}
       <a 
         href={window.location.href} 
         target="_blank" 
@@ -223,7 +241,7 @@ const Login = () => {
           <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Configuración de Google Requerida</AlertTitle>
-            <AlertDescription className="text-xs whitespace-pre-line mt-2 font-mono">
+            <AlertDescription className="text-xs whitespace-pre-line mt-2 font-mono break-all">
               {googleErrorDetail}
             </AlertDescription>
           </Alert>
