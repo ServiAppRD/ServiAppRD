@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { showSuccess, showError } from "@/utils/toast";
 import { 
   Loader2, LogOut, User, Phone, MapPin, Heart, 
   HelpCircle, ChevronRight, Star, 
-  ArrowLeft, Settings, Edit2, Briefcase, Trash2, Camera, Gift, Zap, Check,
+  ArrowLeft, Settings, Edit2, Briefcase, Trash2, Camera, Zap, Check,
   Clock, TrendingUp, Crown, BarChart3, ShieldCheck, Eye, MousePointerClick, CalendarRange,
-  UploadCloud, AlertTriangle, FileCheck, Hammer, Lock, Shield, MoreHorizontal, Edit, FileText
+  AlertTriangle, Hammer, Lock, Shield, MoreHorizontal, FileText, Bell, CreditCard, Sparkles, CheckCircle2
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -62,9 +63,6 @@ const PROFILE_COLORS = [
   { name: "Turquesa", value: "#06B6D4" },
 ];
 
-// Actualizado a 1.5 horas (5400 segundos)
-const REWARD_TARGET_SECONDS = 1.5 * 60 * 60; 
-
 const BOOST_OPTIONS = [
   { label: "1 Día", duration: 24, price: 299, popular: false },
   { label: "3 Días", duration: 72, price: 499, popular: true },
@@ -75,7 +73,10 @@ const Profile = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'dashboard' | 'edit' | 'preview' | 'my-services' | 'reputation' | 'favorites' | 'rewards' | 'metrics' | 'verification' | 'account-settings' | 'change-password'>('dashboard');
+  
+  // View State Updated
+  const [view, setView] = useState<'dashboard' | 'edit' | 'preview' | 'my-services' | 'reputation' | 'favorites' | 'metrics' | 'verification' | 'account-settings' | 'change-password' | 'serviapp-plus' | 'my-plan' | 'notifications'>('dashboard');
+  
   const [session, setSession] = useState<any>(null);
   
   // Profile Data
@@ -91,11 +92,7 @@ const Profile = () => {
   const [updating, setUpdating] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
-  // Rewards & Other Data
-  const [userStats, setUserStats] = useState<any>(null);
-  const [activeSeconds, setActiveSeconds] = useState(0);
-  const [canClaim, setCanClaim] = useState(false);
-  const [claiming, setClaiming] = useState(false);
+  // Data
   const [myServices, setMyServices] = useState<any[]>([]);
   const [myFavorites, setMyFavorites] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
@@ -109,9 +106,6 @@ const Profile = () => {
   const [totalViews, setTotalViews] = useState(0);
   const [totalClicks, setTotalClicks] = useState(0);
   const [loadingMetrics, setLoadingMetrics] = useState(false);
-
-  // Verification State (Placeholder removed logic)
-  const [verifying, setVerifying] = useState(false);
 
   // Boost Logic
   const [boostModalOpen, setBoostModalOpen] = useState(false);
@@ -130,6 +124,10 @@ const Profile = () => {
   const [serviceToDelete, setServiceToDelete] = useState<string | null>(null);
   const [deleteTimer, setDeleteTimer] = useState(5);
 
+  // Notifications State (Mock)
+  const [pushEnabled, setPushEnabled] = useState(true);
+  const [emailEnabled, setEmailEnabled] = useState(true);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -137,7 +135,6 @@ const Profile = () => {
         navigate("/login");
       } else {
         getProfile(session.user.id);
-        fetchUserStats(session.user.id);
         fetchMyServices(session.user.id);
         
         const viewParam = searchParams.get('view');
@@ -145,16 +142,6 @@ const Profile = () => {
       }
     });
   }, [navigate, searchParams]);
-
-  useEffect(() => {
-    let interval: any;
-    if (session?.user?.id && view === 'rewards') {
-        interval = setInterval(() => {
-            fetchUserStats(session.user.id);
-        }, 10000);
-    }
-    return () => clearInterval(interval);
-  }, [session, view]);
 
   useEffect(() => {
     if (view === 'metrics' && session?.user?.id) {
@@ -243,7 +230,6 @@ const Profile = () => {
   };
 
   const calculateCompletion = (data: any) => {
-    // Eliminada 'city' de los campos requeridos para completar el perfil
     const fields = [
       { key: 'first_name' }, { key: 'last_name' }, { key: 'phone' }
     ];
@@ -276,33 +262,6 @@ const Profile = () => {
       console.error('Error:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchUserStats = async (userId: string) => {
-    const { data, error } = await supabase.from('user_stats').select('*').eq('user_id', userId).maybeSingle();
-    if (!data && !error) {
-      await supabase.from('user_stats').insert({ user_id: userId, boosts: 0, active_seconds: 0 });
-    } else if (data) {
-      setUserStats(data);
-      setActiveSeconds(data.active_seconds || 0);
-      setCanClaim((data.active_seconds || 0) >= REWARD_TARGET_SECONDS);
-    }
-  };
-
-  const handleClaimReward = async () => {
-    if (!canClaim) return;
-    setClaiming(true);
-    try {
-      const { error } = await supabase.rpc('claim_reward_boost');
-      if (error) throw error;
-      showSuccess("¡Felicidades! Has ganado 1 Boost.");
-      fetchUserStats(session.user.id);
-      setCanClaim(false);
-    } catch (error: any) {
-      showError(error.message || "Error al reclamar recompensa");
-    } finally {
-      setClaiming(false);
     }
   };
 
@@ -432,14 +391,6 @@ const Profile = () => {
     }
   };
 
-  const formatTime = (seconds: number) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    return `${h}h ${m}m`;
-  };
-  const getProgressPercentage = () => Math.min((activeSeconds / REWARD_TARGET_SECONDS) * 100, 100);
-  const getRemainingTime = () => formatTime(Math.max(0, REWARD_TARGET_SECONDS - activeSeconds));
-
   const fetchMyServices = async (uid: string) => {
     const { data } = await supabase.from('services')
         .select('*')
@@ -510,6 +461,187 @@ const Profile = () => {
   };
 
   if (loading) return <div className="min-h-screen bg-white flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[#F97316]" /></div>;
+
+  // --- SERVIAPP PLUS VIEW ---
+  if (view === 'serviapp-plus') {
+      return (
+          <div className="min-h-screen bg-white pb-20 pt-safe animate-fade-in">
+             <div className="relative h-[40vh] bg-gradient-to-br from-[#0F172A] via-[#1e293b] to-[#334155] rounded-b-[3rem] overflow-hidden">
+                 <div className="absolute inset-0 bg-[url('/placeholder.svg')] opacity-10 mix-blend-overlay"></div>
+                 <div className="absolute top-4 left-4 z-10">
+                    <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="text-white hover:bg-white/20"><ArrowLeft className="h-6 w-6" /></Button>
+                 </div>
+                 <div className="flex flex-col items-center justify-center h-full text-white space-y-4 px-6 text-center">
+                     <div className="bg-gradient-to-tr from-[#F97316] to-yellow-500 p-4 rounded-3xl shadow-2xl mb-2">
+                        <Crown className="h-12 w-12 text-white" />
+                     </div>
+                     <h1 className="text-3xl font-black tracking-tight">ServiAPP Plus</h1>
+                     <p className="text-gray-300 font-medium text-sm max-w-xs">Desbloquea el máximo potencial de tu negocio y llega a más clientes.</p>
+                 </div>
+             </div>
+
+             <div className="px-6 -mt-10 relative z-10 space-y-6">
+                 <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 space-y-4">
+                     <h2 className="font-bold text-lg text-gray-900">Beneficios Exclusivos</h2>
+                     <ul className="space-y-4">
+                         <li className="flex items-start gap-3">
+                             <div className="bg-green-100 p-1.5 rounded-full"><Check className="h-4 w-4 text-green-600" /></div>
+                             <div>
+                                 <h4 className="font-bold text-sm text-gray-800">Verificación Inmediata</h4>
+                                 <p className="text-xs text-gray-500">Obtén la insignia azul de confianza.</p>
+                             </div>
+                         </li>
+                         <li className="flex items-start gap-3">
+                             <div className="bg-orange-100 p-1.5 rounded-full"><TrendingUp className="h-4 w-4 text-[#F97316]" /></div>
+                             <div>
+                                 <h4 className="font-bold text-sm text-gray-800">Posicionamiento Prioritario</h4>
+                                 <p className="text-xs text-gray-500">Aparece primero en las búsquedas.</p>
+                             </div>
+                         </li>
+                         <li className="flex items-start gap-3">
+                             <div className="bg-blue-100 p-1.5 rounded-full"><BarChart3 className="h-4 w-4 text-blue-600" /></div>
+                             <div>
+                                 <h4 className="font-bold text-sm text-gray-800">Métricas Avanzadas</h4>
+                                 <p className="text-xs text-gray-500">Conoce quién visita tu perfil.</p>
+                             </div>
+                         </li>
+                     </ul>
+                 </div>
+
+                 <div className="space-y-3 pb-8">
+                     <Button className="w-full h-14 bg-gradient-to-r from-[#F97316] to-pink-600 hover:to-pink-700 text-white rounded-2xl font-bold text-lg shadow-lg shadow-orange-500/30">
+                         Suscribirme por RD$ 499/mes
+                     </Button>
+                     <p className="text-center text-xs text-gray-400">Cancela cuando quieras. Sin compromisos.</p>
+                 </div>
+             </div>
+          </div>
+      )
+  }
+
+  // --- MY PLAN VIEW ---
+  if (view === 'my-plan') {
+      return (
+          <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
+             <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                   <Button variant="ghost" size="icon" onClick={() => setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button>
+                   <h1 className="text-lg font-bold">Mi Plan</h1>
+                </div>
+             </div>
+
+             <div className="p-5 space-y-6">
+                 {/* Card del Plan Actual */}
+                 <div className="bg-white rounded-3xl p-6 border-2 border-gray-100 shadow-sm relative overflow-hidden">
+                     <div className="absolute top-0 right-0 p-4 opacity-10">
+                         <CreditCard className="h-32 w-32" />
+                     </div>
+                     <div className="relative z-10">
+                         <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">Plan Actual</p>
+                         <h2 className="text-3xl font-black text-gray-900 mb-4">Gratuito</h2>
+                         
+                         <div className="flex items-center gap-2 mb-6">
+                            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">Activo</span>
+                            <span className="text-xs text-gray-400">Vence: Nunca</span>
+                         </div>
+
+                         <div className="space-y-3 border-t border-gray-100 pt-4">
+                             <div className="flex justify-between text-sm">
+                                 <span className="text-gray-600">Publicaciones activas</span>
+                                 <span className="font-bold text-gray-900">3 / 5</span>
+                             </div>
+                             <Progress value={60} className="h-2" />
+                         </div>
+                     </div>
+                 </div>
+
+                 {/* Banner Upgrade */}
+                 <div onClick={() => setView('serviapp-plus')} className="bg-gradient-to-r from-[#0F172A] to-[#334155] rounded-3xl p-6 text-white cursor-pointer hover:shadow-xl transition-shadow relative overflow-hidden group">
+                     <div className="relative z-10 flex justify-between items-center">
+                         <div>
+                             <h3 className="font-bold text-lg mb-1 flex items-center gap-2"><Crown className="h-5 w-5 text-yellow-400" /> Pásate a Plus</h3>
+                             <p className="text-gray-300 text-xs">Desbloquea publicaciones ilimitadas.</p>
+                         </div>
+                         <div className="bg-white/10 p-2 rounded-full group-hover:bg-white/20 transition-colors">
+                             <ChevronRight className="h-6 w-6" />
+                         </div>
+                     </div>
+                 </div>
+
+                 <div className="space-y-4">
+                     <h3 className="font-bold text-gray-900 px-2">Historial de Pagos</h3>
+                     <div className="text-center py-8 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200">
+                         No hay facturas recientes.
+                     </div>
+                 </div>
+             </div>
+          </div>
+      )
+  }
+
+  // --- NOTIFICATIONS VIEW ---
+  if (view === 'notifications') {
+      return (
+          <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
+             <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                   <Button variant="ghost" size="icon" onClick={() => setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button>
+                   <h1 className="text-lg font-bold">Notificaciones</h1>
+                </div>
+             </div>
+
+             <div className="p-5 space-y-6">
+                 {/* Configuración Rápida */}
+                 <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-5">
+                     <div className="flex items-center justify-between">
+                         <div className="space-y-0.5">
+                             <h4 className="font-bold text-gray-900 text-sm">Notificaciones Push</h4>
+                             <p className="text-xs text-gray-500">Recibe alertas en tu dispositivo</p>
+                         </div>
+                         <Switch checked={pushEnabled} onCheckedChange={setPushEnabled} />
+                     </div>
+                     <div className="h-px bg-gray-50" />
+                     <div className="flex items-center justify-between">
+                         <div className="space-y-0.5">
+                             <h4 className="font-bold text-gray-900 text-sm">Correos electrónicos</h4>
+                             <p className="text-xs text-gray-500">Resumen semanal y ofertas</p>
+                         </div>
+                         <Switch checked={emailEnabled} onCheckedChange={setEmailEnabled} />
+                     </div>
+                 </div>
+
+                 <div className="space-y-4">
+                     <h3 className="font-bold text-gray-900 px-2">Recientes</h3>
+                     
+                     {/* Lista Mock de Notificaciones */}
+                     <div className="space-y-3">
+                         <div className="bg-white p-4 rounded-2xl border border-gray-100 flex gap-4">
+                             <div className="bg-orange-50 p-2 rounded-full h-fit flex-shrink-0">
+                                 <Sparkles className="h-5 w-5 text-[#F97316]" />
+                             </div>
+                             <div>
+                                 <h4 className="font-bold text-sm text-gray-900">¡Bienvenido a ServiAPP!</h4>
+                                 <p className="text-xs text-gray-600 mt-1 leading-relaxed">Gracias por unirte. Completa tu perfil para ganar más confianza.</p>
+                                 <span className="text-[10px] text-gray-400 mt-2 block">Hace 2 días</span>
+                             </div>
+                         </div>
+
+                         <div className="bg-white p-4 rounded-2xl border border-gray-100 flex gap-4 opacity-75">
+                             <div className="bg-blue-50 p-2 rounded-full h-fit flex-shrink-0">
+                                 <ShieldCheck className="h-5 w-5 text-blue-500" />
+                             </div>
+                             <div>
+                                 <h4 className="font-bold text-sm text-gray-900">Consejo de Seguridad</h4>
+                                 <p className="text-xs text-gray-600 mt-1 leading-relaxed">Recuerda nunca compartir contraseñas con nadie.</p>
+                                 <span className="text-[10px] text-gray-400 mt-2 block">Hace 1 semana</span>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+          </div>
+      )
+  }
 
   // --- CHANGE PASSWORD VIEW ---
   if (view === 'change-password') {
@@ -1023,22 +1155,6 @@ const Profile = () => {
     );
   }
 
-  // --- REWARDS VIEW ---
-  if (view === 'rewards') {
-    return (
-      <div className="min-h-screen bg-white pb-20 pt-safe animate-fade-in relative overflow-hidden">
-        <div className="absolute inset-0 z-0 opacity-10"><div className="absolute top-[-50px] right-[-50px] w-64 h-64 bg-[#F97316] rounded-full blur-[80px] animate-pulse" /><div className="absolute bottom-[-50px] left-[-50px] w-64 h-64 bg-purple-400 rounded-full blur-[80px] animate-pulse delay-1000" /></div>
-        <div className="relative z-10">
-          <div className="p-4 flex items-center justify-between"><Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="text-gray-500 hover:bg-gray-100 rounded-full"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold text-gray-900">Mis Recompensas</h1><div className="w-10" /></div>
-          <div className="flex flex-col items-center justify-center mt-4 space-y-6 px-6">
-             <div className="text-center space-y-2"><div className="inline-flex items-center justify-center p-4 bg-orange-50 rounded-full border border-orange-100 mb-2 shadow-sm"><Zap className="h-10 w-10 text-[#F97316] fill-[#F97316]" /></div><h2 className="text-4xl font-black tracking-tight text-gray-900">{userStats?.boosts || 0}</h2><p className="text-gray-500 font-medium">Boosts Disponibles</p><Button variant="link" className="text-[#F97316] text-xs h-auto p-0 hover:text-orange-700" onClick={() => navigate('/publish')}>Usar en nueva publicación</Button></div>
-             <div className="w-full bg-white rounded-3xl p-6 border border-gray-100 shadow-xl text-center space-y-6 relative overflow-hidden"><div className="flex items-center justify-center gap-2 text-[#F97316]"><Clock className={`h-5 w-5 ${!canClaim ? "animate-spin-slow" : ""}`} /><span className="font-bold tracking-widest text-sm uppercase">Tiempo Activo</span></div><div className="space-y-2"><div className="font-mono text-4xl font-bold tracking-wider text-gray-900 tabular-nums">{formatTime(activeSeconds)} <span className="text-base text-gray-400 font-normal">/ 1h 30m</span></div><div className="h-4 w-full bg-gray-100 rounded-full overflow-hidden border border-gray-200 relative"><div className="h-full bg-gradient-to-r from-[#F97316] to-yellow-500 transition-all duration-1000 ease-out relative" style={{ width: `${getProgressPercentage()}%` }} /></div><p className="text-xs text-gray-500">{canClaim ? "¡Meta alcanzada!" : `Faltan ${getRemainingTime()} de uso`}</p></div><Button onClick={handleClaimReward} disabled={!canClaim || claiming} className={`w-full h-12 rounded-xl text-lg font-bold transition-all transform ${canClaim ? "bg-[#F97316] hover:bg-orange-600 text-white shadow-lg shadow-orange-500/40 scale-105 animate-pulse" : "bg-gray-100 text-gray-400 cursor-not-allowed hover:bg-gray-200"}`}>{claiming ? <Loader2 className="animate-spin" /> : canClaim ? "¡Reclamar Boost!" : "Sigue usándola..."}</Button></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // --- PREVIEW VIEW ---
   if (view === 'preview') {
     return (
@@ -1081,7 +1197,7 @@ const Profile = () => {
         <div className="flex justify-between gap-2 pb-2">
           <QuickAction icon={User} label="Perfil" onClick={() => setView('preview')} />
           <QuickAction icon={Star} label="Reputación" onClick={handleOpenReputation} />
-          <QuickAction icon={ShieldCheck} label="Verificación" onClick={() => setView('verification')} />
+          <QuickAction icon={Crown} label="ServiAPP Plus" onClick={() => setView('serviapp-plus')} />
           <QuickAction icon={HelpCircle} label="Ayuda" />
         </div>
       </div>
@@ -1101,9 +1217,14 @@ const Profile = () => {
             <MenuItem icon={Heart} label="Mis Favoritos" badge={myFavorites.length > 0 ? String(myFavorites.length) : undefined} onClick={() => handleOpenFavorites()} />
           </MenuSection>
 
-          <MenuSection title="Recompensas & Cuenta">
+          <MenuSection title="Estadísticas & Verificación">
             <MenuItem icon={BarChart3} label="Métricas" onClick={() => setView('metrics')} />
-            <MenuItem icon={Gift} label="Recompensas" badge={canClaim ? "!" : undefined} onClick={() => setView('rewards')} />
+            <MenuItem icon={ShieldCheck} label="Verificación" onClick={() => setView('verification')} />
+            <MenuItem icon={Bell} label="Notificaciones" onClick={() => setView('notifications')} />
+          </MenuSection>
+
+          <MenuSection title="Suscripción">
+            <MenuItem icon={CreditCard} label="Mi Plan" onClick={() => setView('my-plan')} />
           </MenuSection>
 
           <MenuSection title="Preferencias">
