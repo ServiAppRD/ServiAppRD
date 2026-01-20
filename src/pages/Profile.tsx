@@ -462,11 +462,12 @@ const Profile = () => {
 
   if (loading) return <div className="min-h-screen bg-white flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[#F97316]" /></div>;
 
-  // --- SERVIAPP PLUS VIEW ---
+  // --- SERVIAPP PLUS VIEW (FULL SCREEN OVERLAY) ---
   if (view === 'serviapp-plus') {
       return (
-          <div className="min-h-screen bg-white flex flex-col animate-fade-in relative">
-             {/* Header Section (Purple Branding) */}
+          // Usamos fixed inset-0 z-[1000] para que cubra toda la pantalla, incluyendo la MobileNavbar que es z-[999]
+          <div className="fixed inset-0 z-[1000] bg-white flex flex-col animate-fade-in">
+             {/* Header Section */}
              <div className="relative bg-[#4c1d95] text-white rounded-b-[40px] overflow-hidden pb-8 shrink-0">
                  {/* Background decoration */}
                  <div className="absolute top-0 right-0 w-64 h-64 bg-[#6d28d9] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50"></div>
@@ -493,15 +494,14 @@ const Profile = () => {
                              exclusivos
                          </h1>
                      </div>
-                     {/* Image Placeholder - simulating the person in the reference */}
                      <div className="hidden md:block w-32 h-32 bg-white/10 rounded-full flex items-center justify-center">
                         <Crown className="h-16 w-16 text-yellow-400" />
                      </div>
                  </div>
              </div>
 
-             {/* Scrollable Content */}
-             <div className="flex-1 overflow-y-auto px-6 py-8 space-y-8">
+             {/* Scrollable Content - Added heavy padding bottom to clear the fixed footer */}
+             <div className="flex-1 overflow-y-auto px-6 py-8 space-y-8 pb-[180px]">
                  {/* Benefits List */}
                  <div className="space-y-6">
                      <div className="flex items-start gap-4">
@@ -538,14 +538,14 @@ const Profile = () => {
                  </div>
 
                  {/* Question Text */}
-                 <div className="pt-4 pb-20">
+                 <div className="pt-4">
                      <h3 className="font-bold text-lg text-gray-900">¿Listo para crecer?</h3>
                      <p className="text-gray-500 text-sm mt-1">Cancela tu suscripción cuando quieras.</p>
                  </div>
              </div>
 
-             {/* Footer Fixed */}
-             <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100 pb-safe z-20 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)]">
+             {/* Footer Fixed INSIDE the z-[1000] container */}
+             <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100 pb-safe z-20 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)]">
                  <div className="max-w-md mx-auto flex flex-col gap-3">
                      <div className="flex justify-between items-end mb-1">
                         <span className="text-sm font-medium text-gray-500">Total a pagar</span>
@@ -572,15 +572,15 @@ const Profile = () => {
   // --- MY PLAN VIEW ---
   if (view === 'my-plan') {
       return (
-          <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
-             <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
+          <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
+             <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-safe">
                 <div className="flex items-center gap-3">
                    <Button variant="ghost" size="icon" onClick={() => setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button>
                    <h1 className="text-lg font-bold">Mi Plan</h1>
                 </div>
              </div>
 
-             <div className="p-5 space-y-6">
+             <div className="p-5 space-y-6 pb-24">
                  {/* Card del Plan Actual */}
                  <div className="bg-white rounded-3xl p-6 border-2 border-gray-100 shadow-sm relative overflow-hidden">
                      <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -606,7 +606,7 @@ const Profile = () => {
                  </div>
 
                  {/* Banner Upgrade */}
-                 <div onClick={() => setView('serviapp-plus')} className="bg-gradient-to-r from-[#4c1d95] to-[#6d28d9] rounded-3xl p-6 text-white cursor-pointer hover:shadow-xl transition-shadow relative overflow-hidden group">
+                 <div onClick={() => setView('serviapp-plus')} className="bg-gradient-to-r from-[#0F172A] to-[#334155] rounded-3xl p-6 text-white cursor-pointer hover:shadow-xl transition-shadow relative overflow-hidden group">
                      <div className="relative z-10 flex justify-between items-center">
                          <div>
                              <h3 className="font-bold text-lg mb-1 flex items-center gap-2"><Crown className="h-5 w-5 text-yellow-400" /> Pásate a Plus</h3>
@@ -632,15 +632,15 @@ const Profile = () => {
   // --- NOTIFICATIONS VIEW ---
   if (view === 'notifications') {
       return (
-          <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
-             <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
+          <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
+             <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-safe">
                 <div className="flex items-center gap-3">
                    <Button variant="ghost" size="icon" onClick={() => setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button>
                    <h1 className="text-lg font-bold">Notificaciones</h1>
                 </div>
              </div>
 
-             <div className="p-5 space-y-6">
+             <div className="p-5 space-y-6 pb-24">
                  {/* Configuración Rápida */}
                  <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-5">
                      <div className="flex items-center justify-between">
@@ -696,8 +696,8 @@ const Profile = () => {
   // --- CHANGE PASSWORD VIEW ---
   if (view === 'change-password') {
     return (
-        <div className="min-h-screen bg-white pb-20 pt-safe animate-fade-in">
-           <div className="p-4 flex items-center gap-3">
+        <div className="fixed inset-0 z-[1000] bg-white flex flex-col animate-fade-in overflow-y-auto">
+           <div className="p-4 flex items-center gap-3 pt-safe">
                <Button variant="ghost" size="icon" onClick={() => setView('account-settings')}><ArrowLeft className="h-6 w-6" /></Button>
                <h1 className="text-xl font-bold">Cambiar Contraseña</h1>
            </div>
@@ -738,15 +738,15 @@ const Profile = () => {
   // --- ACCOUNT SETTINGS VIEW ---
   if (view === 'account-settings') {
     return (
-      <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
-         <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
+      <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
+         <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-safe">
             <div className="flex items-center gap-3">
                <Button variant="ghost" size="icon" onClick={() => setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button>
                <h1 className="text-lg font-bold">Administrar Cuenta</h1>
             </div>
          </div>
 
-         <div className="p-5 space-y-6">
+         <div className="p-5 space-y-6 pb-24">
             
             <div className="space-y-2">
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-2">Seguridad</h3>
@@ -850,8 +850,8 @@ const Profile = () => {
   // --- VERIFICATION VIEW (COMING SOON) ---
   if (view === 'verification') {
     return (
-        <div className="min-h-screen bg-white pb-20 pt-safe animate-fade-in">
-           <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
+        <div className="fixed inset-0 z-[1000] bg-white flex flex-col animate-fade-in overflow-y-auto">
+           <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-safe">
               <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Verificación</h1></div>
            </div>
            
@@ -893,8 +893,8 @@ const Profile = () => {
   // --- METRICS VIEW ---
   if (view === 'metrics') {
     return (
-        <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
-           <div className="bg-white p-4 shadow-sm sticky top-0 z-10 space-y-4">
+        <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
+           <div className="bg-white p-4 shadow-sm sticky top-0 z-10 space-y-4 pt-safe">
               <div className="flex items-center gap-3">
                  <Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button>
                  <h1 className="text-lg font-bold">Métricas de Rendimiento</h1>
@@ -919,7 +919,7 @@ const Profile = () => {
               </div>
            </div>
 
-           <div className="p-4 space-y-6">
+           <div className="p-4 space-y-6 pb-24">
                {loadingMetrics ? (
                    <div className="flex justify-center py-20"><Loader2 className="animate-spin h-10 w-10 text-gray-300" /></div>
                ) : (
@@ -993,11 +993,11 @@ const Profile = () => {
     const totalReviews = reviews.length || 1; 
 
     return (
-      <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
-        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
+      <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
+        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-safe">
            <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Reputación</h1></div>
         </div>
-        <div className="p-5 space-y-6">
+        <div className="p-5 space-y-6 pb-24">
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center">
                 <div className="text-5xl font-black text-[#0F172A] mb-1">{averageRating.toFixed(1)}</div>
                 <div className="flex gap-1 mb-2">
@@ -1029,12 +1029,12 @@ const Profile = () => {
   // --- EDIT PROFILE VIEW ---
   if (view === 'edit') {
     return (
-      <div className="min-h-screen bg-gray-50 pb-20 pt-safe">
-        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between">
+      <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
+        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-safe">
           <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6"/></Button><h1 className="text-lg font-bold">Editar Perfil</h1></div>
           <Button onClick={updateProfile} disabled={updating} size="sm" className="bg-[#0F172A] text-white rounded-full px-4">{updating ? <Loader2 className="h-4 w-4 animate-spin"/> : "Guardar"}</Button>
         </div>
-        <div className="pb-10">
+        <div className="pb-24">
             <div className="relative mb-16">
                 <div className="h-40 w-full transition-colors duration-500 shadow-inner" style={{ backgroundColor: profileColor }} />
                 <div className="absolute -bottom-12 left-0 right-0 flex justify-center">
@@ -1071,7 +1071,7 @@ const Profile = () => {
   // --- MY SERVICES VIEW ---
   if (view === 'my-services') {
     return (
-      <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
+      <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
         {/* Boost Protection Dialog */}
         <AlertDialog open={showBoostDeleteWarning} onOpenChange={setShowBoostDeleteWarning}>
           <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto border-red-100 shadow-2xl">
@@ -1111,8 +1111,8 @@ const Profile = () => {
                 <Button onClick={handleProcessBoost} disabled={!selectedBoostOption || processingBoost} className="w-full h-12 text-lg font-bold bg-[#F97316] hover:bg-orange-600 rounded-xl shadow-lg shadow-orange-500/20">{processingBoost ? <Loader2 className="animate-spin" /> : "Pagar y Activar"}</Button>
             </DialogContent>
         </Dialog>
-        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Publicaciones</h1></div><Button size="sm" variant="default" className="bg-[#0F172A] rounded-full px-4 text-xs font-bold" onClick={()=>navigate('/publish')}>+ Nueva</Button></div>
-        <div className="p-4 space-y-6">
+        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-safe"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Publicaciones</h1></div><Button size="sm" variant="default" className="bg-[#0F172A] rounded-full px-4 text-xs font-bold" onClick={()=>navigate('/publish')}>+ Nueva</Button></div>
+        <div className="p-4 space-y-6 pb-24">
            {myServices.length === 0 ? <div className="flex flex-col items-center justify-center py-20 text-center"><div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4"><Briefcase className="h-8 w-8 text-gray-400" /></div><h3 className="font-bold text-gray-900">No tienes servicios</h3><p className="text-gray-500 text-sm mb-6 max-w-[200px]">Publica tu primer servicio para empezar a ganar clientes.</p><Button onClick={()=>navigate('/publish')} className="bg-[#F97316] rounded-xl">Crear Servicio</Button></div> : (
              myServices.map(s => {
                 const isPromoted = s.is_promoted && s.promoted_until && new Date(s.promoted_until) > new Date();
@@ -1198,9 +1198,9 @@ const Profile = () => {
   // --- FAVORITES VIEW ---
   if (view === 'favorites') {
     return (
-      <div className="min-h-screen bg-gray-50 pb-20 pt-safe animate-fade-in">
-        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={handleBackToDashboard}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Favoritos</h1></div></div>
-        <div className="p-4">{myFavorites.length === 0 ? <div className="text-center py-10 text-gray-500">Sin favoritos</div> : (<div className="grid grid-cols-2 gap-4">{myFavorites.map((s) => <div key={s.id} onClick={()=>navigate(`/service/${s.id}`)}><ServiceCard title={s.title} price={`RD$ ${s.price}`} image={s.image_url} /></div>)}</div>)}</div>
+      <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
+        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-safe"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={handleBackToDashboard}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Favoritos</h1></div></div>
+        <div className="p-4 pb-24">{myFavorites.length === 0 ? <div className="text-center py-10 text-gray-500">Sin favoritos</div> : (<div className="grid grid-cols-2 gap-4">{myFavorites.map((s) => <div key={s.id} onClick={()=>navigate(`/service/${s.id}`)}><ServiceCard title={s.title} price={`RD$ ${s.price}`} image={s.image_url} /></div>)}</div>)}</div>
       </div>
     );
   }
@@ -1208,9 +1208,9 @@ const Profile = () => {
   // --- PREVIEW VIEW ---
   if (view === 'preview') {
     return (
-      <div className="min-h-screen bg-gray-50 pb-20 pt-safe relative">
+      <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
         <div className="absolute top-0 left-0 right-0 h-72 rounded-b-[3rem] z-0 shadow-lg transition-colors duration-500" style={{ backgroundColor: profileColor }} />
-        <div className="relative z-10 px-4 pt-4">
+        <div className="relative z-10 px-4 pt-4 pt-safe">
           <div className="flex justify-between items-center text-white mb-2"><Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="text-white hover:bg-white/20"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mi Perfil</h1><Button variant="ghost" size="icon" onClick={() => setView('edit')} className="text-white hover:bg-white/20"><Edit2 className="h-5 w-5" /></Button></div>
           <div className="bg-white rounded-3xl shadow-xl p-6 text-center mt-24 space-y-4 border border-gray-100">
             <div className="relative -mt-20 mb-4 flex justify-center"><div className="p-2 bg-white rounded-full shadow-sm"><ProfileAvatar size="xl" className="border-4 border-white" /></div></div>
