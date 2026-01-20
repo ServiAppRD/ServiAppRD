@@ -22,8 +22,12 @@ const Login = () => {
   const [firstName, setFirstName] = useState("");
 
   useEffect(() => {
-    // Inicializar Google Auth (necesario para la web, seguro para móvil)
-    GoogleAuth.initialize();
+    // Inicializar Google Auth con el Client ID proporcionado
+    GoogleAuth.initialize({
+      clientId: '679855184605-fuv9vrv8jldmi9ge17795opc1e4odnnf.apps.googleusercontent.com',
+      scopes: ['profile', 'email'],
+      grantOfflineAccess: true,
+    });
 
     // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
