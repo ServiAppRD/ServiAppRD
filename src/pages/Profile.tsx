@@ -833,7 +833,7 @@ const Profile = () => {
                 {reviews.length === 0 ? <div className="text-center py-8 text-gray-400 bg-white rounded-2xl border border-dashed">Aún no tienes reseñas.</div> : (
                     reviews.map((r, i) => (
                         <div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                            <div className="flex justify-between items-start mb-2"><div className="flex gap-1">{[...Array(5)].map((_, i) => (<Star key={i} className={cn("h-3 w-3", i < r.rating ? "fill-[#F97316] text-[#F97316]" : "text-gray-200")} />))}</div><span className="text-[10px] text-gray-400">{new Date(r.created_at).toLocaleDateString()}</p></div>
+                            <div className="flex justify-between items-start mb-2"><div className="flex gap-1">{[...Array(5)].map((_, i) => (<Star key={i} className={cn("h-3 w-3", i < r.rating ? "fill-[#F97316] text-[#F97316]" : "text-gray-200")} />))}</div><span className="text-[10px] text-gray-400">{new Date(r.created_at).toLocaleDateString()}</span></div>
                             <p className="text-gray-700 text-sm leading-relaxed">"{r.comment}"</p>
                         </div>
                     ))
