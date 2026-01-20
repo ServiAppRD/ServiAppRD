@@ -6,9 +6,6 @@ export const MobileNavbar = () => {
   const location = useLocation();
 
   // Ocultar la barra de navegación en rutas específicas:
-  // - /publish (Crear servicio)
-  // - /login (Inicio de sesión)
-  // - /service/... (Ver detalle de publicación)
   const shouldHideNavbar = 
     ["/publish", "/login"].includes(location.pathname) || 
     location.pathname.startsWith("/service/");
@@ -37,7 +34,7 @@ export const MobileNavbar = () => {
   );
 
   return (
-    <div className="md:hidden fixed bottom-6 left-4 right-4 bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 py-3 px-4 flex justify-between items-center z-[999]">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 pb-safe pt-2 px-6 flex justify-between items-center z-[999] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
       <NavItem icon={Home} label="Inicio" path="/" />
       <NavItem icon={Search} label="Buscar" path="/search" />
       <NavItem icon={PlusCircle} label="Publicar" path="/publish" />
