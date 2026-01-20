@@ -146,10 +146,10 @@ const Index = () => {
     <div className="min-h-screen bg-white flex flex-col pb-24">
       
       {/* 
-        HERO SECTION (Estilo PedidosYa) 
-        Reemplaza la Navbar flotante anterior
+        HERO SECTION - ASYMMETRICAL BORDER
+        Rounded bottom-right ONLY (80px), Square bottom-left.
       */}
-      <div className="relative bg-[#F97316] rounded-b-[2.5rem] pt-safe shadow-lg overflow-hidden">
+      <div className="relative bg-[#F97316] rounded-bl-[0px] rounded-br-[70px] pt-safe shadow-lg overflow-hidden">
         {/* Search Bar */}
         <div className="px-5 pt-2 pb-4 relative z-20">
             <form onSubmit={handleSearch} className="relative">
@@ -189,7 +189,7 @@ const Index = () => {
         </div>
 
         {/* Carousel Dots Mockup */}
-        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-20">
+        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-20 pr-12">
             <div className="w-6 h-1.5 bg-white rounded-full opacity-100"></div>
             <div className="w-1.5 h-1.5 bg-white rounded-full opacity-40"></div>
             <div className="w-1.5 h-1.5 bg-white rounded-full opacity-40"></div>
