@@ -34,9 +34,9 @@ const ResponsiveGrid = ({ children, isLoading, emptyMessage, icon: Icon }: any) 
   
   if (!children || children.length === 0) {
      return (
-        <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-xl mx-4 md:mx-0 border border-dashed flex flex-col items-center justify-center">
+        <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-xl mx-4 md:mx-0 border border-dashed flex flex-col items-center justify-center px-6">
            {Icon && <Icon className="h-8 w-8 text-gray-300 mb-2" />}
-           <p className="text-sm">{emptyMessage}</p>
+           <p className="text-sm font-medium">{emptyMessage}</p>
         </div>
      );
   }
@@ -157,7 +157,7 @@ const Index = () => {
             {/* 1. Destacados */}
             <section>
               <SectionHeader title="Profesionales Destacados" icon={Crown} />
-              <ResponsiveGrid isLoading={loadingFeatured} emptyMessage="Espacio disponible para destacar" icon={Crown}>
+              <ResponsiveGrid isLoading={loadingFeatured} emptyMessage="¡Vaya! Parece que no hay servicios destacados aún. ¿Quieres ser el primero?" icon={Crown}>
                 {featuredServices?.map((item) => (
                     <div key={item.id} onClick={() => navigate(`/service/${item.id}`)} className="h-full">
                       <ServiceCard id={item.id} title={item.title} price={`RD$ ${item.price}`} image={item.image_url || "/placeholder.svg"} badge={{ text: "Top", color: "orange" }} />
@@ -169,7 +169,7 @@ const Index = () => {
             {/* 2. Recientes */}
             <section className="-mt-2 md:mt-0">
               <SectionHeader title="Recién Publicados" icon={Clock} />
-              <ResponsiveGrid isLoading={loadingRecent} emptyMessage="No hay publicaciones nuevas en las últimas 24h." icon={Clock}>
+              <ResponsiveGrid isLoading={loadingRecent} emptyMessage="¡Vaya! Parece que no hay servicios recientes aún. ¿Quieres ser el primero?" icon={Clock}>
                 {recentServices?.map((item) => (
                     <div key={item.id} onClick={() => navigate(`/service/${item.id}`)} className="h-full">
                       <ServiceCard id={item.id} title={item.title} price={`RD$ ${item.price}`} image={item.image_url || "/placeholder.svg"} badge={{ text: "Nuevo", color: "blue" }} />
@@ -181,7 +181,7 @@ const Index = () => {
             {/* 3. Recomendados */}
             <section className="-mt-2 md:mt-0">
               <SectionHeader title={recommendedCategory ? `Porque buscaste: ${recommendedCategory}` : "Recomendados para ti"} icon={Sparkles} />
-              <ResponsiveGrid isLoading={loadingRecommended} emptyMessage={recommendedCategory ? "No encontramos más servicios de esta categoría." : "Explora categorías para recibir recomendaciones."} icon={Sparkles}>
+              <ResponsiveGrid isLoading={loadingRecommended} emptyMessage={recommendedCategory ? "¡Vaya! Parece que no hay recomendaciones aún. ¿Quieres ser el primero?" : "Explora categorías para recibir recomendaciones."} icon={Sparkles}>
                 {recommendedServices?.map((item) => (
                     <div key={item.id} onClick={() => navigate(`/service/${item.id}`)} className="h-full">
                       <ServiceCard id={item.id} title={item.title} price={`RD$ ${item.price}`} image={item.image_url} />

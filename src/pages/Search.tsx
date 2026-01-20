@@ -250,25 +250,31 @@ const SearchPage = () => {
                 <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mb-4">
                   <SearchIcon className="h-8 w-8 text-[#F97316] opacity-50" />
                 </div>
-                <h3 className="font-bold text-gray-900 text-lg mb-2">
-                  {hasActiveFilters ? "No encontramos resultados" : "Aún no hay servicios"}
+                <h3 className="font-bold text-gray-900 text-lg mb-2 px-6">
+                  ¡Vaya! Parece que no hay servicios en este sector aún.
                 </h3>
-                <p className="text-gray-500 text-sm max-w-[200px] mb-4">
-                  {hasActiveFilters 
-                    ? "Intenta buscar con otras palabras o cambia la categoría seleccionada." 
-                    : "Sé el primero en publicar un servicio en esta categoría."}
+                <p className="text-gray-500 text-sm max-w-[220px] mb-6">
+                  ¿Quieres ser el primero en publicar?
                 </p>
                 {hasActiveFilters ? (
-                  <Button 
-                    variant="link" 
-                    className="text-[#F97316]"
-                    onClick={() => {
-                      setSearchTerm("");
-                      setActiveCategory("Todos");
-                    }}
-                  >
-                    Limpiar filtros
-                  </Button>
+                  <div className="flex flex-col gap-3 w-full max-w-[200px]">
+                      <Button 
+                        className="bg-[#F97316] hover:bg-orange-600 text-white rounded-xl w-full"
+                        onClick={() => navigate('/publish')}
+                      >
+                        Publicar Servicio
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="text-gray-500"
+                        onClick={() => {
+                          setSearchTerm("");
+                          setActiveCategory("Todos");
+                        }}
+                      >
+                        Limpiar filtros
+                      </Button>
+                  </div>
                 ) : (
                   <Button 
                     className="bg-[#F97316] hover:bg-orange-600 text-white rounded-xl"
