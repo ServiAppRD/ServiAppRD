@@ -12,7 +12,8 @@ import {
   HelpCircle, ChevronRight, Star, 
   ArrowLeft, Settings, Edit2, Briefcase, Trash2, Camera, Zap, Check,
   Clock, TrendingUp, Crown, BarChart3, ShieldCheck, Eye, MousePointerClick, CalendarRange,
-  AlertTriangle, Hammer, Lock, Shield, MoreHorizontal, FileText, Bell, CreditCard, Sparkles, X
+  AlertTriangle, Hammer, Lock, Shield, MoreHorizontal, FileText, Bell, CreditCard, Sparkles, X,
+  Headphones, Gift, Palette, Ticket
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -468,17 +469,17 @@ const Profile = () => {
           // Usamos fixed inset-0 z-[1000] para que cubra toda la pantalla, incluyendo la MobileNavbar que es z-[999]
           <div className="fixed inset-0 z-[1000] bg-white flex flex-col animate-fade-in">
              {/* Header Section */}
-             <div className="relative bg-[#4c1d95] text-white rounded-b-[40px] overflow-hidden pb-8 shrink-0">
-                 {/* Background decoration */}
-                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#6d28d9] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50"></div>
-                 <div className="absolute bottom-0 left-0 w-40 h-40 bg-[#8b5cf6] rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 opacity-30"></div>
+             <div className="relative bg-[#0F172A] text-white rounded-b-[40px] overflow-hidden pb-8 shrink-0">
+                 {/* Background decoration - Updated colors for Navy theme */}
+                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#1e293b] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50"></div>
+                 <div className="absolute bottom-0 left-0 w-40 h-40 bg-[#334155] rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 opacity-30"></div>
                  
                  {/* Navbar part */}
                  <div className="relative z-10 px-4 pt-safe flex items-center justify-between h-16">
-                    <button onClick={() => setView('dashboard')} className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/30 transition-colors">
+                    <button onClick={() => setView('dashboard')} className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/20 transition-colors">
                         <X className="h-6 w-6 text-white" />
                     </button>
-                    <div className="bg-white/20 backdrop-blur-md px-4 py-1 rounded-full">
+                    <div className="bg-white/10 backdrop-blur-md px-4 py-1 rounded-full">
                         <span className="font-black italic text-sm tracking-wider">PLUS</span>
                     </div>
                     <div className="w-10" /> {/* Spacer */}
@@ -487,15 +488,15 @@ const Profile = () => {
                  {/* Hero Content */}
                  <div className="relative z-10 px-6 pt-4 pb-6 flex flex-col md:flex-row md:items-center gap-6">
                      <div className="space-y-3 flex-1">
-                         <p className="text-purple-200 font-medium text-sm">Suscríbete y destaca tu perfil</p>
-                         <h1 className="text-4xl font-black leading-[1.1] tracking-tight">
+                         <p className="text-gray-300 font-medium text-sm">Suscríbete y destaca tu perfil</p>
+                         <h1 className="text-4xl font-black leading-[1.1] tracking-tight text-white">
                              Verificación y<br/>
                              beneficios<br/>
                              exclusivos
                          </h1>
                      </div>
-                     <div className="hidden md:block w-32 h-32 bg-white/10 rounded-full flex items-center justify-center">
-                        <Crown className="h-16 w-16 text-yellow-400" />
+                     <div className="hidden md:block w-32 h-32 bg-white/5 rounded-full flex items-center justify-center">
+                        <Crown className="h-16 w-16 text-[#F97316]" />
                      </div>
                  </div>
              </div>
@@ -535,6 +536,39 @@ const Profile = () => {
                              <p className="text-xs text-gray-500 mt-0.5">No hay límites para ofrecer tus servicios.</p>
                          </div>
                      </div>
+
+                     {/* Filler Benefits */}
+                     <div className="flex items-start gap-4">
+                         <div className="mt-1"><Headphones className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div>
+                         <div>
+                             <h3 className="font-bold text-gray-900 text-sm md:text-base">Soporte VIP 24/7</h3>
+                             <p className="text-xs text-gray-500 mt-0.5">Atención prioritaria para resolver tus dudas.</p>
+                         </div>
+                     </div>
+
+                     <div className="flex items-start gap-4">
+                         <div className="mt-1"><Gift className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div>
+                         <div>
+                             <h3 className="font-bold text-gray-900 text-sm md:text-base">Sin anuncios</h3>
+                             <p className="text-xs text-gray-500 mt-0.5">Navega y gestiona tu perfil sin interrupciones.</p>
+                         </div>
+                     </div>
+
+                     <div className="flex items-start gap-4">
+                         <div className="mt-1"><Palette className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div>
+                         <div>
+                             <h3 className="font-bold text-gray-900 text-sm md:text-base">Temas Exclusivos</h3>
+                             <p className="text-xs text-gray-500 mt-0.5">Personaliza el color de tu perfil.</p>
+                         </div>
+                     </div>
+
+                     <div className="flex items-start gap-4">
+                         <div className="mt-1"><Ticket className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div>
+                         <div>
+                             <h3 className="font-bold text-gray-900 text-sm md:text-base">Acceso Anticipado</h3>
+                             <p className="text-xs text-gray-500 mt-0.5">Prueba nuevas funciones antes que nadie.</p>
+                         </div>
+                     </div>
                  </div>
 
                  {/* Question Text */}
@@ -552,11 +586,11 @@ const Profile = () => {
                         <div className="text-right">
                              <span className="text-xs text-gray-400 line-through mr-2">RD$ 899</span>
                              <span className="text-2xl font-black text-gray-900">RD$ 499</span>
-                             <span className="text-xs font-bold text-purple-600 ml-1">/mes</span>
+                             <span className="text-xs font-bold text-[#0F172A] ml-1">/mes</span>
                         </div>
                      </div>
                      
-                     <Button className="w-full h-14 bg-[#4c1d95] hover:bg-[#5b21b6] text-white rounded-xl font-bold text-lg shadow-xl shadow-purple-900/20">
+                     <Button className="w-full h-14 bg-[#0F172A] hover:bg-[#1e293b] text-white rounded-xl font-bold text-lg shadow-xl shadow-slate-900/20">
                          Suscribirme a Plus
                      </Button>
                      
