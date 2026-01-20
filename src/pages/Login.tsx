@@ -8,10 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { showSuccess, showError } from "@/utils/toast";
 import { Loader2, Mail, Lock, User, ArrowRight, ArrowLeft } from "lucide-react";
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 const Login = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
 
   // Form states
@@ -20,6 +22,9 @@ const Login = () => {
   const [firstName, setFirstName] = useState("");
 
   useEffect(() => {
+    // Inicializar Google Auth (necesario para la web, seguro para móvil)
+    GoogleAuth.initialize();
+
     // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) navigate("/profile");
@@ -31,6 +36,40 @@ const Login = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const handleGoogleLogin = async () => {
+    try {
+      setGoogleLoading(true);
+      
+      // 1. Solicitar inicio de sesión al plugin nativo (o web)
+      const response = await GoogleAuth.signIn();
+      
+      // 2. Obtener el idToken de la respuesta de Google
+      const { idToken } = response.authentication;
+
+      if (idToken) {
+        // 3. Intercambiar el token de Google por una sesión de Supabase
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: 'google',
+          token: idToken,
+        });
+
+        if (error) throw error;
+        // La redirección la maneja el onAuthStateChange
+      } else {
+        throw new Error("No se recibió el token de Google");
+      }
+      
+    } catch (error: any) {
+      console.error("Google Auth Error:", error);
+      // Ignoramos el error si el usuario canceló el modal
+      if (error?.error !== 'popup_closed_by_user' && error?.message !== 'cancelled') {
+         showError("Error al iniciar con Google");
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,6 +132,37 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  // Componente del botón de Google para reutilizar
+  const GoogleButton = ({ text }: { text: string }) => (
+    <div className="space-y-4">
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-gray-200" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-white px-2 text-gray-500">O continúa con</span>
+        </div>
+      </div>
+      
+      <Button 
+        type="button" 
+        variant="outline" 
+        className="w-full h-11 border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-medium relative shadow-sm"
+        onClick={handleGoogleLogin}
+        disabled={googleLoading || loading}
+      >
+        {googleLoading ? (
+           <Loader2 className="h-5 w-5 animate-spin text-gray-500" />
+        ) : (
+           <>
+             <img src="/google-logo.png" alt="Google" className="h-5 w-5 absolute left-4" />
+             {text}
+           </>
+        )}
+      </Button>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 pb-24 relative">
@@ -177,10 +247,14 @@ const Login = () => {
                   <Button 
                     type="submit" 
                     className="w-full bg-[#F97316] hover:bg-orange-600 text-white h-11 text-base font-semibold mt-4 shadow-md hover:shadow-lg transition-all" 
-                    disabled={loading}
+                    disabled={loading || googleLoading}
                   >
                     {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <span className="flex items-center gap-2">Ingresar <ArrowRight className="h-4 w-4" /></span>}
                   </Button>
+
+                  {/* Google Login Button */}
+                  <GoogleButton text="Iniciar con Google" />
+
                 </form>
               </CardContent>
             </Card>
@@ -246,11 +320,14 @@ const Login = () => {
                   <Button 
                     type="submit" 
                     className="w-full bg-[#F97316] hover:bg-orange-600 text-white h-11 text-base font-semibold mt-4 shadow-md hover:shadow-lg transition-all" 
-                    disabled={loading}
+                    disabled={loading || googleLoading}
                   >
                     {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Crear cuenta gratis"}
                   </Button>
                   
+                  {/* Google Login Button */}
+                  <GoogleButton text="Registrarse con Google" />
+
                   <p className="text-xs text-center text-gray-500 mt-4 px-4">
                     Al registrarte, aceptas nuestros <a href="#" className="underline hover:text-[#F97316]">Términos de Servicio</a> y <a href="#" className="underline hover:text-[#F97316]">Política de Privacidad</a>.
                   </p>
