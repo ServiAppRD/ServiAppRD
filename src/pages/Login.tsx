@@ -7,14 +7,16 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { showSuccess, showError } from "@/utils/toast";
-import { Loader2, Mail, Lock, User, ArrowRight, ArrowLeft, ExternalLink } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowRight, ArrowLeft, ExternalLink, AlertTriangle } from "lucide-react";
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Login = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
+  const [googleErrorDetail, setGoogleErrorDetail] = useState<string | null>(null);
 
   // Form states
   const [email, setEmail] = useState("");
@@ -42,9 +44,10 @@ const Login = () => {
   }, [navigate]);
 
   const handleGoogleLogin = async () => {
+    setGoogleErrorDetail(null);
     try {
       setGoogleLoading(true);
-      console.log("Iniciando login con Google...");
+      console.log("Iniciando login con Google en origen:", window.location.origin);
       
       const response = await GoogleAuth.signIn();
       console.log("Respuesta Google:", response);
@@ -59,7 +62,7 @@ const Login = () => {
 
         if (error) throw error;
       } else {
-        throw new Error("No se recibió el token de Google (idToken vacío)");
+        throw new Error("No se recibió el token de Google.");
       }
       
     } catch (error: any) {
@@ -70,14 +73,20 @@ const Login = () => {
       else if (error?.message) msg = error.message;
       else if (error?.error) msg = JSON.stringify(error.error);
       
-      // Manejo específico para el error de popup cerrado (común en iframes)
+      // Diagnóstico específico para el usuario
       if (msg.includes('popup_closed_by_user')) {
-        showError("⚠️ Google cerró la ventana. Si estás en el editor, abre la app en una PESTAÑA NUEVA para probar.");
-        return;
-      }
-
-      if (msg.includes('cancelled')) {
-        return;
+         setGoogleErrorDetail(`
+           Google cerró la ventana porque detectó un problema de seguridad.
+           
+           CAUSA MÁS PROBABLE:
+           La URL actual (${window.location.origin}) NO está autorizada en la consola de Google Cloud.
+           
+           SOLUCIÓN:
+           1. Necesitas tu propio 'Google Client ID'.
+           2. En Google Cloud Console > APIs & Services > Credentials.
+           3. Agrega "${window.location.origin}" en "Authorized JavaScript origins".
+         `);
+         return;
       }
 
       showError(`Error Google: ${msg}`);
@@ -201,13 +210,24 @@ const Login = () => {
         <ExternalLink className="h-4 w-4" />
       </a>
 
-      <div className="w-full max-w-md animate-accordion-down">
+      <div className="w-full max-w-md animate-accordion-down space-y-4">
         
-        <div className="text-center space-y-2 mb-8">
+        <div className="text-center space-y-2 mb-4">
           <div className="flex justify-center mb-6">
             <img src="/logo.png" alt="ServiAPP" className="h-32 object-contain drop-shadow-sm" />
           </div>
         </div>
+
+        {/* Mensaje de Error de Diagnóstico */}
+        {googleErrorDetail && (
+          <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Configuración de Google Requerida</AlertTitle>
+            <AlertDescription className="text-xs whitespace-pre-line mt-2 font-mono">
+              {googleErrorDetail}
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4 h-14 p-1 bg-white border border-gray-200 rounded-xl shadow-sm">
