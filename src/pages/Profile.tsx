@@ -13,7 +13,7 @@ import {
   ArrowLeft, Settings, Edit2, Briefcase, Trash2, Camera, Zap, Check,
   Clock, TrendingUp, Crown, BarChart3, ShieldCheck, Eye, MousePointerClick, CalendarRange,
   AlertTriangle, Hammer, Lock, Shield, MoreHorizontal, FileText, Bell, CreditCard, Sparkles, X,
-  Headphones, Gift, Palette, Ticket
+  Plus
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -69,6 +69,8 @@ const BOOST_OPTIONS = [
   { label: "3 Días", duration: 72, price: 499, popular: true },
   { label: "7 Días", duration: 168, price: 999, popular: false },
 ];
+
+const MAX_SLOTS = 5;
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -468,11 +470,11 @@ const Profile = () => {
       return (
           // Usamos fixed inset-0 z-[1000] para que cubra toda la pantalla, incluyendo la MobileNavbar que es z-[999]
           <div className="fixed inset-0 z-[1000] bg-white flex flex-col animate-fade-in">
-             {/* Header Section */}
-             <div className="relative bg-[#0F172A] text-white rounded-b-[40px] overflow-hidden pb-8 shrink-0">
-                 {/* Background decoration - Updated colors for Navy theme */}
-                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#1e293b] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50"></div>
-                 <div className="absolute bottom-0 left-0 w-40 h-40 bg-[#334155] rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 opacity-30"></div>
+             {/* Header Section - COLOR ACTUALIZADO #0239c7 */}
+             <div className="relative bg-[#0239c7] text-white rounded-b-[40px] overflow-hidden pb-8 shrink-0">
+                 {/* Background decoration */}
+                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#0a46eb] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50"></div>
+                 <div className="absolute bottom-0 left-0 w-40 h-40 bg-[#3b82f6] rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 opacity-20"></div>
                  
                  {/* Navbar part */}
                  <div className="relative z-10 px-4 pt-safe flex items-center justify-between h-16">
@@ -488,14 +490,14 @@ const Profile = () => {
                  {/* Hero Content */}
                  <div className="relative z-10 px-6 pt-4 pb-6 flex flex-col md:flex-row md:items-center gap-6">
                      <div className="space-y-3 flex-1">
-                         <p className="text-gray-300 font-medium text-sm">Suscríbete y destaca tu perfil</p>
+                         <p className="text-blue-100 font-medium text-sm">Suscríbete y destaca tu perfil</p>
                          <h1 className="text-4xl font-black leading-[1.1] tracking-tight text-white">
                              Verificación y<br/>
                              beneficios<br/>
                              exclusivos
                          </h1>
                      </div>
-                     <div className="hidden md:block w-32 h-32 bg-white/5 rounded-full flex items-center justify-center">
+                     <div className="hidden md:block w-32 h-32 bg-white/10 rounded-full flex items-center justify-center">
                         <Crown className="h-16 w-16 text-[#F97316]" />
                      </div>
                  </div>
@@ -503,7 +505,7 @@ const Profile = () => {
 
              {/* Scrollable Content - Added heavy padding bottom to clear the fixed footer */}
              <div className="flex-1 overflow-y-auto px-6 py-8 space-y-8 pb-[180px]">
-                 {/* Benefits List */}
+                 {/* Benefits List - CLEANED UP */}
                  <div className="space-y-6">
                      <div className="flex items-start gap-4">
                          <div className="mt-1"><ShieldCheck className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div>
@@ -536,39 +538,6 @@ const Profile = () => {
                              <p className="text-xs text-gray-500 mt-0.5">No hay límites para ofrecer tus servicios.</p>
                          </div>
                      </div>
-
-                     {/* Filler Benefits */}
-                     <div className="flex items-start gap-4">
-                         <div className="mt-1"><Headphones className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div>
-                         <div>
-                             <h3 className="font-bold text-gray-900 text-sm md:text-base">Soporte VIP 24/7</h3>
-                             <p className="text-xs text-gray-500 mt-0.5">Atención prioritaria para resolver tus dudas.</p>
-                         </div>
-                     </div>
-
-                     <div className="flex items-start gap-4">
-                         <div className="mt-1"><Gift className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div>
-                         <div>
-                             <h3 className="font-bold text-gray-900 text-sm md:text-base">Sin anuncios</h3>
-                             <p className="text-xs text-gray-500 mt-0.5">Navega y gestiona tu perfil sin interrupciones.</p>
-                         </div>
-                     </div>
-
-                     <div className="flex items-start gap-4">
-                         <div className="mt-1"><Palette className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div>
-                         <div>
-                             <h3 className="font-bold text-gray-900 text-sm md:text-base">Temas Exclusivos</h3>
-                             <p className="text-xs text-gray-500 mt-0.5">Personaliza el color de tu perfil.</p>
-                         </div>
-                     </div>
-
-                     <div className="flex items-start gap-4">
-                         <div className="mt-1"><Ticket className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div>
-                         <div>
-                             <h3 className="font-bold text-gray-900 text-sm md:text-base">Acceso Anticipado</h3>
-                             <p className="text-xs text-gray-500 mt-0.5">Prueba nuevas funciones antes que nadie.</p>
-                         </div>
-                     </div>
                  </div>
 
                  {/* Question Text */}
@@ -586,11 +555,12 @@ const Profile = () => {
                         <div className="text-right">
                              <span className="text-xs text-gray-400 line-through mr-2">RD$ 899</span>
                              <span className="text-2xl font-black text-gray-900">RD$ 499</span>
-                             <span className="text-xs font-bold text-[#0F172A] ml-1">/mes</span>
+                             <span className="text-xs font-bold text-[#0239c7] ml-1">/mes</span>
                         </div>
                      </div>
                      
-                     <Button className="w-full h-14 bg-[#0F172A] hover:bg-[#1e293b] text-white rounded-xl font-bold text-lg shadow-xl shadow-slate-900/20">
+                     {/* BOTON CON COLOR ACTUALIZADO */}
+                     <Button className="w-full h-14 bg-[#0239c7] hover:bg-[#022b9e] text-white rounded-xl font-bold text-lg shadow-xl shadow-blue-900/20">
                          Suscribirme a Plus
                      </Button>
                      
@@ -632,19 +602,19 @@ const Profile = () => {
                          <div className="space-y-3 border-t border-gray-100 pt-4">
                              <div className="flex justify-between text-sm">
                                  <span className="text-gray-600">Publicaciones activas</span>
-                                 <span className="font-bold text-gray-900">3 / 5</span>
+                                 <span className="font-bold text-gray-900">{myServices.length} / {MAX_SLOTS}</span>
                              </div>
-                             <Progress value={60} className="h-2" />
+                             <Progress value={(myServices.length / MAX_SLOTS) * 100} className="h-2" />
                          </div>
                      </div>
                  </div>
 
-                 {/* Banner Upgrade */}
-                 <div onClick={() => setView('serviapp-plus')} className="bg-gradient-to-r from-[#0F172A] to-[#334155] rounded-3xl p-6 text-white cursor-pointer hover:shadow-xl transition-shadow relative overflow-hidden group">
+                 {/* Banner Upgrade - Updated Gradient */}
+                 <div onClick={() => setView('serviapp-plus')} className="bg-gradient-to-r from-[#0239c7] to-[#3b82f6] rounded-3xl p-6 text-white cursor-pointer hover:shadow-xl transition-shadow relative overflow-hidden group">
                      <div className="relative z-10 flex justify-between items-center">
                          <div>
                              <h3 className="font-bold text-lg mb-1 flex items-center gap-2"><Crown className="h-5 w-5 text-yellow-400" /> Pásate a Plus</h3>
-                             <p className="text-gray-300 text-xs">Desbloquea publicaciones ilimitadas.</p>
+                             <p className="text-blue-100 text-xs">Desbloquea publicaciones ilimitadas.</p>
                          </div>
                          <div className="bg-white/10 p-2 rounded-full group-hover:bg-white/20 transition-colors">
                              <ChevronRight className="h-6 w-6" />
@@ -1102,7 +1072,7 @@ const Profile = () => {
     );
   }
 
-  // --- MY SERVICES VIEW ---
+  // --- MY SERVICES VIEW (UPDATED SLOTS) ---
   if (view === 'my-services') {
     return (
       <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
@@ -1145,17 +1115,27 @@ const Profile = () => {
                 <Button onClick={handleProcessBoost} disabled={!selectedBoostOption || processingBoost} className="w-full h-12 text-lg font-bold bg-[#F97316] hover:bg-orange-600 rounded-xl shadow-lg shadow-orange-500/20">{processingBoost ? <Loader2 className="animate-spin" /> : "Pagar y Activar"}</Button>
             </DialogContent>
         </Dialog>
-        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-safe"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Publicaciones</h1></div><Button size="sm" variant="default" className="bg-[#0F172A] rounded-full px-4 text-xs font-bold" onClick={()=>navigate('/publish')}>+ Nueva</Button></div>
-        <div className="p-4 space-y-6 pb-24">
-           {myServices.length === 0 ? <div className="flex flex-col items-center justify-center py-20 text-center"><div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4"><Briefcase className="h-8 w-8 text-gray-400" /></div><h3 className="font-bold text-gray-900">No tienes servicios</h3><p className="text-gray-500 text-sm mb-6 max-w-[200px]">Publica tu primer servicio para empezar a ganar clientes.</p><Button onClick={()=>navigate('/publish')} className="bg-[#F97316] rounded-xl">Crear Servicio</Button></div> : (
-             myServices.map(s => {
-                const isPromoted = s.is_promoted && s.promoted_until && new Date(s.promoted_until) > new Date();
-                let remainingLabel = "";
-                if (isPromoted && s.promoted_until) {
-                    const now = new Date(); const end = new Date(s.promoted_until); const diffMs = end.getTime() - now.getTime(); const diffHrs = Math.ceil(diffMs / (1000 * 60 * 60)); const diffDays = Math.ceil(diffHrs / 24);
-                    if (diffDays > 1) remainingLabel = `${diffDays} días restantes`; else remainingLabel = `${diffHrs}h restantes`;
-                }
-                return (
+        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-safe"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Publicaciones</h1></div></div>
+        
+        <div className="p-4 space-y-4 pb-24">
+           <div className="flex items-center justify-between px-1">
+              <span className="text-sm font-medium text-gray-500">Espacios utilizados</span>
+              <span className="text-sm font-bold text-gray-900">{myServices.length} / {MAX_SLOTS}</span>
+           </div>
+           
+           {Array.from({ length: MAX_SLOTS }).map((_, index) => {
+             const s = myServices[index];
+             
+             if (s) {
+               // SLOT OCUPADO
+               const isPromoted = s.is_promoted && s.promoted_until && new Date(s.promoted_until) > new Date();
+               let remainingLabel = "";
+               if (isPromoted && s.promoted_until) {
+                   const now = new Date(); const end = new Date(s.promoted_until); const diffMs = end.getTime() - now.getTime(); const diffHrs = Math.ceil(diffMs / (1000 * 60 * 60)); const diffDays = Math.ceil(diffHrs / 24);
+                   if (diffDays > 1) remainingLabel = `${diffDays} días restantes`; else remainingLabel = `${diffHrs}h restantes`;
+               }
+
+               return (
                  <div key={s.id} className="bg-white rounded-3xl p-0 shadow-sm border border-gray-100 overflow-hidden mb-6 group relative">
                    {isPromoted && (
                      <div className="absolute top-3 left-3 bg-[#F97316] text-white text-xs font-bold px-3 py-1.5 rounded-full z-10 flex items-center gap-1 shadow-lg shadow-orange-500/20">
@@ -1163,7 +1143,6 @@ const Profile = () => {
                      </div>
                    )}
                    
-                   {/* Imagen Grande Full Width */}
                    <div className="w-full h-48 relative bg-gray-100">
                       <img 
                         src={s.image_url || "/placeholder.svg"} 
@@ -1178,7 +1157,7 @@ const Profile = () => {
 
                    <div className="p-5">
                        <div className="flex justify-between items-start mb-3">
-                           <h3 className="font-bold text-gray-900 text-lg leading-tight flex-1 mr-4">{s.title}</h3>
+                           <h3 className="font-bold text-gray-900 text-lg leading-tight flex-1 mr-4 truncate">{s.title}</h3>
                            <DropdownMenu>
                              <DropdownMenuTrigger asChild>
                                <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-gray-400">
@@ -1204,7 +1183,6 @@ const Profile = () => {
                           Publicado el {new Date(s.created_at).toLocaleDateString()}
                        </div>
 
-                       {/* Botones de Acción Grandes */}
                        <div className="flex items-center gap-3">
                           {!isPromoted ? (
                             <Button 
@@ -1222,8 +1200,22 @@ const Profile = () => {
                    </div>
                  </div>
                );
-             })
-           )}
+             } else {
+               // SLOT VACIO
+               return (
+                 <div 
+                    key={`empty-${index}`} 
+                    onClick={() => navigate('/publish')}
+                    className="h-32 rounded-3xl border-2 border-dashed border-gray-200 bg-gray-50 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-100 hover:border-gray-300 transition-all group"
+                 >
+                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm text-gray-400 group-hover:text-[#F97316] transition-colors">
+                        <Plus className="h-6 w-6" />
+                    </div>
+                    <span className="text-sm font-medium text-gray-400 group-hover:text-gray-600">Crear nuevo servicio</span>
+                 </div>
+               );
+             }
+           })}
         </div>
       </div>
     )
