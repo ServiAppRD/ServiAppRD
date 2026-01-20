@@ -214,10 +214,10 @@ const Index = () => {
         </div>
 
         {/* Swipeable Carousel */}
-        <div className="relative z-10 flex-1 flex flex-col">
+        <div className="relative z-10 flex-1 flex flex-col justify-end pb-8">
           <Carousel 
             setApi={setApi} 
-            className="w-full h-full flex-1"
+            className="w-full h-full"
             plugins={[
               Autoplay({
                 delay: 4000,
@@ -227,11 +227,9 @@ const Index = () => {
             <CarouselContent className="h-full">
               {HERO_SLIDES.map((slide) => (
                 <CarouselItem key={slide.id} className="h-full">
-                  {/* Contenedor Slide: min-h ajustado para llenar espacio vertical */}
-                  <div className="relative px-6 pt-4 flex items-center justify-between h-full min-h-[260px]">
-                    
-                    {/* Texto a la Izquierda (con pb para no chocar con dots) */}
-                    <div className="text-white space-y-3 max-w-[55%] z-20 relative flex flex-col justify-center h-full pb-8">
+                  <div className="relative px-6 pb-2 pt-4 flex items-center justify-between h-[220px]">
+                    {/* Texto a la Izquierda */}
+                    <div className="text-white space-y-3 max-w-[55%] z-20 relative flex flex-col justify-center h-full pb-4">
                       <h1 className="text-3xl font-black leading-[1.1] tracking-tight whitespace-pre-line drop-shadow-sm">
                         {slide.title}
                       </h1>
@@ -246,8 +244,8 @@ const Index = () => {
                       </button>
                     </div>
 
-                    {/* Imagen a la Derecha - Bottom 0 absoluto */}
-                    <div className="absolute right-0 bottom-0 w-[55%] h-[95%] flex items-end justify-end pointer-events-none z-10">
+                    {/* Imagen a la Derecha - Pegada al fondo EXACTAMENTE */}
+                    <div className="absolute right-0 bottom-0 w-[50%] h-[100%] pointer-events-none z-10 flex items-end justify-end">
                       <img 
                         src={slide.image} 
                         className="w-full h-full object-contain object-bottom drop-shadow-2xl" 
@@ -294,26 +292,65 @@ const Index = () => {
         
         {/* CATEGORIES GRID */}
         <div className="px-5 mt-6 mb-8 space-y-3">
-            {/* Fila 1: Tarjetas Grandes */}
+            {/* Fila 1: Tarjetas Grandes (Con imágenes reales) */}
             <div className="grid grid-cols-2 gap-3">
-                <div onClick={() => navigate('/search?category=Plomería')} className="bg-blue-50 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:shadow-md transition-all border border-blue-100 h-32 relative overflow-hidden group">
-                     <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity"><Droplets className="w-16 h-16 text-blue-500" /></div>
-                     <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-blue-500 mb-1 z-10"><Droplets className="h-6 w-6" /></div>
-                     <span className="font-bold text-gray-700 z-10">Plomería</span>
+                <div 
+                  onClick={() => navigate('/search?category=Plomería')} 
+                  className="bg-blue-100/50 p-4 rounded-3xl flex flex-col justify-between cursor-pointer hover:shadow-md transition-all border border-blue-100 h-36 relative overflow-hidden group"
+                >
+                     <div className="relative z-10">
+                        <span className="font-bold text-gray-800 text-lg block">Plomería</span>
+                        <span className="text-xs text-blue-600 font-medium bg-white/60 px-2 py-0.5 rounded-full">Popular</span>
+                     </div>
+                     <img 
+                        src="/cat-plumber.png" 
+                        alt="Plomero" 
+                        className="absolute -right-2 -bottom-2 w-32 h-32 object-contain z-0 filter drop-shadow-lg transition-transform group-hover:scale-105"
+                     />
                 </div>
-                <div onClick={() => navigate('/search?category=Electricidad')} className="bg-yellow-50 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:shadow-md transition-all border border-yellow-100 h-32 relative overflow-hidden group">
-                     <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity"><Zap className="w-16 h-16 text-yellow-500" /></div>
-                     <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-yellow-500 mb-1 z-10"><Zap className="h-6 w-6" /></div>
-                     <span className="font-bold text-gray-700 z-10">Electricidad</span>
+                
+                <div 
+                  onClick={() => navigate('/search?category=Electricidad')} 
+                  className="bg-yellow-100/50 p-4 rounded-3xl flex flex-col justify-between cursor-pointer hover:shadow-md transition-all border border-yellow-100 h-36 relative overflow-hidden group"
+                >
+                     <div className="relative z-10">
+                        <span className="font-bold text-gray-800 text-lg block">Electricidad</span>
+                        <span className="text-xs text-yellow-700 font-medium bg-white/60 px-2 py-0.5 rounded-full">24/7</span>
+                     </div>
+                     <img 
+                        src="/cat-electrician.png" 
+                        alt="Electricista" 
+                        className="absolute -right-2 -bottom-2 w-32 h-32 object-contain z-0 filter drop-shadow-lg transition-transform group-hover:scale-105"
+                     />
                 </div>
             </div>
             
-            {/* Fila 2: Tarjetas Pequeñas */}
+            {/* Fila 2: Tarjetas Pequeñas (Con imágenes reales) */}
             <div className="grid grid-cols-4 gap-3">
-                 <CategorySmallIcon icon={Sparkles} label="Limpieza" color="text-purple-500" bg="bg-purple-50" onClick={() => navigate('/search?category=Limpieza')} />
-                 <CategorySmallIcon icon={Car} label="Mecánica" color="text-gray-600" bg="bg-gray-100" onClick={() => navigate('/search?category=Mecánica')} />
-                 <CategorySmallIcon icon={Laptop} label="Tecnología" color="text-cyan-500" bg="bg-cyan-50" onClick={() => navigate('/search?category=Tecnología')} />
-                 <CategorySmallIcon icon={Grid} label="Ver todo" color="text-[#F97316]" bg="bg-orange-50" onClick={() => navigate('/search')} />
+                 <CategorySmallImage 
+                    image="/cat-cleaner.png" 
+                    label="Limpieza" 
+                    bg="bg-purple-100/50" 
+                    onClick={() => navigate('/search?category=Limpieza')} 
+                 />
+                 <CategorySmallImage 
+                    image="/cat-mechanic.webp" 
+                    label="Mecánica" 
+                    bg="bg-gray-100" 
+                    onClick={() => navigate('/search?category=Mecánica')} 
+                 />
+                 <CategorySmallImage 
+                    image="/cat-carpenter.png" 
+                    label="Carpintería" 
+                    bg="bg-orange-100/50" 
+                    onClick={() => navigate('/search?category=Carpintería')} 
+                 />
+                 <CategorySmallImage 
+                    image="/cat-gardener.webp" 
+                    label="Jardinería" 
+                    bg="bg-green-100/50" 
+                    onClick={() => navigate('/search?category=Jardinería')} 
+                 />
             </div>
         </div>
 
@@ -361,13 +398,17 @@ const Index = () => {
   );
 };
 
-// Componente helper para iconos pequeños
-const CategorySmallIcon = ({ icon: Icon, label, color, bg, onClick }: any) => (
+// Componente helper para IMAGENES pequeñas
+const CategorySmallImage = ({ image, label, bg, onClick }: any) => (
     <div onClick={onClick} className="flex flex-col items-center gap-2 cursor-pointer group">
-        <div className={cn("w-full aspect-square rounded-2xl flex items-center justify-center transition-all group-active:scale-95", bg)}>
-            <Icon className={cn("h-6 w-6", color)} />
+        <div className={cn("w-full aspect-square rounded-2xl flex items-end justify-center transition-all group-active:scale-95 relative overflow-hidden", bg)}>
+            <img 
+               src={image} 
+               alt={label} 
+               className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500" 
+            />
         </div>
-        <span className="text-[10px] font-medium text-gray-600 truncate w-full text-center">{label}</span>
+        <span className="text-[10px] font-bold text-gray-700 truncate w-full text-center">{label}</span>
     </div>
 );
 
