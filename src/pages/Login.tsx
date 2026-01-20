@@ -22,11 +22,11 @@ const Login = () => {
   const [firstName, setFirstName] = useState("");
 
   useEffect(() => {
-    // Inicializar Google Auth con el Client ID proporcionado
+    // Inicializar Google Auth (Simplificado)
     GoogleAuth.initialize({
       clientId: '679855184605-fuv9vrv8jldmi9ge17795opc1e4odnnf.apps.googleusercontent.com',
       scopes: ['profile', 'email'],
-      grantOfflineAccess: true,
+      grantOfflineAccess: false, // Cambiado a false para priorizar idToken
     });
 
     // Check if user is already logged in
@@ -44,32 +44,41 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     try {
       setGoogleLoading(true);
+      console.log("Iniciando login con Google...");
       
-      // 1. Solicitar inicio de sesión al plugin nativo (o web)
       const response = await GoogleAuth.signIn();
+      console.log("Respuesta Google:", response);
       
-      // 2. Obtener el idToken de la respuesta de Google
       const { idToken } = response.authentication;
 
       if (idToken) {
-        // 3. Intercambiar el token de Google por una sesión de Supabase
         const { error } = await supabase.auth.signInWithIdToken({
           provider: 'google',
           token: idToken,
         });
 
         if (error) throw error;
-        // La redirección la maneja el onAuthStateChange
       } else {
-        throw new Error("No se recibió el token de Google");
+        // Fallback: A veces en web viene directo en response, no en authentication
+        // Dependiendo de la versión de la librería
+        throw new Error("No se recibió el token de Google (idToken vacío)");
       }
       
     } catch (error: any) {
-      console.error("Google Auth Error:", error);
-      // Ignoramos el error si el usuario canceló el modal
-      if (error?.error !== 'popup_closed_by_user' && error?.message !== 'cancelled') {
-         showError("Error al iniciar con Google");
+      console.error("Google Auth Error Full:", error);
+      
+      // Intentar extraer el mensaje más claro posible
+      let msg = "Error desconocido";
+      if (typeof error === 'string') msg = error;
+      else if (error?.message) msg = error.message;
+      else if (error?.error) msg = JSON.stringify(error.error);
+      
+      // Ignorar cancelaciones del usuario
+      if (msg.includes('popup_closed_by_user') || msg.includes('cancelled')) {
+        return;
       }
+
+      showError(`Error Google: ${msg}`);
     } finally {
       setGoogleLoading(false);
     }
