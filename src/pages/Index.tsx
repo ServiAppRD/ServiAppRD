@@ -214,10 +214,10 @@ const Index = () => {
         </div>
 
         {/* Swipeable Carousel */}
-        <div className="relative z-10 flex-1 flex flex-col justify-end pb-8">
+        <div className="relative z-10 flex-1 flex flex-col">
           <Carousel 
             setApi={setApi} 
-            className="w-full h-full"
+            className="w-full h-full flex-1"
             plugins={[
               Autoplay({
                 delay: 4000,
@@ -227,9 +227,11 @@ const Index = () => {
             <CarouselContent className="h-full">
               {HERO_SLIDES.map((slide) => (
                 <CarouselItem key={slide.id} className="h-full">
-                  <div className="relative px-6 pb-2 pt-4 flex items-center justify-between h-[220px]">
+                  {/* Contenedor Slide: h-full para ocupar todo el espacio naranja */}
+                  <div className="relative px-6 pt-4 flex items-center justify-between h-full min-h-[260px]">
+                    
                     {/* Texto a la Izquierda */}
-                    <div className="text-white space-y-3 max-w-[55%] z-20 relative flex flex-col justify-center h-full pb-4">
+                    <div className="text-white space-y-3 max-w-[55%] z-20 relative flex flex-col justify-center h-full pb-8">
                       <h1 className="text-3xl font-black leading-[1.1] tracking-tight whitespace-pre-line drop-shadow-sm">
                         {slide.title}
                       </h1>
@@ -244,8 +246,8 @@ const Index = () => {
                       </button>
                     </div>
 
-                    {/* Imagen a la Derecha - Pegada al fondo EXACTAMENTE */}
-                    <div className="absolute right-0 bottom-0 w-[50%] h-[100%] pointer-events-none z-10 flex items-end justify-end">
+                    {/* Imagen a la Derecha - Bottom 0 absoluto, h-full para pegar abajo */}
+                    <div className="absolute right-0 bottom-0 w-[55%] h-full flex items-end justify-end pointer-events-none z-10">
                       <img 
                         src={slide.image} 
                         className="w-full h-full object-contain object-bottom drop-shadow-2xl" 
