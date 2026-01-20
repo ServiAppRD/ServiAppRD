@@ -168,18 +168,23 @@ const Index = () => {
         {/* Banner Content */}
         <div className="px-6 pb-12 pt-2 relative z-10 flex items-center justify-between">
             <div className="text-white space-y-2 max-w-[60%]">
-                <h1 className="text-3xl font-black leading-tight tracking-tight">
+                <h1 className="text-2xl font-bold leading-tight tracking-tight">
                     Soluciones<br/>
                     al instante
                 </h1>
-                <p className="text-orange-100 text-sm font-medium">¡Miles de expertos listos!</p>
+                <p className="text-orange-100 text-xs font-medium">¡Miles de expertos listos!</p>
                 <button onClick={() => navigate('/publish')} className="mt-2 bg-white text-[#F97316] px-4 py-2 rounded-full text-xs font-bold shadow-sm hover:bg-orange-50 transition-colors">
                     Publicar Gratis
                 </button>
             </div>
-            {/* Simple Image Graphic */}
-            <div className="absolute -right-4 bottom-0 w-48 h-48 opacity-90">
-                <img src="/placeholder.svg" className="w-full h-full object-contain drop-shadow-xl transform rotate-3 translate-y-4" alt="Hero" />
+            {/* Professional Image from Unsplash */}
+            <div className="absolute -right-4 bottom-0 w-44 h-44 opacity-100">
+                <img 
+                    src="https://images.unsplash.com/photo-1581578731117-104f2a41272c?q=80&w=300&auto=format&fit=crop" 
+                    className="w-full h-full object-cover mask-image-linear-gradient rounded-tl-3xl" 
+                    alt="Professional" 
+                    style={{ maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)' }}
+                />
             </div>
         </div>
 
@@ -207,7 +212,7 @@ const Index = () => {
 
       <PullToRefresh onRefresh={handleRefresh}>
         
-        {/* CATEGORIES GRID (Sobreponiéndose ligeramente al Hero si quisieramos, pero aqui lo pongo debajo limpio) */}
+        {/* CATEGORIES GRID */}
         <div className="px-5 mt-6 mb-8 space-y-3">
             {/* Fila 1: Tarjetas Grandes */}
             <div className="grid grid-cols-2 gap-3">
