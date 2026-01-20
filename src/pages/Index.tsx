@@ -183,8 +183,7 @@ const Index = () => {
       const { data, error } = await query;
       if (error) throw error;
       return data;
-    },
-    enabled: !!recommendedCategory
+    }
   });
 
   const handleRefresh = async () => {
@@ -197,10 +196,10 @@ const Index = () => {
       {/* 
         HERO SECTION - ASYMMETRICAL BORDER & CAROUSEL
       */}
-      <div className="relative bg-[#F97316] rounded-bl-[0px] rounded-br-[70px] pt-safe shadow-lg overflow-hidden">
+      <div className="relative bg-[#F97316] rounded-bl-[0px] rounded-br-[70px] pt-safe shadow-lg overflow-hidden min-h-[300px] flex flex-col">
         
         {/* Search Bar (Fixed at top of Hero) */}
-        <div className="px-5 pt-2 pb-2 relative z-20">
+        <div className="px-5 pt-4 pb-2 relative z-30">
             <form onSubmit={handleSearch} className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 bg-[#F97316] p-1.5 rounded-full">
                     <Search className="h-4 w-4 text-white" strokeWidth={3} />
@@ -215,42 +214,43 @@ const Index = () => {
         </div>
 
         {/* Swipeable Carousel */}
-        <div className="relative z-10 pb-8">
+        <div className="relative z-10 flex-1 flex flex-col justify-end pb-8">
           <Carousel 
             setApi={setApi} 
-            className="w-full"
+            className="w-full h-full"
             plugins={[
               Autoplay({
                 delay: 4000,
               }),
             ]}
           >
-            <CarouselContent>
+            <CarouselContent className="h-full">
               {HERO_SLIDES.map((slide) => (
-                <CarouselItem key={slide.id}>
-                  <div className="px-6 pb-4 pt-2 flex items-center justify-between min-h-[180px]">
-                    {/* Texto */}
-                    <div className="text-white space-y-2 max-w-[55%] z-20">
-                      <h1 className="text-2xl font-bold leading-tight tracking-tight whitespace-pre-line">
+                <CarouselItem key={slide.id} className="h-full">
+                  <div className="relative px-6 pb-2 pt-4 flex items-center justify-between h-[220px]">
+                    {/* Texto a la Izquierda */}
+                    <div className="text-white space-y-3 max-w-[55%] z-20 relative flex flex-col justify-center h-full">
+                      <h1 className="text-3xl font-black leading-[1.1] tracking-tight whitespace-pre-line drop-shadow-sm">
                         {slide.title}
                       </h1>
-                      <p className="text-orange-100 text-xs font-medium">
+                      <p className="text-orange-50 text-xs font-semibold tracking-wide">
                         {slide.subtitle}
                       </p>
                       <button 
                         onClick={() => navigate(`/search?category=${slide.category}`)} 
-                        className="mt-3 bg-white text-[#F97316] px-4 py-2 rounded-full text-xs font-bold shadow-sm hover:bg-orange-50 transition-colors"
+                        className="w-fit bg-white text-[#F97316] px-5 py-2.5 rounded-full text-xs font-bold shadow-lg hover:bg-orange-50 transition-all active:scale-95"
                       >
                         {slide.cta}
                       </button>
                     </div>
 
-                    {/* Imagen */}
-                    <div className="absolute -right-4 bottom-0 w-48 h-48 md:w-56 md:h-56">
+                    {/* Imagen a la Derecha - Pegada al fondo */}
+                    <div className="absolute right-0 bottom-0 w-[55%] h-[110%] flex items-end justify-end pointer-events-none z-10">
                       <img 
                         src={slide.image} 
-                        className="w-full h-full object-contain drop-shadow-xl transform translate-y-2 object-bottom" 
+                        className="w-full h-full object-contain object-bottom drop-shadow-2xl" 
                         alt={slide.title}
+                        style={{ filter: "drop-shadow(0px 10px 20px rgba(0,0,0,0.25))" }}
                       />
                     </div>
                   </div>
@@ -267,7 +267,7 @@ const Index = () => {
                 key={index}
                 className={cn(
                   "h-1.5 rounded-full transition-all duration-300",
-                  current === index ? "w-6 bg-white opacity-100" : "w-1.5 bg-white opacity-40"
+                  current === index ? "w-6 bg-white opacity-100 shadow-sm" : "w-1.5 bg-white opacity-40"
                 )}
               />
             ))}
