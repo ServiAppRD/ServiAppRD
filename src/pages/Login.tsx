@@ -12,11 +12,7 @@ import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // --- CONFIGURACIÓN DE GOOGLE ---
-// 1. Ve a https://console.cloud.google.com/
-// 2. Crea un proyecto y ve a "APIs & Services" > "Credentials"
-// 3. Crea un "OAuth Client ID" (Tipo: Web Application)
-// 4. En "Authorized JavaScript origins", PEGA TU URL ACTUAL: https://tudominio.com (sin barra al final)
-// 5. Copia el Client ID y pégalo abajo:
+// CLIENT ID WEB:
 const GOOGLE_CLIENT_ID = '679855184605-fuv9vrv8jldmi9ge17795opc1e4odnnf.apps.googleusercontent.com'; 
 // -------------------------------
 
@@ -56,20 +52,60 @@ const Login = () => {
     setGoogleErrorDetail(null);
     try {
       setGoogleLoading(true);
-      console.log("Iniciando login con Google en origen:", window.location.origin);
+      console.log("Iniciando login con Google...");
       
+      // 1. Iniciar flujo nativo/web de Google
       const response = await GoogleAuth.signIn();
       console.log("Respuesta Google:", response);
       
       const { idToken } = response.authentication;
 
       if (idToken) {
-        const { error } = await supabase.auth.signInWithIdToken({
+        // 2. Intercambiar token con Supabase
+        const { data, error } = await supabase.auth.signInWithIdToken({
           provider: 'google',
           token: idToken,
         });
 
         if (error) throw error;
+
+        // 3. ACTUALIZAR PERFIL CON DATOS DE GOOGLE
+        // Si el login es exitoso, extraemos la info y actualizamos la tabla 'profiles'
+        if (data.user) {
+          const metadata = data.user.user_metadata;
+          
+          // Google suele mandar 'full_name' o 'name', y 'picture' o 'avatar_url'
+          const googleName = metadata.full_name || metadata.name || "";
+          const googlePicture = metadata.picture || metadata.avatar_url || "";
+          
+          // Separar nombre y apellido (simple)
+          const nameParts = googleName.split(" ");
+          const firstName = nameParts[0] || "";
+          const lastName = nameParts.slice(1).join(" ") || "";
+
+          // Actualizamos la tabla profiles
+          // Usamos upsert para crear si no existe o actualizar si ya existe
+          // IMPORTANTE: No sobrescribimos si los campos ya tienen datos (opcional, aquí sobrescribimos foto para mantenerla fresca)
+          const { error: profileError } = await supabase.from('profiles').upsert({
+             id: data.user.id,
+             first_name: firstName,
+             last_name: lastName,
+             avatar_url: googlePicture,
+             // Mantenemos updated_at fresco
+             updated_at: new Date().toISOString()
+          }, { 
+             onConflict: 'id',
+             // Si quieres que SOLO se actualice si está vacío, habría que hacer un select primero.
+             // Aquí asumimos que queremos los datos frescos de Google.
+          });
+          
+          if (profileError) {
+             console.error("Error actualizando perfil con datos de Google:", profileError);
+          } else {
+             console.log("Perfil actualizado con datos de Google");
+          }
+        }
+
       } else {
         throw new Error("No se recibió el token de Google.");
       }
@@ -82,29 +118,18 @@ const Login = () => {
       else if (error?.message) msg = error.message;
       else if (error?.error) msg = JSON.stringify(error.error);
       
-      // --- MANEJO DE ERRORES COMUNES ---
-
-      // 1. Popup cerrado (común en iframes)
       if (msg.includes('popup_closed_by_user')) {
          setGoogleErrorDetail(`
-           Google cerró la ventana por seguridad (posiblemente por estar en un iframe).
-           INTENTA ABRIR LA APP EN UNA PESTAÑA NUEVA.
+           Google cerró la ventana.
+           Asegúrate de que tu URL esté autorizada en Google Cloud Console.
          `);
          return;
       }
 
-      // 2. Origen no autorizado (El error que tienes ahora)
-      if (msg.includes('Not a valid origin') || msg.includes('registered origin')) {
+      if (msg.includes('Not a valid origin')) {
          setGoogleErrorDetail(`
-           TU URL NO ESTÁ AUTORIZADA EN GOOGLE CLOUD.
-           
-           URL Actual: ${window.location.origin}
-           
-           SOLUCIÓN:
-           1. Necesitas tu propio CLIENT ID (el actual es de ejemplo y no puedes editarlo).
-           2. Crea uno en Google Cloud Console.
-           3. Agrega "${window.location.origin}" en "Authorized JavaScript origins".
-           4. Reemplaza la variable GOOGLE_CLIENT_ID en este archivo.
+           URL NO AUTORIZADA.
+           Agrega "${window.location.origin}" a los orígenes permitidos en tu Google Client ID.
          `);
          return;
       }
