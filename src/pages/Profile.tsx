@@ -657,7 +657,7 @@ const Profile = () => {
                      </div>
                      <div className="relative z-10">
                          <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">Plan Actual</p>
-                         <h2 className="text-3xl font-black text-gray-900 mb-4">{isPlus ? "Plus" : "Gratuito"}</h2>
+                         <h2 className="text-3xl font-black text-gray-900 mb-4">{isPlus ? "ServiAPP Plus" : "Gratuito"}</h2>
                          
                          <div className="flex items-center gap-2 mb-6">
                             <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">Activo</span>
@@ -1277,7 +1277,7 @@ const Profile = () => {
                             <SelectTrigger className="h-14 rounded-xl border-gray-300 focus:ring-[#F97316] text-base px-4">
                                 <SelectValue placeholder="Selecciona..." />
                             </SelectTrigger>
-                            <SelectContent className="bg-white max-h-[250px] z-[1002]">
+                            <SelectContent className="bg-white max-h-[250px]">
                                 {DR_CITIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                             </SelectContent>
                         </Select>
