@@ -609,7 +609,7 @@ const Profile = () => {
             );
 
           case 'my-plan':
-            const renewalDate = plusExpiresAt ? new Date(plusExpiresAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' }) : "Sin vencimiento";
+            const renewalDate = plusExpiresAt ? new Date(plusExpiresAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : "Sin vencimiento";
             
             return (
                 <div className="fixed inset-0 z-[1000] bg-gray-100 flex flex-col animate-fade-in overflow-y-auto">
@@ -624,12 +624,12 @@ const Profile = () => {
                    <div className="p-6">
                        {/* Main Card */}
                        <div className="bg-white rounded-[2rem] p-6 shadow-sm mb-8">
-                           <div className="w-16 h-16 bg-[#F97316] rounded-2xl flex items-center justify-center mb-4 shadow-sm">
-                               <img src="/app-icon.png" className="w-10 h-10 object-contain invert brightness-0 filter" style={{filter: 'brightness(0) invert(1)'}} alt="Logo" /> 
+                           <div className="w-16 h-16 bg-transparent rounded-2xl flex items-center justify-center mb-4 shadow-sm overflow-hidden">
+                               <img src="/serviapp-s-logo.png" className="w-full h-full object-cover" alt="Logo" /> 
                            </div>
                            
                            <h2 className="text-2xl font-black text-gray-900 mb-6">
-                               {isPlus ? "ServiAPP+" : "ServiAPP Básico"}
+                               {isPlus ? "ServiAPP Plus" : "ServiAPP Básico"}
                            </h2>
 
                            <div className="border-t border-gray-100 my-4" />
@@ -675,13 +675,33 @@ const Profile = () => {
 
                        {/* History List */}
                        <div className="space-y-4">
-                           {/* Skeleton Items mimicking the image */}
-                           {[1, 2, 3].map((i) => (
-                               <div key={i} className="bg-gray-200/80 h-24 rounded-[1.5rem] w-full flex flex-col justify-center px-6 gap-3 animate-pulse">
-                                   <div className="h-3 bg-gray-300 rounded-full w-3/4"></div>
-                                   <div className="h-3 bg-gray-300 rounded-full w-1/2"></div>
-                               </div>
-                           ))}
+                           {isPlus ? (
+                              <div className="bg-white p-4 rounded-3xl w-full flex items-center justify-between shadow-sm">
+                                  <div className="flex items-center gap-4">
+                                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+                                          <Check className="h-5 w-5" />
+                                      </div>
+                                      <div>
+                                          <p className="font-bold text-gray-900">Suscripción Plus</p>
+                                          <p className="text-xs text-gray-500">{new Date().toLocaleDateString()}</p>
+                                      </div>
+                                  </div>
+                                  <span className="font-bold text-gray-900">RD$ 499.00</span>
+                              </div>
+                           ) : (
+                              <div className="bg-white p-4 rounded-3xl w-full flex items-center justify-between shadow-sm opacity-70">
+                                  <div className="flex items-center gap-4">
+                                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500">
+                                          <User className="h-5 w-5" />
+                                      </div>
+                                      <div>
+                                          <p className="font-bold text-gray-900">Plan Gratuito</p>
+                                          <p className="text-xs text-gray-500">Siempre activo</p>
+                                      </div>
+                                  </div>
+                                  <span className="font-bold text-gray-900">RD$ 0.00</span>
+                              </div>
+                           )}
                        </div>
                    </div>
                 </div>
