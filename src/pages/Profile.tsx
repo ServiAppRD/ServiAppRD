@@ -466,8 +466,11 @@ const Profile = () => {
   };
 
   const handleDeleteAccount = async () => {
+    if (isPlus) return; // Doble verificación por seguridad
+
     setIsDeleting(true);
     try {
+       // Llamamos a la Edge Function 'delete-user' que se encarga de borrar de auth.users
        const { error } = await supabase.functions.invoke('delete-user');
        
        if (error) {
@@ -475,6 +478,7 @@ const Profile = () => {
          throw new Error("No se pudo completar la eliminación.");
        }
 
+       // Si la función tuvo éxito, cerramos sesión local y enviamos al inicio
        await supabase.auth.signOut();
        navigate('/');
        showSuccess("Tu cuenta y datos han sido eliminados permanentemente.");
@@ -1139,8 +1143,36 @@ const Profile = () => {
 
       <AlertDialog open={showDeleteAccountDialog} onOpenChange={setShowDeleteAccountDialog}>
         <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto z-[2000]">
-          <AlertDialogHeader><AlertDialogTitle className="text-red-600">¿Borrar cuenta?</AlertDialogTitle><AlertDialogDescription>Esta acción eliminará permanentemente todos tus datos de ServiAPP.</AlertDialogDescription></AlertDialogHeader>
-          <AlertDialogFooter><AlertDialogCancel disabled={isDeleting} className="rounded-xl">Cancelar</AlertDialogCancel><AlertDialogAction disabled={isDeleting} onClick={handleDeleteAccount} className="bg-red-600 rounded-xl">{isDeleting ? <Loader2 className="animate-spin" /> : "Sí, eliminar"}</AlertDialogAction></AlertDialogFooter>
+          <AlertDialogHeader>
+            {isPlus ? (
+              <>
+                <div className="mx-auto bg-orange-50 w-12 h-12 rounded-full flex items-center justify-center mb-2">
+                    <ShieldCheck className="h-6 w-6 text-[#0239c7]" />
+                </div>
+                <AlertDialogTitle className="text-center text-gray-900">Acción requerida</AlertDialogTitle>
+                <AlertDialogDescription className="text-center text-gray-600">
+                    Tienes una suscripción **Plus** activa. Debes cancelar tu plan antes de poder eliminar tu cuenta. 
+                    <br/><br/>
+                    Si cancelas el plan y eliminas la cuenta, perderás acceso a todas las funcionalidades Plus de forma inmediata.
+                </AlertDialogDescription>
+              </>
+            ) : (
+              <>
+                <AlertDialogTitle className="text-red-600">¿Borrar cuenta?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Esta acción eliminará permanentemente todos tus datos de ServiAPP. No podrás recuperar tus anuncios ni reseñas.
+                </AlertDialogDescription>
+              </>
+            )}
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting} className="rounded-xl">Cancelar</AlertDialogCancel>
+            {!isPlus && (
+               <AlertDialogAction disabled={isDeleting} onClick={handleDeleteAccount} className="bg-red-600 hover:bg-red-700 rounded-xl">
+                    {isDeleting ? <Loader2 className="animate-spin" /> : "Sí, eliminar"}
+               </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>
