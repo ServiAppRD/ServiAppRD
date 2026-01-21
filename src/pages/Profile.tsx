@@ -19,6 +19,7 @@ import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ServiceCard } from "@/components/ServiceCard";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -1495,10 +1496,16 @@ const Profile = () => {
             <div className="flex items-center gap-1.5">
                 <h1 className="text-2xl font-bold text-[#0F172A] truncate max-w-[200px]">{firstName || 'Usuario'}</h1>
                 {profileData?.is_verified && <ShieldCheck className="h-5 w-5 text-green-500" />}
+                {isPlus && <Badge className="bg-[#0239c7] text-white text-[10px] px-1.5 py-0.5"><Crown className="h-3 w-3 mr-1 fill-white" />PLUS</Badge>}
             </div>
           </div>
-          <div onClick={() => setView('preview')} className="cursor-pointer">
-             <ProfileAvatar size="md" className="border-2 border-orange-100" />
+          <div onClick={() => setView('preview')} className="cursor-pointer relative">
+             <ProfileAvatar size="md" className={isPlus ? "border-2 border-[#0239c7]" : "border-2 border-orange-100"} />
+             {isPlus && (
+               <div className="absolute -bottom-1 -right-1 bg-[#0239c7] text-white p-0.5 rounded-full border-2 border-white">
+                 <Crown className="h-3 w-3 fill-white" />
+               </div>
+             )}
           </div>
         </div>
         <div className="flex justify-between gap-2 pb-2">
