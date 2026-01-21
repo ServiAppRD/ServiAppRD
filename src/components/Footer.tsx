@@ -42,7 +42,7 @@ export const Footer = () => {
           <div>
             <h3 className="font-bold text-gray-900 mb-4">Contacto</h3>
             <ul className="space-y-2 text-sm text-gray-600">
-              <li className="flex items-center gap-2"><Mail className="h-4 w-4" /> soporte@serviapp.com</li>
+              <li className="flex items-center gap-2"><Mail className="h-4 w-4" /> serviapp.help@gmail.com</li>
               <li className="flex gap-4 mt-4">
                 <a href="#" className="p-2 bg-white border border-gray-200 rounded-full hover:border-[#F97316] hover:text-[#F97316] transition-all"><Facebook className="h-4 w-4" /></a>
                 <a href="#" className="p-2 bg-white border border-gray-200 rounded-full hover:border-[#F97316] hover:text-[#F97316] transition-all"><Instagram className="h-4 w-4" /></a>
