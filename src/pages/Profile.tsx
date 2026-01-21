@@ -70,7 +70,9 @@ const BOOST_OPTIONS = [
   { label: "7 Días", duration: 168, price: 999, popular: false },
 ];
 
-const MAX_SLOTS = 5;
+// LÍMITES DE PUBLICACIONES
+const SLOT_LIMIT_FREE = 5;
+const SLOT_LIMIT_PLUS = 10;
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -91,9 +93,11 @@ const Profile = () => {
   const [address, setAddress] = useState(""); 
   const [avatarUrl, setAvatarUrl] = useState("");
   const [profileColor, setProfileColor] = useState("#0F172A");
+  const [isPlus, setIsPlus] = useState(false);
   
   const [updating, setUpdating] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [buyingPlus, setBuyingPlus] = useState(false);
 
   // Data
   const [myServices, setMyServices] = useState<any[]>([]);
@@ -131,6 +135,9 @@ const Profile = () => {
   // Notifications State (Mock)
   const [pushEnabled, setPushEnabled] = useState(true);
   const [emailEnabled, setEmailEnabled] = useState(true);
+
+  // Computed Max Slots
+  const maxSlots = isPlus ? SLOT_LIMIT_PLUS : SLOT_LIMIT_FREE;
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -228,7 +235,7 @@ const Profile = () => {
         setMetricsData(Array.from(groupedData.values()));
 
         // 2. Fetch Recent Viewers (With Profile Data)
-        // We fetch the viewer IDs first
+        // Solo si es Plus mostramos la data, pero la lógica de fetch la mantenemos para saber si hay datos
         const viewerIds = events?.map(e => e.viewer_id).filter(Boolean) || [];
         const uniqueViewerIds = [...new Set(viewerIds)];
 
@@ -275,7 +282,7 @@ const Profile = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('profiles')
-        .select('first_name, last_name, phone, city, address, avatar_url, profile_color, is_verified, verification_status')
+        .select('first_name, last_name, phone, city, address, avatar_url, profile_color, is_verified, verification_status, is_plus')
         .eq('id', userId)
         .single();
 
@@ -288,6 +295,7 @@ const Profile = () => {
         setAddress(data.address || "");
         setAvatarUrl(data.avatar_url || "");
         setProfileColor(data.profile_color || "#0F172A");
+        setIsPlus(data.is_plus || false);
         calculateCompletion(data);
       }
     } catch (error) {
@@ -295,6 +303,29 @@ const Profile = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleBuyPlus = async () => {
+      setBuyingPlus(true);
+      // Simulación de delay de pago
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      try {
+          const { error } = await supabase.from('profiles').update({ 
+              is_plus: true, 
+              // plus_expires_at: new Date(Date.now() + 30*24*60*60*1000).toISOString() // 30 días
+          }).eq('id', session.user.id);
+          
+          if (error) throw error;
+          
+          setIsPlus(true);
+          showSuccess("¡Bienvenido a ServiAPP Plus!");
+          setView('dashboard'); // Volver al inicio con el badge activo
+      } catch (e: any) {
+          showError("Error al procesar suscripción");
+      } finally {
+          setBuyingPlus(false);
+      }
   };
 
   const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -563,8 +594,8 @@ const Profile = () => {
                       <div className="flex items-start gap-4">
                          <div className="mt-1"><Zap className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div>
                          <div>
-                             <h3 className="font-bold text-gray-900 text-sm md:text-base">Publicaciones Ilimitadas</h3>
-                             <p className="text-xs text-gray-500 mt-0.5">No hay límites para ofrecer tus servicios.</p>
+                             <h3 className="font-bold text-gray-900 text-sm md:text-base">Publicaciones Ilimitadas ({SLOT_LIMIT_PLUS})</h3>
+                             <p className="text-xs text-gray-500 mt-0.5">Duplica tu capacidad de publicación.</p>
                          </div>
                      </div>
                  </div>
@@ -588,9 +619,13 @@ const Profile = () => {
                         </div>
                      </div>
                      
-                     {/* BOTON CON COLOR ACTUALIZADO */}
-                     <Button className="w-full h-14 bg-[#0239c7] hover:bg-[#022b9e] text-white rounded-xl font-bold text-lg shadow-xl shadow-blue-900/20">
-                         Suscribirme a Plus
+                     {/* BOTON CON COLOR ACTUALIZADO Y LOGICA DE COMPRA */}
+                     <Button 
+                        onClick={handleBuyPlus}
+                        disabled={buyingPlus || isPlus}
+                        className="w-full h-14 bg-[#0239c7] hover:bg-[#022b9e] text-white rounded-xl font-bold text-lg shadow-xl shadow-blue-900/20"
+                     >
+                         {buyingPlus ? <Loader2 className="animate-spin" /> : (isPlus ? "Ya eres Plus" : "Suscribirme a Plus")}
                      </Button>
                      
                      <p className="text-center text-[10px] text-gray-400">
@@ -621,40 +656,42 @@ const Profile = () => {
                      </div>
                      <div className="relative z-10">
                          <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">Plan Actual</p>
-                         <h2 className="text-3xl font-black text-gray-900 mb-4">Gratuito</h2>
+                         <h2 className="text-3xl font-black text-gray-900 mb-4">{isPlus ? "ServiAPP Plus" : "Gratuito"}</h2>
                          
                          <div className="flex items-center gap-2 mb-6">
                             <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">Activo</span>
-                            <span className="text-xs text-gray-400">Vence: Nunca</span>
+                            <span className="text-xs text-gray-400">Vence: {isPlus ? "Renovación Mensual" : "Nunca"}</span>
                          </div>
 
                          <div className="space-y-3 border-t border-gray-100 pt-4">
                              <div className="flex justify-between text-sm">
                                  <span className="text-gray-600">Publicaciones activas</span>
-                                 <span className="font-bold text-gray-900">{myServices.length} / {MAX_SLOTS}</span>
+                                 <span className="font-bold text-gray-900">{myServices.length} / {maxSlots}</span>
                              </div>
-                             <Progress value={(myServices.length / MAX_SLOTS) * 100} className="h-2" />
+                             <Progress value={(myServices.length / maxSlots) * 100} className="h-2" />
                          </div>
                      </div>
                  </div>
 
-                 {/* Banner Upgrade - Updated Gradient */}
-                 <div onClick={() => setView('serviapp-plus')} className="bg-gradient-to-r from-[#0239c7] to-[#3b82f6] rounded-3xl p-6 text-white cursor-pointer hover:shadow-xl transition-shadow relative overflow-hidden group">
-                     <div className="relative z-10 flex justify-between items-center">
-                         <div>
-                             <h3 className="font-bold text-lg mb-1 flex items-center gap-2"><Crown className="h-5 w-5 text-yellow-400" /> Pásate a Plus</h3>
-                             <p className="text-blue-100 text-xs">Desbloquea publicaciones ilimitadas.</p>
-                         </div>
-                         <div className="bg-white/10 p-2 rounded-full group-hover:bg-white/20 transition-colors">
-                             <ChevronRight className="h-6 w-6" />
+                 {/* Banner Upgrade - Updated Gradient (Only show if not plus) */}
+                 {!isPlus && (
+                     <div onClick={() => setView('serviapp-plus')} className="bg-gradient-to-r from-[#0239c7] to-[#3b82f6] rounded-3xl p-6 text-white cursor-pointer hover:shadow-xl transition-shadow relative overflow-hidden group">
+                         <div className="relative z-10 flex justify-between items-center">
+                             <div>
+                                 <h3 className="font-bold text-lg mb-1 flex items-center gap-2"><Crown className="h-5 w-5 text-yellow-400" /> Pásate a Plus</h3>
+                                 <p className="text-blue-100 text-xs">Desbloquea 10 publicaciones y métricas.</p>
+                             </div>
+                             <div className="bg-white/10 p-2 rounded-full group-hover:bg-white/20 transition-colors">
+                                 <ChevronRight className="h-6 w-6" />
+                             </div>
                          </div>
                      </div>
-                 </div>
+                 )}
 
                  <div className="space-y-4">
                      <h3 className="font-bold text-gray-900 px-2">Historial de Pagos</h3>
                      <div className="text-center py-8 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200">
-                         No hay facturas recientes.
+                         {isPlus ? "Suscripción activada recientemente." : "No hay facturas recientes."}
                      </div>
                  </div>
              </div>
@@ -1013,46 +1050,78 @@ const Profile = () => {
                            </div>
                        </div>
                        
-                       {/* NEW: Recent Viewers List */}
+                       {/* NEW: Recent Viewers List - ONLY FOR PLUS USERS */}
                        <div className="space-y-4">
                            <div className="flex items-center justify-between px-2">
                                <h3 className="font-bold text-gray-900">Últimas visitas</h3>
-                               <span className="text-xs text-[#0239c7] font-bold bg-blue-50 px-2 py-1 rounded-full">PLAN PLUS</span>
+                               {isPlus ? (
+                                 <span className="text-xs text-[#0239c7] font-bold bg-blue-50 px-2 py-1 rounded-full">PLAN PLUS</span>
+                               ) : (
+                                 <Lock className="h-4 w-4 text-gray-400" />
+                               )}
                            </div>
                            
-                           {recentViewers.length > 0 ? (
-                               <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
-                                   {recentViewers.map((viewer: any, idx) => (
-                                       <div key={idx} className="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors">
-                                           <Avatar className="h-10 w-10 border border-gray-200">
-                                               <AvatarImage src={viewer.avatar_url} />
-                                               <AvatarFallback className="bg-gray-100 text-gray-500 text-xs">
-                                                   {viewer.first_name?.[0]}
-                                               </AvatarFallback>
-                                           </Avatar>
-                                           <div className="flex-1 min-w-0">
-                                               <p className="font-bold text-sm text-gray-900 truncate">
-                                                   {viewer.first_name} {viewer.last_name}
-                                               </p>
-                                               <p className="text-xs text-gray-400">
-                                                   Visitó tu perfil
-                                               </p>
+                           {isPlus ? (
+                               recentViewers.length > 0 ? (
+                                   <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
+                                       {recentViewers.map((viewer: any, idx) => (
+                                           <div key={idx} className="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors">
+                                               <Avatar className="h-10 w-10 border border-gray-200">
+                                                   <AvatarImage src={viewer.avatar_url} />
+                                                   <AvatarFallback className="bg-gray-100 text-gray-500 text-xs">
+                                                       {viewer.first_name?.[0]}
+                                                   </AvatarFallback>
+                                               </Avatar>
+                                               <div className="flex-1 min-w-0">
+                                                   <p className="font-bold text-sm text-gray-900 truncate">
+                                                       {viewer.first_name} {viewer.last_name}
+                                                   </p>
+                                                   <p className="text-xs text-gray-400">
+                                                       Visitó tu perfil
+                                                   </p>
+                                               </div>
+                                               <span className="text-[10px] font-medium text-gray-400 whitespace-nowrap">
+                                                   {new Date(viewer.visited_at).toLocaleDateString(undefined, {
+                                                       day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                                                   })}
+                                               </span>
                                            </div>
-                                           <span className="text-[10px] font-medium text-gray-400 whitespace-nowrap">
-                                               {new Date(viewer.visited_at).toLocaleDateString(undefined, {
-                                                   day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
-                                               })}
-                                           </span>
-                                       </div>
-                                   ))}
-                               </div>
-                           ) : (
-                               <div className="text-center py-8 bg-white rounded-3xl border border-dashed border-gray-200">
-                                   <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                                       <User className="h-6 w-6 text-gray-300" />
+                                       ))}
                                    </div>
-                                   <p className="text-sm text-gray-500 font-medium">Aún no hay visitas registradas de usuarios.</p>
-                                   <p className="text-xs text-gray-400 mt-1">Comparte tu perfil para obtener más visibilidad.</p>
+                               ) : (
+                                   <div className="text-center py-8 bg-white rounded-3xl border border-dashed border-gray-200">
+                                       <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                                           <User className="h-6 w-6 text-gray-300" />
+                                       </div>
+                                       <p className="text-sm text-gray-500 font-medium">Aún no hay visitas registradas de usuarios.</p>
+                                       <p className="text-xs text-gray-400 mt-1">Comparte tu perfil para obtener más visibilidad.</p>
+                                   </div>
+                               )
+                           ) : (
+                               /* LOCKED VIEW FOR NON-PLUS USERS */
+                               <div className="relative bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden p-6 text-center">
+                                   <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-6">
+                                       <div className="bg-white p-3 rounded-full shadow-lg mb-3">
+                                          <Lock className="h-6 w-6 text-gray-400" />
+                                       </div>
+                                       <h3 className="font-bold text-gray-900 mb-1">Función Plus</h3>
+                                       <p className="text-sm text-gray-500 mb-4">Descubre quién visita tu perfil con ServiAPP Plus.</p>
+                                       <Button onClick={() => setView('serviapp-plus')} className="bg-[#0239c7] hover:bg-[#022b9e] text-white rounded-xl shadow-lg shadow-blue-900/10">
+                                           Desbloquear ahora
+                                       </Button>
+                                   </div>
+                                   {/* Fake blurred list behind */}
+                                   <div className="opacity-30 blur-sm pointer-events-none space-y-4">
+                                       {[1,2,3].map(i => (
+                                           <div key={i} className="flex items-center gap-3">
+                                               <div className="h-10 w-10 bg-gray-200 rounded-full" />
+                                               <div className="flex-1 space-y-2">
+                                                   <div className="h-3 w-24 bg-gray-200 rounded" />
+                                                   <div className="h-2 w-16 bg-gray-100 rounded" />
+                                               </div>
+                                           </div>
+                                       ))}
+                                   </div>
                                </div>
                            )}
                        </div>
@@ -1193,10 +1262,10 @@ const Profile = () => {
         <div className="p-4 space-y-4 pb-24">
            <div className="flex items-center justify-between px-1">
               <span className="text-sm font-medium text-gray-500">Espacios utilizados</span>
-              <span className="text-sm font-bold text-gray-900">{myServices.length} / {MAX_SLOTS}</span>
+              <span className="text-sm font-bold text-gray-900">{myServices.length} / {maxSlots}</span>
            </div>
            
-           {Array.from({ length: MAX_SLOTS }).map((_, index) => {
+           {Array.from({ length: maxSlots }).map((_, index) => {
              const s = myServices[index];
              
              if (s) {
