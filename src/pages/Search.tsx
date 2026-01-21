@@ -1,4 +1,3 @@
-Sector) usando un Drawer y actualizando la lógica de filtrado de servicios.">
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
