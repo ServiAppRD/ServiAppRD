@@ -198,7 +198,7 @@ const SearchPage = () => {
       <div className="min-h-screen bg-gray-50 pb-24 animate-fade-in">
         
         {/* Sticky Header with Safe Area */}
-        <div className="bg-white sticky top-0 z-20 shadow-sm rounded-b-[1.5rem] pt-8">
+        <div className="bg-white sticky top-0 z-20 shadow-sm rounded-b-[1.5rem] pt-12">
           <div className="pb-4 px-4 pt-4">
             <div className="flex justify-between items-center mb-4 px-1">
                <h1 className="text-2xl font-bold text-[#0F172A]">Explorar Servicios</h1>

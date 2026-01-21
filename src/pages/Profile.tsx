@@ -521,7 +521,7 @@ const Profile = () => {
                    <div className="relative bg-[#0239c7] text-white rounded-b-[40px] overflow-hidden pb-8 shrink-0">
                        <div className="absolute top-0 right-0 w-64 h-64 bg-[#0a46eb] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50"></div>
                        <div className="absolute bottom-0 left-0 w-40 h-40 bg-[#3b82f6] rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 opacity-20"></div>
-                       <div className="relative z-10 px-4 pt-safe flex items-center justify-between h-16">
+                       <div className="relative z-10 px-4 pt-12 flex items-center justify-between h-16">
                           <button onClick={() => setView('dashboard')} className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/20 transition-colors">
                               <X className="h-6 w-6 text-white" />
                           </button>
@@ -604,7 +604,7 @@ const Profile = () => {
           case 'my-plan':
             return (
                 <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
-                   <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-safe">
+                   <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12">
                       <div className="flex items-center gap-3">
                          <Button variant="ghost" size="icon" onClick={() => setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button>
                          <h1 className="text-lg font-bold">Mi Plan</h1>
@@ -653,7 +653,7 @@ const Profile = () => {
           case 'notifications':
             return (
                 <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
-                   <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-safe">
+                   <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12">
                       <div className="flex items-center gap-3">
                          <Button variant="ghost" size="icon" onClick={() => setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button>
                          <h1 className="text-lg font-bold">Notificaciones</h1>
@@ -684,7 +684,7 @@ const Profile = () => {
           case 'change-password':
             return (
                 <div className="fixed inset-0 z-[1000] bg-white flex flex-col animate-fade-in overflow-y-auto">
-                   <div className="p-4 flex items-center gap-3 pt-safe">
+                   <div className="p-4 flex items-center gap-3 pt-12">
                        <Button variant="ghost" size="icon" onClick={() => setView('account-settings')}><ArrowLeft className="h-6 w-6" /></Button>
                        <h1 className="text-xl font-bold">Cambiar Contraseña</h1>
                    </div>
@@ -708,7 +708,7 @@ const Profile = () => {
           case 'account-settings':
             return (
               <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
-                 <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-safe">
+                 <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12">
                     <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Administrar Cuenta</h1></div>
                  </div>
                  <div className="p-5 space-y-6 pb-24">
@@ -739,7 +739,7 @@ const Profile = () => {
           case 'verification':
             return (
                 <div className="fixed inset-0 z-[1000] bg-white flex flex-col animate-fade-in overflow-y-auto">
-                   <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-safe">
+                   <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12">
                       <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Verificación</h1></div>
                    </div>
                    <div className="p-6 flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
@@ -753,7 +753,7 @@ const Profile = () => {
           case 'metrics':
             return (
                 <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
-                   <div className="bg-white p-4 shadow-sm sticky top-0 z-10 space-y-4 pt-safe">
+                   <div className="bg-white p-4 shadow-sm sticky top-0 z-10 space-y-4 pt-12">
                       <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Métricas de Rendimiento</h1></div>
                       <div className="flex justify-between items-center bg-gray-100 p-1 rounded-lg">
                           {['24h', '7d', '30d', 'Año', 'Todo'].map((r) => {
@@ -803,7 +803,7 @@ const Profile = () => {
           case 'reputation':
             return (
               <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
-                <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-safe">
+                <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12">
                    <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Reputación</h1></div>
                 </div>
                 <div className="p-5 space-y-6 pb-24">
@@ -816,7 +816,7 @@ const Profile = () => {
           case 'edit':
             return (
               <div className="fixed inset-0 z-[1000] bg-white flex flex-col animate-fade-in overflow-y-auto">
-                <div className="flex items-center gap-4 p-4 sticky top-0 bg-white z-10 pt-safe"><Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="-ml-2"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis datos personales</h1></div>
+                <div className="flex items-center gap-4 p-4 sticky top-0 bg-white z-10 pt-12"><Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="-ml-2"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis datos personales</h1></div>
                 <div className="pb-32 px-6 pt-4">
                     <div className="flex flex-col items-center mb-10"><div className="relative group"><div className="p-1.5 rounded-full border-2 border-dashed border-gray-200" style={{ borderColor: profileColor }}><ProfileAvatar size="xl" className="border-4 border-white shadow-sm" /></div><label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-[#F97316] p-2.5 rounded-full cursor-pointer shadow-lg border-2 border-white">{uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <Camera className="h-4 w-4 text-white" />}</label><input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={uploadAvatar} disabled={uploadingAvatar} /></div><div className="mt-6 w-full max-w-xs"><p className="text-xs font-bold text-gray-400 text-center uppercase mb-3">Color de Portada</p><div className="flex gap-3 overflow-x-auto p-2 no-scrollbar justify-center">{PROFILE_COLORS.map((color) => (<button key={color.value} onClick={() => setProfileColor(color.value)} className={cn("w-8 h-8 rounded-full transition-all shadow-sm flex-shrink-0 border-2 border-white ring-1 ring-gray-100", profileColor === color.value ? "scale-110 ring-2 ring-offset-2 ring-gray-900 z-10" : "hover:scale-105")} style={{ backgroundColor: color.value }} />))}</div></div></div>
                     <div className="space-y-8"><div className="space-y-5"><h3 className="text-lg font-bold">¿Cómo te llamas?</h3><div className="space-y-5"><div className="relative"><label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Nombre(s)*</label><Input value={firstName} onChange={e => setFirstName(e.target.value)} className="h-14 rounded-xl border-gray-300" /></div><div className="relative"><label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Apellido(s)*</label><Input value={lastName} onChange={e => setLastName(e.target.value)} className="h-14 rounded-xl border-gray-300" /></div></div></div><div className="space-y-5"><h3 className="text-lg font-bold">Contacto y Ubicación</h3><div className="relative"><label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Teléfono móvil</label><div className="relative"><Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" /><Input value={phone} onChange={e => setPhone(e.target.value)} type="tel" className="h-14 pl-12 rounded-xl border-gray-300" /></div></div><div className="relative"><label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Provincia</label><Select value={city} onValueChange={setCity}><SelectTrigger className="h-14 rounded-xl border-gray-300"><SelectValue placeholder="Selecciona..." /></SelectTrigger><SelectContent className="bg-white max-h-[250px] z-[1100]"><ScrollArea className="h-64">{DR_PROVINCES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</ScrollArea></SelectContent></Select></div></div></div>
@@ -828,7 +828,7 @@ const Profile = () => {
           case 'my-services':
             return (
               <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
-                <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-safe"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Publicaciones</h1></div></div>
+                <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Publicaciones</h1></div></div>
                 <div className="p-4 space-y-4 pb-24">
                    <div className="flex items-center justify-between px-1"><span className="text-sm font-medium text-gray-500">Espacios utilizados</span><span className="text-sm font-bold text-gray-900">{myServices.length} / {maxSlots}</span></div>
                    {Array.from({ length: maxSlots }).map((_, index) => {
@@ -861,7 +861,7 @@ const Profile = () => {
           case 'favorites':
             return (
               <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
-                <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-safe"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={handleBackToDashboard}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Favoritos</h1></div></div>
+                <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={handleBackToDashboard}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Favoritos</h1></div></div>
                 <div className="p-4 pb-24">{myFavorites.length === 0 ? <div className="text-center py-10 text-gray-500">Sin favoritos</div> : (<div className="grid grid-cols-2 gap-4">{myFavorites.map((s) => <div key={s.id} onClick={()=>navigate(`/service/${s.id}`)}><ServiceCard title={s.title} price={`RD$ ${s.price}`} image={s.image_url} /></div>)}</div>)}</div>
               </div>
             );
@@ -870,7 +870,7 @@ const Profile = () => {
             return (
               <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
                 <div className="absolute top-0 left-0 right-0 h-72 rounded-b-[3rem] z-0" style={{ backgroundColor: profileColor }} />
-                <div className="relative z-10 px-4 pt-4 pt-safe">
+                <div className="relative z-10 px-4 pt-12">
                   <div className="flex justify-between items-center text-white mb-2"><Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="text-white hover:bg-white/20"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mi Perfil</h1><Button variant="ghost" size="icon" onClick={() => setView('edit')} className="text-white hover:bg-white/20"><Edit2 className="h-5 w-5" /></Button></div>
                   <div className="bg-white rounded-3xl shadow-xl p-6 text-center mt-24 space-y-4">
                     <div className="relative -mt-20 mb-4 flex justify-center"><div className="p-2 bg-white rounded-full"><ProfileAvatar size="xl" className="border-4 border-white" /></div></div>
@@ -883,7 +883,7 @@ const Profile = () => {
 
           default: // DASHBOARD
             return (
-                <div className="min-h-screen bg-gray-50 pb-24 pt-safe animate-fade-in">
+                <div className="min-h-screen bg-gray-50 pb-24 pt-12 animate-fade-in">
                   <div className="bg-white pt-4 pb-4 px-6 shadow-sm rounded-b-[2.5rem] relative z-10">
                     <div className="flex justify-between items-center mb-6">
                       <div className="flex-1"><p className="text-gray-400 text-sm">Bienvenido,</p><div className="flex items-center gap-1.5"><h1 className="text-2xl font-bold truncate max-w-[200px]">{firstName || 'Usuario'}</h1>{isPlus && <Badge className="bg-[#0239c7] text-white text-[10px]"><Crown className="h-3 w-3 mr-1" />PLUS</Badge>}</div></div>
