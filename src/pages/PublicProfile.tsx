@@ -200,7 +200,7 @@ const PublicProfile = () => {
         className="h-48 rounded-b-[2rem] transition-colors duration-500"
         style={{ backgroundColor: profile.profile_color || '#0F172A' }}
       >
-         <div className="pt-12 px-4 flex justify-between items-start">
+         <div className="pt-6 px-4 flex justify-between items-start">
             <Button 
                 variant="ghost" 
                 size="icon" 

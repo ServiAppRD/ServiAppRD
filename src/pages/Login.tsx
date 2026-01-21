@@ -95,7 +95,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col pt-12 pb-24">
+    <div className="min-h-screen bg-gray-50 flex flex-col pt-6 pb-24">
       
       {/* Header con botón de volver */}
       <div className="px-4 pb-4">

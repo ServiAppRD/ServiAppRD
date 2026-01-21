@@ -196,7 +196,7 @@ const Index = () => {
       {/* 
         HERO SECTION - ASYMMETRICAL BORDER & CAROUSEL
       */}
-      <div className="relative bg-[#F97316] rounded-bl-[0px] rounded-br-[70px] pt-12 shadow-lg overflow-hidden min-h-[300px] flex flex-col">
+      <div className="relative bg-[#F97316] rounded-bl-[0px] rounded-br-[70px] pt-6 shadow-lg overflow-hidden min-h-[300px] flex flex-col">
         
         {/* Search Bar (Fixed at top of Hero) */}
         <div className="px-5 pt-4 pb-2 relative z-30">

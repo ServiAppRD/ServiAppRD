@@ -6,7 +6,7 @@ const Privacy = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-white pt-12 pb-20">
+    <div className="min-h-screen bg-white pt-6 pb-20">
       <div className="max-w-3xl mx-auto px-6 py-8">
         <Button variant="ghost" className="mb-6 pl-0 hover:bg-transparent hover:text-[#F97316]" onClick={() => navigate(-1)}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Volver

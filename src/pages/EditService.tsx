@@ -213,7 +213,7 @@ const EditService = () => {
   return (
     <div className="min-h-screen bg-white pb-32 animate-fade-in">
         {/* Header */}
-        <div className="sticky top-0 bg-white z-10 pt-12 shadow-sm border-b border-gray-100">
+        <div className="sticky top-0 bg-white z-10 pt-6 shadow-sm border-b border-gray-100">
             <div className="px-4 py-4 flex items-center gap-3">
                 <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-gray-900" /></Button>
                 <h1 className="text-xl font-bold text-gray-900">Editar Publicación</h1>
