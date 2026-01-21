@@ -75,11 +75,22 @@ const ServiceDetail = () => {
   // --- TRACKING ---
   const trackEvent = async (type: 'view' | 'click') => {
     if (!service) return;
+    
+    // Obtener sesión actual para identificar al visitante
+    const { data: { session } } = await supabase.auth.getSession();
+    const viewerId = session?.user?.id || null;
+
+    // No contarse a sí mismo
+    if (viewerId === service.user_id) return;
+
     await supabase.from('service_analytics').insert({
       service_id: id,
       owner_id: service.user_id,
-      event_type: type
+      event_type: type,
+      viewer_id: viewerId // Guardamos quién lo vio
     });
+
+    // Actualizar contadores simples en la tabla services
     if (type === 'view') await supabase.rpc('increment_view', { row_id: id });
     else await supabase.rpc('increment_click', { row_id: id });
   };
@@ -108,7 +119,10 @@ const ServiceDetail = () => {
   useEffect(() => {
     if (service && !viewTracked.current) {
         viewTracked.current = true;
-        setTimeout(() => { trackEvent('view').catch(() => incrementCounterManual('views')); }, 2000);
+        // Esperamos un poco para asegurar que no es un rebote inmediato
+        setTimeout(() => { 
+            trackEvent('view').catch(console.error); 
+        }, 2000);
     }
   }, [service]);
 

@@ -106,6 +106,7 @@ const Profile = () => {
   // Metrics Data Real
   const [metricsTimeRange, setMetricsTimeRange] = useState('7d');
   const [metricsData, setMetricsData] = useState<any[]>([]);
+  const [recentViewers, setRecentViewers] = useState<any[]>([]);
   const [totalViews, setTotalViews] = useState(0);
   const [totalClicks, setTotalClicks] = useState(0);
   const [loadingMetrics, setLoadingMetrics] = useState(false);
@@ -174,9 +175,10 @@ const Profile = () => {
         else if (metricsTimeRange === '1y') startDate.setFullYear(now.getFullYear() - 1);
         else startDate = new Date(0); 
 
+        // 1. Fetch Stats for Chart & Totals
         const { data: events, error } = await supabase
             .from('service_analytics')
-            .select('event_type, created_at')
+            .select('event_type, created_at, viewer_id')
             .eq('owner_id', session.user.id)
             .gte('created_at', startDate.toISOString())
             .order('created_at', { ascending: true });
@@ -224,6 +226,33 @@ const Profile = () => {
         });
 
         setMetricsData(Array.from(groupedData.values()));
+
+        // 2. Fetch Recent Viewers (With Profile Data)
+        // We fetch the viewer IDs first
+        const viewerIds = events?.map(e => e.viewer_id).filter(Boolean) || [];
+        const uniqueViewerIds = [...new Set(viewerIds)];
+
+        if (uniqueViewerIds.length > 0) {
+            const { data: viewersData } = await supabase
+               .from('profiles')
+               .select('id, first_name, last_name, avatar_url')
+               .in('id', uniqueViewerIds);
+            
+            // Map event to user data
+            const recentVisits = events
+               ?.filter(e => e.event_type === 'view' && e.viewer_id)
+               .map(e => {
+                   const profile = viewersData?.find(v => v.id === e.viewer_id);
+                   return profile ? { ...profile, visited_at: e.created_at } : null;
+               })
+               .filter(Boolean)
+               .reverse() // Newest first
+               .slice(0, 10); // Last 10
+
+            setRecentViewers(recentVisits || []);
+        } else {
+            setRecentViewers([]);
+        }
 
     } catch (err) {
         console.error("Error fetching metrics:", err);
@@ -982,6 +1011,50 @@ const Profile = () => {
                                    </ResponsiveContainer>
                                )}
                            </div>
+                       </div>
+                       
+                       {/* NEW: Recent Viewers List */}
+                       <div className="space-y-4">
+                           <div className="flex items-center justify-between px-2">
+                               <h3 className="font-bold text-gray-900">Últimas visitas</h3>
+                               <span className="text-xs text-[#0239c7] font-bold bg-blue-50 px-2 py-1 rounded-full">PLAN PLUS</span>
+                           </div>
+                           
+                           {recentViewers.length > 0 ? (
+                               <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
+                                   {recentViewers.map((viewer: any, idx) => (
+                                       <div key={idx} className="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors">
+                                           <Avatar className="h-10 w-10 border border-gray-200">
+                                               <AvatarImage src={viewer.avatar_url} />
+                                               <AvatarFallback className="bg-gray-100 text-gray-500 text-xs">
+                                                   {viewer.first_name?.[0]}
+                                               </AvatarFallback>
+                                           </Avatar>
+                                           <div className="flex-1 min-w-0">
+                                               <p className="font-bold text-sm text-gray-900 truncate">
+                                                   {viewer.first_name} {viewer.last_name}
+                                               </p>
+                                               <p className="text-xs text-gray-400">
+                                                   Visitó tu perfil
+                                               </p>
+                                           </div>
+                                           <span className="text-[10px] font-medium text-gray-400 whitespace-nowrap">
+                                               {new Date(viewer.visited_at).toLocaleDateString(undefined, {
+                                                   day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                                               })}
+                                           </span>
+                                       </div>
+                                   ))}
+                               </div>
+                           ) : (
+                               <div className="text-center py-8 bg-white rounded-3xl border border-dashed border-gray-200">
+                                   <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                                       <User className="h-6 w-6 text-gray-300" />
+                                   </div>
+                                   <p className="text-sm text-gray-500 font-medium">Aún no hay visitas registradas de usuarios.</p>
+                                   <p className="text-xs text-gray-400 mt-1">Comparte tu perfil para obtener más visibilidad.</p>
+                               </div>
+                           )}
                        </div>
                    </>
                )}
