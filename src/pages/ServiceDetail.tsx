@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, ArrowLeft, MapPin, Check, Phone, Calendar, Star, MessageCircle, Send, Facebook, Instagram, Globe, AlertCircle, Flag, MoreVertical, Share2, ShieldAlert, ChevronRight } from "lucide-react";
+import { Loader2, ArrowLeft, MapPin, Check, Phone, Calendar, Star, MessageCircle, Send, Facebook, Instagram, Globe, AlertCircle, Flag, MoreVertical, Share2, ShieldAlert, ChevronRight, Crown, ShieldCheck } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { showSuccess, showError } from "@/utils/toast";
 import { useState, useEffect, useRef } from "react";
@@ -107,7 +107,7 @@ const ServiceDetail = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('services')
-        .select(`*, profiles (id, first_name, last_name, phone, avatar_url)`)
+        .select(`*, profiles (id, first_name, last_name, phone, avatar_url, is_verified, is_plus)`)
         .eq('id', id)
         .is('deleted_at', null)
         .single();
@@ -237,6 +237,8 @@ const ServiceDetail = () => {
   const formattedDate = new Date(service.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
   const social = service.social_media as { facebook?: string; instagram?: string; website?: string } | null;
   const serviceAreas = Array.isArray(service.service_areas) ? service.service_areas : [];
+  const isPlus = service.profiles?.is_plus;
+  const isVerified = service.profiles?.is_verified;
 
   return (
     <div className="min-h-screen bg-white pb-32 animate-fade-in">
@@ -297,12 +299,19 @@ const ServiceDetail = () => {
 
         {serviceAreas.length > 0 && (<div className="bg-gray-50 rounded-xl p-4 border border-gray-100"><h3 className="font-bold text-gray-900 text-sm mb-2 flex items-center gap-2"><MapPin className="h-4 w-4 text-[#F97316]" /> Cobertura en {service.location}</h3><div className="flex flex-wrap gap-2">{serviceAreas.map((area: string, i: number) => (<span key={i} className="bg-white border border-gray-200 text-gray-600 text-xs px-2.5 py-1 rounded-md shadow-sm font-medium">{area}</span>))}</div></div>)}
 
-        {/* Perfil Clicable - AHORA CON STATS GLOBALES */}
+        {/* Perfil Clicable - AHORA CON STATS GLOBALES Y BADGES */}
         <div className="flex items-center gap-3 p-2 -mx-2 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer group" onClick={() => navigate(`/user/${service.user_id}`)}>
-          <Avatar className="h-14 w-14 border border-gray-100"><AvatarImage src={service.profiles?.avatar_url} /><AvatarFallback className="bg-orange-100 text-[#F97316] font-bold">{service.profiles?.first_name?.[0] || 'U'}</AvatarFallback></Avatar>
+          <div className="relative">
+             <Avatar className="h-14 w-14 border border-gray-100"><AvatarImage src={service.profiles?.avatar_url} /><AvatarFallback className="bg-orange-100 text-[#F97316] font-bold">{service.profiles?.first_name?.[0] || 'U'}</AvatarFallback></Avatar>
+             {isPlus && <div className="absolute -bottom-1 -right-1 bg-[#0239c7] text-white p-0.5 rounded-full border-2 border-white"><Crown className="h-3 w-3" /></div>}
+          </div>
           <div className="flex-1">
             <p className="text-xs font-medium text-gray-400 uppercase">Publicado por</p>
-            <h3 className="font-bold text-gray-900 text-lg leading-tight group-hover:text-[#F97316] transition-colors">{service.profiles?.first_name} {service.profiles?.last_name}</h3>
+            <div className="flex items-center gap-1.5">
+                <h3 className="font-bold text-gray-900 text-lg leading-tight group-hover:text-[#F97316] transition-colors">{service.profiles?.first_name} {service.profiles?.last_name}</h3>
+                {isVerified && <ShieldCheck className="h-4 w-4 text-green-600" />}
+                {isPlus && <span className="bg-[#0239c7] text-white text-[9px] font-black px-1 rounded-sm">PLUS</span>}
+            </div>
             <div className="mt-1 flex items-center gap-1">
                 <Star className="h-4 w-4 text-[#F97316] fill-current" />
                 <span className="font-bold text-gray-900">{providerStats?.avg || "0.0"}</span>
@@ -326,7 +335,7 @@ const ServiceDetail = () => {
            {isLoadingReviews ? (<Loader2 className="h-6 w-6 animate-spin mx-auto text-gray-300" />) : isErrorReviews ? (<div className="bg-red-50 p-4 rounded-xl flex items-center gap-3 text-red-600 text-sm"><AlertCircle className="h-5 w-5" />Error cargando reseñas. Intenta refrescar.</div>) : serviceReviews && serviceReviews.length > 0 ? (<div className="space-y-4">{serviceReviews.map((review: any) => (<div key={review.id} className="bg-gray-50 p-4 rounded-xl space-y-2"><div className="flex justify-between items-start"><div className="flex items-center gap-2"><Avatar className="h-8 w-8"><AvatarImage src={review.reviewer?.avatar_url} /><AvatarFallback>{review.reviewer?.first_name?.[0] || 'A'}</AvatarFallback></Avatar><span className="font-bold text-sm text-gray-900">{review.reviewer?.first_name || "Anónimo"}</span></div><div className="flex text-[#F97316]">{[...Array(5)].map((_, i) => (<Star key={i} className={cn("h-3 w-3", i < review.rating ? "fill-current" : "text-gray-300 fill-none")} />))}</div></div><p className="text-gray-600 text-sm">{review.comment}</p><p className="text-[10px] text-gray-400">{new Date(review.created_at).toLocaleDateString()}</p></div>))}</div>) : (<div className="text-center py-8 text-gray-400 border border-dashed rounded-xl">Sé el primero en opinar sobre este servicio.</div>)}
         </div>
       </div>
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 pb-safe z-20"><div className="max-w-lg mx-auto flex gap-3"><Button variant="outline" className="flex-1 h-12 rounded-xl font-bold border-gray-200 text-gray-700 hover:bg-gray-50" onClick={handleCall}><Phone className="mr-2 h-5 w-5" /> Llamar</Button><Button className="flex-[2] bg-[#25D366] hover:bg-[#20bd5a] text-white h-12 rounded-xl font-bold shadow-lg shadow-green-100" onClick={handleWhatsApp}><MessageCircle className="mr-2 h-5 w-5" /> WhatsApp</Button></div></div>
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 pb-safe z-20"><div className="max-w-md mx-auto flex gap-3"><Button variant="outline" className="flex-1 h-12 rounded-xl font-bold border-gray-200 text-gray-700 hover:bg-gray-50" onClick={handleCall}><Phone className="mr-2 h-5 w-5" /> Llamar</Button><Button className="flex-[2] bg-[#25D366] hover:bg-[#20bd5a] text-white h-12 rounded-xl font-bold shadow-lg shadow-green-100" onClick={handleWhatsApp}><MessageCircle className="mr-2 h-5 w-5" /> WhatsApp</Button></div></div>
     </div>
   );
 };
