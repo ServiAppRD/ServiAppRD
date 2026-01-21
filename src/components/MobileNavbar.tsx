@@ -39,7 +39,8 @@ export const MobileNavbar = () => {
   // Ocultar la barra de navegación en rutas específicas:
   const shouldHideNavbar = 
     ["/publish", "/login"].includes(location.pathname) || 
-    location.pathname.startsWith("/service/");
+    location.pathname.startsWith("/service/") ||
+    location.pathname.startsWith("/edit-service/");
 
   if (shouldHideNavbar) {
     return null;

@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { showSuccess, showError } from "@/utils/toast";
 import { 
-  ArrowLeft, Check, UploadCloud, Loader2, X, MapPin, DollarSign, Facebook, Instagram, Globe 
+  ArrowLeft, Check, UploadCloud, Loader2, X, MapPin, DollarSign, Facebook, Instagram, Globe, Save
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -213,10 +213,22 @@ const EditService = () => {
   return (
     <div className="min-h-screen bg-white pb-32 animate-fade-in">
         {/* Header */}
-        <div className="sticky top-0 bg-white z-10 pt-6 shadow-sm border-b border-gray-100">
-            <div className="px-4 py-4 flex items-center gap-3">
-                <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-gray-900" /></Button>
-                <h1 className="text-xl font-bold text-gray-900">Editar Publicación</h1>
+        <div className="sticky top-0 bg-white z-40 pt-6 shadow-sm border-b border-gray-100">
+            <div className="px-4 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-gray-900" /></Button>
+                    <h1 className="text-xl font-bold text-gray-900">Editar Publicación</h1>
+                </div>
+                
+                {/* Save Button in Header */}
+                <Button 
+                   onClick={handleSave} 
+                   disabled={saving}
+                   variant="ghost"
+                   className="text-[#F97316] font-bold hover:bg-orange-50"
+                >
+                   {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : "Guardar"}
+                </Button>
             </div>
         </div>
 
@@ -314,7 +326,8 @@ const EditService = () => {
             </div>
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 pb-safe z-20">
+        {/* Floating Bottom Button (Backup) */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 pb-safe z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
             <div className="max-w-lg mx-auto">
                 <Button onClick={handleSave} disabled={saving} className="w-full bg-[#F97316] hover:bg-orange-600 text-white h-14 rounded-2xl text-lg font-bold shadow-lg shadow-orange-200">
                     {saving ? <Loader2 className="animate-spin mr-2" /> : "Guardar Cambios"}
