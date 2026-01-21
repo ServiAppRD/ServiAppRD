@@ -7,6 +7,7 @@ import Profile from "./pages/Profile";
 import PublicProfile from "./pages/PublicProfile"; 
 import Search from "./pages/Search";
 import Publish from "./pages/Publish";
+import EditService from "./pages/EditService";
 import ServiceDetail from "./pages/ServiceDetail"; 
 import NotFound from "./pages/NotFound";
 import Terms from "./pages/Terms";
@@ -29,10 +30,10 @@ const AppLayout = () => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  // Ocultamos navbar móvil en publicar, login y detalles
-  const hideMobileNav = ["/publish", "/login"].includes(location.pathname) || location.pathname.startsWith("/service/") || location.pathname.startsWith("/user/");
+  // Ocultamos navbar móvil en publicar, login, detalles y editar
+  const hideMobileNav = ["/publish", "/login"].includes(location.pathname) || location.pathname.startsWith("/service/") || location.pathname.startsWith("/user/") || location.pathname.startsWith("/edit-service/");
   
-  // Ocultar Navbar Desktop en Login (queremos pantalla limpia)
+  // Ocultar Navbar Desktop en Login
   const hideDesktopNav = ["/login"].includes(location.pathname);
 
   return (
@@ -43,7 +44,7 @@ const AppLayout = () => {
       {/* Navbar Superior (Solo Desktop) */}
       {!hideDesktopNav && <DesktopNavbar />}
       
-      {/* Contenedor Principal: En móvil es full width, en desktop es centrado */}
+      {/* Contenedor Principal */}
       <div className={`
          w-full flex-1
          ${!hideMobileNav ? "pb-24 md:pb-0" : ""} 
@@ -56,6 +57,7 @@ const AppLayout = () => {
           <Route path="/user/:id" element={<PublicProfile />} /> 
           <Route path="/search" element={<Search />} />
           <Route path="/publish" element={<Publish />} />
+          <Route path="/edit-service/:id" element={<EditService />} />
           <Route path="/service/:id" element={<ServiceDetail />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
@@ -78,11 +80,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {/* Notificaciones visuales eliminadas */}
-        
-        {/* SplashScreen se muestra sobre todo lo demás */}
         {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
-        
         <BrowserRouter>
           <AppLayout />
         </BrowserRouter>

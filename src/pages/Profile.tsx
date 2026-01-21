@@ -487,8 +487,9 @@ const Profile = () => {
     }
   };
 
+  // --- UPDATED HANDLER ---
   const handleEditService = (serviceId: string) => {
-     showSuccess("Edición próximamente");
+     navigate(`/edit-service/${serviceId}`);
   };
 
   const handleSignOut = async () => { await supabase.auth.signOut(); navigate("/"); };
