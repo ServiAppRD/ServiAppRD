@@ -1,8 +1,9 @@
+Sector) con botones grandes y scroll nativo para mejor UX móvil.">
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search as SearchIcon, MapPin, Star, X, ArrowRight, Loader2, AlertCircle, Wrench, Filter } from "lucide-react";
+import { Search as SearchIcon, MapPin, Star, X, ArrowRight, Loader2, AlertCircle, Wrench, ChevronRight, ChevronLeft, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,21 +11,12 @@ import { cn } from "@/lib/utils";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerDescription,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 const CATEGORIES = [
   "Todos", "Plomería", "Electricidad", "Limpieza", "Mecánica", 
@@ -162,9 +154,6 @@ const SearchPage = () => {
     if (selectedProvince) {
       matchesLocation = service.location === selectedProvince;
       if (matchesLocation && selectedSector) {
-        // Verificar si service_areas (array) incluye el sector seleccionado
-        // O si el servicio no tiene áreas específicas (cubre toda la provincia, opcional)
-        // Por ahora asumimos que si selecciona sector, debe estar en service_areas
         const areas = Array.isArray(service.service_areas) ? service.service_areas : [];
         if (areas.length > 0) {
            matchesLocation = areas.includes(selectedSector);
@@ -208,40 +197,91 @@ const SearchPage = () => {
                      {selectedProvince ? (selectedSector || selectedProvince) : "Ubicación"}
                    </Button>
                  </DrawerTrigger>
-                 <DrawerContent className="rounded-t-[2rem]">
+                 <DrawerContent className="max-h-[90vh] flex flex-col rounded-t-[2rem]">
                    <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-200 mt-4 mb-2" />
-                   <DrawerHeader className="text-left">
-                     <DrawerTitle className="text-xl font-bold text-gray-900">Filtrar por ubicación</DrawerTitle>
-                     <DrawerDescription>Encuentra servicios cerca de ti seleccionando tu zona.</DrawerDescription>
+                   <DrawerHeader className="text-left flex-shrink-0 pb-2">
+                     <DrawerTitle className="text-xl font-bold text-gray-900">
+                         {selectedProvince ? "Selecciona Sector" : "Selecciona Ubicación"}
+                     </DrawerTitle>
+                     <DrawerDescription>
+                        {selectedProvince 
+                          ? `Estás buscando en ${selectedProvince}` 
+                          : "Elige primero la provincia donde buscas el servicio."}
+                     </DrawerDescription>
                    </DrawerHeader>
-                   <div className="p-4 space-y-4">
-                      <div className="space-y-2">
-                         <label className="text-sm font-bold text-gray-700 ml-1">1. Provincia</label>
-                         <Select value={selectedProvince} onValueChange={(val) => { setSelectedProvince(val); setSelectedSector(""); }}>
-                            <SelectTrigger className="h-12 rounded-xl bg-gray-50 border-gray-200"><SelectValue placeholder="Selecciona provincia..." /></SelectTrigger>
-                            <SelectContent className="max-h-[300px]">
-                               {Object.keys(DR_LOCATIONS).map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                            </SelectContent>
-                         </Select>
-                      </div>
 
-                      {selectedProvince && (
-                        <div className="space-y-2 animate-fade-in">
-                           <label className="text-sm font-bold text-gray-700 ml-1">2. Sector (Opcional)</label>
-                           <Select value={selectedSector} onValueChange={setSelectedSector}>
-                              <SelectTrigger className="h-12 rounded-xl bg-gray-50 border-gray-200"><SelectValue placeholder="Selecciona sector..." /></SelectTrigger>
-                              <SelectContent className="max-h-[300px]">
-                                 <SelectItem value="all_sectors">Todos los sectores</SelectItem>
-                                 {DR_LOCATIONS[selectedProvince]?.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                              </SelectContent>
-                           </Select>
+                   <div className="flex-1 overflow-y-auto px-4 min-h-[300px]">
+                        {!selectedProvince ? (
+                            <div className="space-y-2 pb-4">
+                                {Object.keys(DR_LOCATIONS).map((prov) => (
+                                    <button
+                                        key={prov}
+                                        onClick={() => {
+                                            setSelectedProvince(prov);
+                                            setSelectedSector("");
+                                        }}
+                                        className="w-full text-left px-4 py-3.5 rounded-xl border border-gray-100 bg-white hover:border-[#F97316] hover:bg-orange-50 transition-all font-medium text-gray-700 flex justify-between items-center active:scale-[0.98]"
+                                    >
+                                        {prov}
+                                        <ChevronRight className="h-4 w-4 text-gray-400" />
+                                    </button>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="space-y-4 pb-4 animate-in slide-in-from-right-4 duration-300">
+                                <button 
+                                    onClick={() => { setSelectedProvince(""); setSelectedSector(""); }}
+                                    className="flex items-center text-sm text-gray-500 hover:text-[#F97316] mb-2 font-medium"
+                                >
+                                    <ChevronLeft className="h-4 w-4 mr-1" /> Cambiar Provincia
+                                </button>
+
+                                <div className="space-y-2">
+                                    <button
+                                        onClick={() => setSelectedSector("")}
+                                        className={cn(
+                                            "w-full text-left px-4 py-3 rounded-xl border transition-all font-medium flex justify-between items-center active:scale-[0.98]",
+                                            selectedSector === "" 
+                                                ? "bg-[#F97316] border-[#F97316] text-white shadow-md shadow-orange-200" 
+                                                : "bg-white border-gray-100 text-gray-700 hover:bg-gray-50"
+                                        )}
+                                    >
+                                        Toda la provincia
+                                        {selectedSector === "" && <Check className="h-4 w-4 text-white" />}
+                                    </button>
+                                    
+                                    {DR_LOCATIONS[selectedProvince]?.map((sector) => (
+                                        <button
+                                            key={sector}
+                                            onClick={() => setSelectedSector(sector === selectedSector ? "" : sector)}
+                                            className={cn(
+                                                "w-full text-left px-4 py-3 rounded-xl border transition-all font-medium flex justify-between items-center active:scale-[0.98]",
+                                                selectedSector === sector
+                                                    ? "bg-[#F97316] border-[#F97316] text-white shadow-md shadow-orange-200" 
+                                                    : "bg-white border-gray-100 text-gray-700 hover:bg-gray-50"
+                                            )}
+                                        >
+                                            {sector}
+                                            {selectedSector === sector && <Check className="h-4 w-4 text-white" />}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                   </div>
+
+                   <div className="p-4 border-t border-gray-100 bg-white pb-safe mt-auto">
+                        <div className="flex gap-3">
+                             <Button variant="outline" className="flex-1 h-12 rounded-xl border-gray-200" onClick={clearLocationFilters}>
+                                Limpiar
+                             </Button>
+                             <Button 
+                                className="flex-[2] h-12 rounded-xl bg-[#F97316] hover:bg-orange-600 font-bold text-white shadow-lg shadow-orange-100" 
+                                onClick={() => setIsFilterOpen(false)}
+                             >
+                                Ver Resultados
+                             </Button>
                         </div>
-                      )}
-
-                      <div className="flex gap-3 pt-2">
-                         <Button variant="outline" className="flex-1 h-12 rounded-xl" onClick={clearLocationFilters}>Limpiar</Button>
-                         <Button className="flex-[2] h-12 rounded-xl bg-[#F97316] hover:bg-orange-600 font-bold" onClick={() => setIsFilterOpen(false)}>Aplicar Filtros</Button>
-                      </div>
                    </div>
                  </DrawerContent>
                </Drawer>
