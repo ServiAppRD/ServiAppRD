@@ -86,6 +86,15 @@ const SLOT_LIMIT_FREE = 5;
 const SLOT_LIMIT_PLUS = 10;
 const TOTAL_DISPLAY_SLOTS = 10; 
 
+// Componente Wrapper para vistas "Full Screen" que las centra en Desktop
+const FullViewWrapper = ({ children, bg = "bg-gray-50", maxWidth = "max-w-2xl" }: { children: React.ReactNode, bg?: string, maxWidth?: string }) => (
+    <div className={cn("fixed inset-0 z-[1000] flex flex-col items-center justify-start overflow-hidden", bg)}>
+        <div className={cn("w-full h-full flex flex-col md:shadow-2xl md:border-x md:border-gray-100 overflow-y-auto bg-white transition-all", maxWidth)}>
+            {children}
+        </div>
+    </div>
+);
+
 const Profile = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -470,19 +479,11 @@ const Profile = () => {
 
     setIsDeleting(true);
     try {
-       // Llamamos a la Edge Function 'delete-user' que se encarga de borrar de auth.users
        const { error } = await supabase.functions.invoke('delete-user');
-       
-       if (error) {
-         console.error(error);
-         throw new Error("No se pudo completar la eliminación.");
-       }
-
-       // Si la función tuvo éxito, cerramos sesión local y enviamos al inicio
+       if (error) throw new Error("No se pudo completar la eliminación.");
        await supabase.auth.signOut();
        navigate('/');
        showSuccess("Tu cuenta y datos han sido eliminados permanentemente.");
-       
     } catch (error: any) {
        console.error("Error eliminando cuenta:", error);
        showError("Hubo un error al eliminar tu cuenta. Intenta de nuevo.");
@@ -511,7 +512,6 @@ const Profile = () => {
   
   const handleClickDelete = (service: any) => {
     const isBoosted = service.is_promoted && service.promoted_until && new Date(service.promoted_until) > new Date();
-    
     if (isBoosted) {
       setServiceToDelete(service.id);
       setDeleteTimer(5);
@@ -523,25 +523,19 @@ const Profile = () => {
 
   const handleConfirmDelete = async (id: string | null) => {
     if (!id) return;
-    
     if (!showBoostDeleteWarning) {
-        if (!confirm("¿Estás seguro de eliminar este servicio? Desaparecerá de las búsquedas, pero mantendrás tus métricas históricas.")) return;
+        if (!confirm("¿Estás seguro de eliminar este servicio?")) return;
     }
-
     const { error } = await supabase.from('services').update({ deleted_at: new Date().toISOString() }).eq('id', id);
-    if (error) { 
-        showError("Error al eliminar"); 
-    } else { 
+    if (error) showError("Error al eliminar"); 
+    else { 
         setMyServices(prev => prev.filter(s => s.id !== id)); 
         showSuccess("Servicio eliminado"); 
         setShowBoostDeleteWarning(false);
     }
   };
 
-  const handleEditService = (serviceId: string) => {
-     navigate(`/edit-service/${serviceId}`);
-  };
-
+  const handleEditService = (serviceId: string) => navigate(`/edit-service/${serviceId}`);
   const handleSignOut = async () => { await supabase.auth.signOut(); navigate("/"); };
   const handleOpenMyServices = () => { setView('my-services'); fetchMyServices(session.user.id); };
   const handleOpenFavorites = (uid?: string) => { setView('favorites'); fetchFavorites(uid); };
@@ -564,7 +558,7 @@ const Profile = () => {
       switch (view) {
           case 'help':
             return (
-                <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
+                <FullViewWrapper maxWidth="max-w-3xl">
                    <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12">
                       <div className="flex items-center gap-3">
                          <Button variant="ghost" size="icon" onClick={() => setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button>
@@ -579,159 +573,71 @@ const Profile = () => {
                            <h2 className="text-xl font-bold text-gray-900">¿Cómo podemos ayudarte?</h2>
                            <p className="text-sm text-gray-500">Encuentra respuestas a las dudas más comunes.</p>
                        </div>
-
                        <Accordion type="single" collapsible className="w-full space-y-3">
                             <AccordionItem value="item-1" className="bg-white border rounded-2xl px-4 py-1 shadow-sm border-gray-100">
                                 <AccordionTrigger className="hover:no-underline font-bold text-gray-800 text-left">¿Cómo contacto a un técnico?</AccordionTrigger>
-                                <AccordionContent className="text-gray-600 leading-relaxed pt-2">
-                                    Es muy sencillo. Solo tienes que buscar el servicio que necesitas, entrar a su publicación y en la parte inferior verás los botones de <span className="font-bold text-green-600">WhatsApp</span> y <span className="font-bold text-gray-900">Llamar</span>. El contacto es directo con el profesional.
-                                </AccordionContent>
+                                <AccordionContent className="text-gray-600 leading-relaxed pt-2">Es muy sencillo. Solo tienes que buscar el servicio que necesitas, entrar a su publicación y en la parte inferior verás los botones de WhatsApp y Llamar.</AccordionContent>
                             </AccordionItem>
-
                             <AccordionItem value="item-2" className="bg-white border rounded-2xl px-4 py-1 shadow-sm border-gray-100">
                                 <AccordionTrigger className="hover:no-underline font-bold text-gray-800 text-left">¿Es seguro contratar por aquí?</AccordionTrigger>
-                                <AccordionContent className="text-gray-600 leading-relaxed pt-2 space-y-3">
-                                    <p>En ServiAPP trabajamos para que sea seguro. Contamos con dos sistemas clave:</p>
-                                    <ul className="list-disc pl-5 space-y-1">
-                                        <li><span className="font-bold">Reseñas reales:</span> Mira las estrellas y comentarios que otros clientes han dejado en el perfil del técnico.</li>
-                                        <li><span className="font-bold text-[#0239c7]">Sello Plus:</span> Los usuarios Plus han verificado su información con nosotros.</li>
-                                    </ul>
-                                    <p className="text-xs italic bg-gray-50 p-2 rounded-lg border">Consejo: Nunca pagues por adelantado sin haber conocido al técnico o revisado su trabajo.</p>
-                                </AccordionContent>
-                            </AccordionItem>
-
-                            <AccordionItem value="item-3" className="bg-white border rounded-2xl px-4 py-1 shadow-sm border-gray-100">
-                                <AccordionTrigger className="hover:no-underline font-bold text-gray-800 text-left">¿Qué hago si un técnico no llega?</AccordionTrigger>
-                                <AccordionContent className="text-gray-600 leading-relaxed pt-2">
-                                    ServiAPP es una plataforma de contacto, por lo que no gestionamos directamente las citas. Si un profesional no cumple:
-                                    <ol className="list-decimal pl-5 mt-2 space-y-2">
-                                        <li>Intenta contactarlo por WhatsApp.</li>
-                                        <li>Deja una reseña en su perfil explicando lo sucedido para alertar a otros.</li>
-                                        <li>Usa el botón de <span className="font-bold text-red-500">Reportar</span> en su anuncio si sospechas de una estafa.</li>
-                                    </ol>
-                                </AccordionContent>
-                            </AccordionItem>
-
-                            <AccordionItem value="item-4" className="bg-white border rounded-2xl px-4 py-1 shadow-sm border-gray-100">
-                                <AccordionTrigger className="hover:no-underline font-bold text-gray-800 text-left">¿Cómo funcionan los Boosts?</AccordionTrigger>
-                                <AccordionContent className="text-gray-600 leading-relaxed pt-2">
-                                    Los Boosts sirven para que tu anuncio aparezca en los **primeros lugares** de la búsqueda y en la sección de destacados de la pantalla principal. Puedes elegir duraciones de <span className="font-bold">24 horas, 3 días o 7 días</span>. Al terminar el tiempo, tu anuncio volverá a su posición normal.
-                                </AccordionContent>
-                            </AccordionItem>
-
-                            <AccordionItem value="item-5" className="bg-white border rounded-2xl px-4 py-1 shadow-sm border-gray-100">
-                                <AccordionTrigger className="hover:no-underline font-bold text-gray-800 text-left">¿Por qué no veo mi anuncio?</AccordionTrigger>
-                                <AccordionContent className="text-gray-600 leading-relaxed pt-2">
-                                    Hay varias razones:
-                                    <ul className="list-disc pl-5 mt-2 space-y-2">
-                                        <li><span className="font-bold">Expiración:</span> Si tenías un Boost, este pudo haber terminado.</li>
-                                        <li><span className="font-bold">Revisión:</span> Si el anuncio infringe normas, puede ser pausado.</li>
-                                        <li><span className="font-bold">Límite:</span> Recuerda que el plan gratis permite hasta 5 anuncios activos.</li>
-                                    </ul>
-                                    Revisa la sección "Mis Publicaciones" para ver el estado actual.
-                                </AccordionContent>
-                            </AccordionItem>
-
-                            <AccordionItem value="item-6" className="bg-white border rounded-2xl px-4 py-1 shadow-sm border-gray-100">
-                                <AccordionTrigger className="hover:no-underline font-bold text-gray-800 text-left">¿Cómo verifico mi perfil?</AccordionTrigger>
-                                <AccordionContent className="text-gray-600 leading-relaxed pt-2">
-                                    Actualmente el sello de verificación se obtiene al suscribirse al **Plan Plus**. Muy pronto habilitaremos una verificación gratuita adicional mediante escaneo de documentos con IA para aumentar la confianza en tu perfil.
-                                </AccordionContent>
+                                <AccordionContent className="text-gray-600 leading-relaxed pt-2 space-y-3"><p>En ServiAPP trabajamos para que sea seguro mediante reseñas reales y el Sello Plus de verificación.</p></AccordionContent>
                             </AccordionItem>
                        </Accordion>
-
                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mt-4 text-center space-y-4">
                            <h3 className="font-bold text-gray-900">¿Todavía tienes dudas?</h3>
-                           <p className="text-xs text-gray-500">Nuestro equipo de soporte está disponible por correo electrónico.</p>
                            <Button variant="outline" className="w-full h-12 rounded-xl border-[#F97316] text-[#F97316] hover:bg-orange-50 font-bold" onClick={() => window.location.href = 'mailto:serviapp.help@gmail.com'}>
                                <MessageCircle className="mr-2 h-5 w-5" /> Contactar Soporte
                            </Button>
                        </div>
                    </div>
-                </div>
+                </FullViewWrapper>
             );
 
           case 'serviapp-plus':
             return (
-                <div className="fixed inset-0 z-[1000] bg-white flex flex-col animate-fade-in">
-                   <div className="relative bg-[#0239c7] text-white rounded-b-[40px] overflow-hidden pb-8 shrink-0">
-                       <div className="absolute top-0 right-0 w-64 h-64 bg-[#0a46eb] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50"></div>
-                       <div className="absolute bottom-0 left-0 w-40 h-40 bg-[#3b82f6] rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 opacity-20"></div>
-                       <div className="relative z-10 px-4 pt-12 flex items-center justify-between h-16">
-                          <button onClick={() => setView('dashboard')} className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/20 transition-colors">
-                              <X className="h-6 w-6 text-white" />
-                          </button>
-                          <div className="bg-white/10 backdrop-blur-md px-4 py-1 rounded-full">
-                              <span className="font-black italic text-sm tracking-wider">PLUS</span>
-                          </div>
-                          <div className="w-10" />
-                       </div>
-                       <div className="relative z-10 px-6 pt-4 pb-6 flex flex-col md:flex-row md:items-center gap-6">
-                           <div className="space-y-3 flex-1">
-                               <p className="text-blue-100 font-medium text-sm">Suscríbete y destaca tu perfil</p>
-                               <h1 className="text-4xl font-black leading-[1.1] tracking-tight text-white">
-                                   Verificación y<br/>
-                                   beneficios<br/>
-                                   exclusivos
-                               </h1>
+                <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/10 backdrop-blur-sm">
+                   <div className="w-full h-full md:h-[90vh] md:max-w-xl md:rounded-[2.5rem] bg-white flex flex-col animate-in fade-in zoom-in-95 duration-300 overflow-hidden shadow-2xl relative">
+                       <div className="relative bg-[#0239c7] text-white rounded-b-[40px] overflow-hidden pb-8 shrink-0">
+                           <div className="absolute top-0 right-0 w-64 h-64 bg-[#0a46eb] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50"></div>
+                           <div className="relative z-10 px-4 pt-12 flex items-center justify-between h-16">
+                              <button onClick={() => setView('dashboard')} className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/20">
+                                  <X className="h-6 w-6 text-white" />
+                              </button>
+                              <div className="bg-white/10 backdrop-blur-md px-4 py-1 rounded-full"><span className="font-black italic text-sm tracking-wider">PLUS</span></div>
+                              <div className="w-10" />
                            </div>
-                           <div className="hidden md:block w-32 h-32 bg-white/10 rounded-full flex items-center justify-center">
-                              <Crown className="h-16 w-16 text-[#F97316]" />
-                           </div>
-                       </div>
-                   </div>
-                   <div className="flex-1 overflow-y-auto px-6 py-8 space-y-8 pb-[180px]">
-                       <div className="space-y-6">
-                           <div className="flex items-start gap-4">
-                               <div className="mt-1"><ShieldCheck className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div>
-                               <div>
-                                   <h3 className="font-bold text-gray-900 text-sm md:text-base">Insignia de Verificación inmediata</h3>
-                                   <p className="text-xs text-gray-500 mt-0.5">Genera máxima confianza en tus clientes.</p>
-                               </div>
-                           </div>
-                           <div className="flex items-start gap-4">
-                               <div className="mt-1"><TrendingUp className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div>
-                               <div>
-                                   <h3 className="font-bold text-gray-900 text-sm md:text-base">Posicionamiento Prioritario</h3>
-                                   <p className="text-xs text-gray-500 mt-0.5">Aparece antes que la competencia en búsquedas.</p>
-                               </div>
-                           </div>
-                           <div className="flex items-start gap-4">
-                               <div className="mt-1"><BarChart3 className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div>
-                               <div>
-                                   <h3 className="font-bold text-gray-900 text-sm md:text-base">Métricas Avanzadas de Negocio</h3>
-                                   <p className="text-xs text-gray-500 mt-0.5">Descubre quién visita tu perfil y cuándo.</p>
-                               </div>
-                           </div>
-                            <div className="flex items-start gap-4">
-                               <div className="mt-1"><Zap className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div>
-                               <div>
-                                   <h3 className="font-bold text-gray-900 text-sm md:text-base">Publicaciones Ilimitadas ({SLOT_LIMIT_PLUS})</h3>
-                                   <p className="text-xs text-gray-500 mt-0.5">Duplica tu capacidad de publicación.</p>
+                           <div className="relative z-10 px-6 pt-4 pb-6 flex flex-col gap-6">
+                               <div className="space-y-3 flex-1">
+                                   <p className="text-blue-100 font-medium text-sm">Suscríbete y destaca tu perfil</p>
+                                   <h1 className="text-4xl font-black leading-[1.1] tracking-tight text-white">Verificación y<br/>beneficios<br/>exclusivos</h1>
                                </div>
                            </div>
                        </div>
-                       <div className="pt-4">
-                           <h3 className="font-bold text-lg text-gray-900">¿Listo para crecer?</h3>
-                           <p className="text-gray-500 text-sm mt-1">Cancela tu suscripción cuando quieras.</p>
-                       </div>
-                   </div>
-                   <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100 pb-safe z-20 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)]">
-                       <div className="max-w-md mx-auto flex flex-col gap-3">
-                           <div className="flex justify-between items-end mb-1">
-                              <span className="text-sm font-medium text-gray-500">Total a pagar</span>
-                              <div className="text-right">
-                                   <span className="text-xs text-gray-400 line-through mr-2">RD$ 899</span>
-                                   <span className="text-2xl font-black text-gray-900">RD$ 499</span>
-                                   <span className="text-xs font-bold text-[#0239c7] ml-1">/mes</span>
-                              </div>
+                       <div className="flex-1 overflow-y-auto px-6 py-8 space-y-8 pb-[180px]">
+                           <div className="space-y-6">
+                               <div className="flex items-start gap-4">
+                                   <div className="mt-1"><ShieldCheck className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div>
+                                   <div><h3 className="font-bold text-gray-900">Insignia de Verificación inmediata</h3><p className="text-xs text-gray-500">Genera máxima confianza en tus clientes.</p></div>
+                               </div>
+                               <div className="flex items-start gap-4">
+                                   <div className="mt-1"><BarChart3 className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div>
+                                   <div><h3 className="font-bold text-gray-900">Métricas Avanzadas de Negocio</h3><p className="text-xs text-gray-500">Descubre quién visita tu perfil y cuándo.</p></div>
+                               </div>
                            </div>
-                           <Button onClick={handleBuyPlus} disabled={buyingPlus || isPlus} className="w-full h-14 bg-[#0239c7] hover:bg-[#022b9e] text-white rounded-xl font-bold text-lg shadow-xl shadow-blue-900/20">
-                               {buyingPlus ? <Loader2 className="animate-spin" /> : (isPlus ? "Ya eres Plus" : "Suscribirme a Plus")}
-                           </Button>
-                           <p className="text-center text-[10px] text-gray-400">
-                               Al continuar, aceptas los <span className="underline cursor-pointer">términos y condiciones</span>.
-                           </p>
+                       </div>
+                       <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100 pb-safe z-20 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)]">
+                           <div className="max-w-md mx-auto flex flex-col gap-3">
+                               <div className="flex justify-between items-end mb-1">
+                                  <span className="text-sm font-medium text-gray-500">Total a pagar</span>
+                                  <div className="text-right">
+                                       <span className="text-2xl font-black text-gray-900">RD$ 499</span>
+                                       <span className="text-xs font-bold text-[#0239c7] ml-1">/mes</span>
+                                  </div>
+                               </div>
+                               <Button onClick={handleBuyPlus} disabled={buyingPlus || isPlus} className="w-full h-14 bg-[#0239c7] hover:bg-[#022b9e] text-white rounded-xl font-bold text-lg shadow-xl shadow-blue-900/20">
+                                   {buyingPlus ? <Loader2 className="animate-spin" /> : (isPlus ? "Ya eres Plus" : "Suscribirme a Plus")}
+                               </Button>
+                           </div>
                        </div>
                    </div>
                 </div>
@@ -739,137 +645,68 @@ const Profile = () => {
 
           case 'my-plan':
             const renewalDate = plusExpiresAt ? new Date(plusExpiresAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : "Sin vencimiento";
-            
             return (
-                <div className="fixed inset-0 z-[1000] bg-gray-100 flex flex-col animate-fade-in overflow-y-auto">
-                   <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center pt-6">
-                      <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="-ml-2 mr-2">
-                          <ArrowLeft className="h-6 w-6 text-black" />
-                      </Button>
+                <FullViewWrapper maxWidth="max-w-2xl">
+                   <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center pt-12">
+                      <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="-ml-2 mr-2"><ArrowLeft className="h-6 w-6 text-black" /></Button>
                       <h1 className="text-xl font-bold text-black">Mi Plan</h1>
                    </div>
-
                    <div className="p-6">
-                       <div className="bg-white rounded-[2rem] p-6 shadow-sm mb-8">
-                           <div className="w-16 h-16 bg-transparent rounded-2xl flex items-center justify-center mb-4 shadow-sm overflow-hidden">
-                               <img src="/serviapp-s-logo.png" className="w-full h-full object-cover" alt="Logo" /> 
-                           </div>
-                           
-                           <h2 className="text-2xl font-black text-gray-900 mb-6">
-                               {isPlus ? "ServiAPP Plus" : "ServiAPP Básico"}
-                           </h2>
-
-                           <div className="border-t border-gray-100 my-4" />
-
+                       <div className="bg-white rounded-[2rem] p-6 shadow-sm mb-8 border border-gray-100">
+                           <div className="w-16 h-16 bg-transparent rounded-2xl flex items-center justify-center mb-4 shadow-sm overflow-hidden"><img src="/serviapp-s-logo.png" className="w-full h-full object-cover" alt="Logo" /></div>
+                           <h2 className="text-2xl font-black text-gray-900 mb-6">{isPlus ? "ServiAPP Plus" : "ServiAPP Básico"}</h2>
                            <div className="space-y-3">
-                               <div className="flex items-center gap-3">
-                                   <CreditCard className="h-5 w-5 text-gray-800" />
-                                   <span className="text-sm font-medium text-gray-700">
-                                       {isPlus ? "RD$499 al mes" : "Gratis"}
-                                   </span>
-                               </div>
-                               <div className="flex items-center gap-3">
-                                   <Calendar className="h-5 w-5 text-gray-800" />
-                                   <span className="text-sm font-medium text-gray-700">
-                                       {isPlus ? `${renewalDate}` : "Siempre activo"}
-                                   </span>
-                               </div>
+                               <div className="flex items-center gap-3"><CreditCard className="h-5 w-5 text-gray-800" /><span className="text-sm font-medium text-gray-700">{isPlus ? "RD$499 al mes" : "Gratis"}</span></div>
+                               <div className="flex items-center gap-3"><Calendar className="h-5 w-5 text-gray-800" /><span className="text-sm font-medium text-gray-700">{isPlus ? `${renewalDate}` : "Siempre activo"}</span></div>
                            </div>
                        </div>
-
                        {!isPlus && (
-                           <div onClick={() => setView('serviapp-plus')} className="bg-[#0239c7] rounded-[2rem] p-6 shadow-lg shadow-blue-200 mb-8 cursor-pointer flex items-center justify-between">
-                                <div className="text-white">
-                                    <h3 className="font-bold text-lg">Mejorar a Plus</h3>
-                                    <p className="text-xs opacity-80">Desbloquea todos los beneficios</p>
-                                </div>
-                                <div className="bg-white/20 p-2 rounded-full">
-                                    <Crown className="h-6 w-6 text-white" />
-                                </div>
+                           <div onClick={() => setView('serviapp-plus')} className="bg-[#0239c7] rounded-[2rem] p-6 shadow-lg shadow-blue-200 mb-8 cursor-pointer flex items-center justify-between text-white">
+                                <div><h3 className="font-bold text-lg">Mejorar a Plus</h3><p className="text-xs opacity-80">Desbloquea todos los beneficios</p></div>
+                                <div className="bg-white/20 p-2 rounded-full"><Crown className="h-6 w-6 text-white" /></div>
                            </div>
                        )}
-
-                       <div className="relative flex items-center justify-center mb-6">
-                           <div className="bg-white px-4 rounded-full py-1 z-10 shadow-sm border border-gray-100">
-                               <h3 className="text-sm font-black text-gray-900 uppercase tracking-wide">HISTORIAL DE PAGOS</h3>
-                           </div>
-                           <div className="absolute inset-0 flex items-center">
-                               <div className="w-full border-t border-gray-300" />
-                           </div> 
-                       </div>
-
                        <div className="space-y-4 pb-24">
-                           {transactions.length === 0 && !isPlus && (
-                              <div className="bg-white p-4 rounded-3xl w-full flex items-center justify-between shadow-sm opacity-70">
-                                  <div className="flex items-center gap-4">
-                                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500">
-                                          <User className="h-5 w-5" />
-                                      </div>
-                                      <div>
-                                          <p className="font-bold text-gray-900">Plan Gratuito</p>
-                                          <p className="text-xs text-gray-500">Siempre activo</p>
-                                      </div>
-                                  </div>
-                                  <span className="font-bold text-gray-900">RD$ 0.00</span>
-                              </div>
-                           )}
-
+                           <h3 className="text-sm font-black text-gray-900 uppercase tracking-wide px-2">HISTORIAL DE PAGOS</h3>
+                           {transactions.length === 0 && !isPlus && <div className="text-center py-8 text-gray-400">Sin pagos registrados.</div>}
                            {transactions.map((tx) => (
-                              <div key={tx.id} className="bg-white p-4 rounded-3xl w-full flex items-center justify-between shadow-sm">
+                              <div key={tx.id} className="bg-white p-4 rounded-3xl w-full flex items-center justify-between shadow-sm border border-gray-50">
                                   <div className="flex items-center gap-4">
-                                      <div className={cn(
-                                          "w-10 h-10 rounded-full flex items-center justify-center",
-                                          tx.type === 'subscription' ? "bg-blue-100 text-blue-600" : "bg-orange-100 text-[#F97316]"
-                                      )}>
-                                          {tx.type === 'subscription' ? <Crown className="h-5 w-5" /> : <RocketIcon className="h-5 w-5" />}
-                                      </div>
-                                      <div>
-                                          <p className="font-bold text-gray-900 text-sm max-w-[150px] truncate">{tx.description}</p>
-                                          <p className="text-xs text-gray-500">{new Date(tx.created_at).toLocaleDateString()}</p>
-                                      </div>
+                                      <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", tx.type === 'subscription' ? "bg-blue-100 text-blue-600" : "bg-orange-100 text-[#F97316]")}><Crown className="h-5 w-5" /></div>
+                                      <div><p className="font-bold text-gray-900 text-sm">{tx.description}</p><p className="text-xs text-gray-500">{new Date(tx.created_at).toLocaleDateString()}</p></div>
                                   </div>
                                   <span className="font-bold text-gray-900">RD$ {tx.amount}</span>
                               </div>
                            ))}
                        </div>
                    </div>
-                </div>
+                </FullViewWrapper>
             );
 
           case 'notifications':
             return (
-                <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
+                <FullViewWrapper maxWidth="max-w-xl">
                    <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12">
-                      <div className="flex items-center gap-3">
-                         <Button variant="ghost" size="icon" onClick={() => setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button>
-                         <h1 className="text-lg font-bold">Notificaciones</h1>
-                      </div>
+                      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Notificaciones</h1></div>
                    </div>
                    <div className="p-5 space-y-6 pb-24">
                        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-5">
                            <div className="flex items-center justify-between">
-                               <div className="space-y-0.5">
-                                   <h4 className="font-bold text-gray-900 text-sm">Notificaciones Push</h4>
-                                   <p className="text-xs text-gray-500">Recibe alertas en tu dispositivo</p>
-                               </div>
+                               <div className="space-y-0.5"><h4 className="font-bold text-gray-900 text-sm">Notificaciones Push</h4><p className="text-xs text-gray-500">Recibe alertas en tu dispositivo</p></div>
                                <Switch checked={pushEnabled} onCheckedChange={setPushEnabled} />
                            </div>
-                           <div className="h-px bg-gray-50" />
                            <div className="flex items-center justify-between">
-                               <div className="space-y-0.5">
-                                   <h4 className="font-bold text-gray-900 text-sm">Correos electrónicos</h4>
-                                   <p className="text-xs text-gray-500">Resumen semanal y ofertas</p>
-                               </div>
+                               <div className="space-y-0.5"><h4 className="font-bold text-gray-900 text-sm">Correos electrónicos</h4><p className="text-xs text-gray-500">Resumen semanal y ofertas</p></div>
                                <Switch checked={emailEnabled} onCheckedChange={setEmailEnabled} />
                            </div>
                        </div>
                    </div>
-                </div>
+                </FullViewWrapper>
             );
 
           case 'change-password':
             return (
-                <div className="fixed inset-0 z-[1000] bg-white flex flex-col animate-fade-in overflow-y-auto">
+                <FullViewWrapper maxWidth="max-w-lg">
                    <div className="p-4 flex items-center gap-3 pt-12">
                        <Button variant="ghost" size="icon" onClick={() => setView('account-settings')}><ArrowLeft className="h-6 w-6" /></Button>
                        <h1 className="text-xl font-bold">Cambiar Contraseña</h1>
@@ -879,213 +716,166 @@ const Profile = () => {
                        <div className="space-y-4">
                            <div className="space-y-2">
                                <Label>Nueva Contraseña</Label>
-                               <Input type="password" placeholder="Mínimo 6 caracteres" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white" />
+                               <Input type="password" placeholder="Mínimo 6 caracteres" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="h-12 rounded-xl" />
                            </div>
                        </div>
-                       <div className="pt-4">
-                           <Button onClick={handleUpdatePassword} disabled={passwordLoading || !newPassword} className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-200">
+                       <Button onClick={handleUpdatePassword} disabled={passwordLoading || !newPassword} className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg">
                                 {passwordLoading ? <Loader2 className="animate-spin" /> : "Actualizar Contraseña"}
-                           </Button>
-                       </div>
+                       </Button>
                    </div>
-                </div>
+                </FullViewWrapper>
             );
 
           case 'account-settings':
             return (
-              <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
+              <FullViewWrapper maxWidth="max-w-xl">
                  <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12">
                     <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Administrar Cuenta</h1></div>
                  </div>
                  <div className="p-5 space-y-6 pb-24">
                     <div className="space-y-2">
                         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-2">Seguridad</h3>
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                            <button onClick={() => setView('change-password')} className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"><div className="flex items-center gap-4"><div className="p-2 bg-blue-50 text-blue-600 rounded-xl"><Lock className="h-5 w-5" /></div><span className="font-semibold text-gray-700">Cambiar Contraseña</span></div><ChevronRight className="h-5 w-5 text-gray-300" /></button>
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-2">Información Legal</h3>
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">
-                            <button onClick={() => navigate('/terms')} className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"><div className="flex items-center gap-4"><div className="p-2 bg-orange-50 text-[#F97316] rounded-xl"><FileText className="h-5 w-5" /></div><span className="font-semibold text-gray-700">Términos y Condiciones</span></div><ChevronRight className="h-5 w-5 text-gray-300" /></button>
-                             <button onClick={() => navigate('/privacy')} className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"><div className="flex items-center gap-4"><div className="p-2 bg-blue-50 text-blue-600 rounded-xl"><Shield className="h-5 w-5" /></div><span className="font-semibold text-gray-700">Política de Privacidad</span></div><ChevronRight className="h-5 w-5 text-gray-300" /></button>
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y">
+                            <button onClick={() => setView('change-password')} className="w-full flex items-center justify-between p-4 hover:bg-gray-50"><div className="flex items-center gap-4"><div className="p-2 bg-blue-50 text-blue-600 rounded-xl"><Lock className="h-5 w-5" /></div><span className="font-semibold text-gray-700">Cambiar Contraseña</span></div><ChevronRight className="h-5 w-5 text-gray-300" /></button>
                         </div>
                     </div>
                     <div className="space-y-2">
                         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-2">Sesión</h3>
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y">
                             <button onClick={handleSignOut} className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"><div className="flex items-center gap-4"><div className="p-2 bg-gray-100 text-gray-600 rounded-xl"><LogOut className="h-5 w-5" /></div><span className="font-semibold text-gray-700">Cerrar Sesión</span></div></button>
-                             <button onClick={() => setShowDeleteAccountDialog(true)} className="w-full flex items-center justify-between p-4 hover:bg-red-50 transition-colors group"><div className="flex items-center gap-4"><div className="p-2 bg-red-50 text-red-500 rounded-xl group-hover:bg-red-100 transition-colors"><Trash2 className="h-5 w-5" /></div><span className="font-semibold text-red-600">Eliminar mi cuenta</span></div></button>
+                             <button onClick={() => setShowDeleteAccountDialog(true)} className="w-full flex items-center justify-between p-4 hover:bg-red-50 group text-red-600"><div className="flex items-center gap-4"><div className="p-2 bg-red-50 text-red-500 rounded-xl"><Trash2 className="h-5 w-5" /></div><span className="font-semibold">Eliminar mi cuenta</span></div></button>
                         </div>
                     </div>
                  </div>
-              </div>
-            );
-
-          case 'verification':
-            return (
-                <div className="fixed inset-0 z-[1000] bg-white flex flex-col animate-fade-in overflow-y-auto">
-                   <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12">
-                      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Verificación</h1></div>
-                   </div>
-                   <div className="p-6 flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
-                       <div className="w-24 h-24 bg-orange-50 rounded-full flex items-center justify-center mb-4 border-2 border-orange-100 relative"><ShieldCheck className="h-10 w-10 text-[#F97316]" /><div className="absolute -bottom-1 -right-1 bg-[#F97316] text-white p-1.5 rounded-full border-2 border-white"><Hammer className="h-4 w-4" /></div></div>
-                       <div className="space-y-2 max-w-xs mx-auto"><h2 className="text-2xl font-bold text-gray-900">¡Próximamente!</h2><p className="text-gray-500 text-sm leading-relaxed">Estamos finalizando los detalles de nuestro sistema de verificación segura con IA.</p></div>
-                       <Button onClick={() => setView('dashboard')} className="w-full max-w-sm bg-[#F97316] hover:bg-orange-600 rounded-xl h-12 shadow-lg shadow-orange-100">Entendido</Button>
-                   </div>
-                </div>
+              </FullViewWrapper>
             );
 
           case 'metrics':
             return (
-                <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
+                <FullViewWrapper maxWidth="max-w-4xl" bg="bg-gray-50">
                    <div className="bg-white p-4 shadow-sm sticky top-0 z-10 space-y-4 pt-12">
                       <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Métricas de Rendimiento</h1></div>
                       <div className="flex justify-between items-center bg-gray-100 p-1 rounded-lg">
                           {['24h', '7d', '30d', 'Año', 'Todo'].map((r) => {
                               const val = r === 'Año' ? '1y' : r === 'Todo' ? 'all' : r;
-                              return (<button key={r} onClick={() => setMetricsTimeRange(val)} className={cn("flex-1 py-1.5 text-xs font-semibold rounded-md transition-all", metricsTimeRange === val ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700")}>{r}</button>)
+                              return (<button key={r} onClick={() => setMetricsTimeRange(val)} className={cn("flex-1 py-1.5 text-xs font-semibold rounded-md transition-all", metricsTimeRange === val ? "bg-white text-gray-900 shadow-sm" : "text-gray-500")}>{r}</button>)
                           })}
                       </div>
                    </div>
                    <div className="p-4 space-y-6 pb-24">
                        {loadingMetrics ? (<div className="flex justify-center py-20"><Loader2 className="animate-spin h-10 w-10 text-gray-300" /></div>) : (
                            <>
-                               <div className="grid grid-cols-2 gap-4">
+                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                    <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-1"><div className="flex items-center gap-2 text-gray-400 text-xs font-medium uppercase tracking-wider"><Eye className="h-3 w-3" /> Vistas Totales</div><p className="text-2xl font-black text-gray-900">{totalViews}</p></div>
                                    <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-1"><div className="flex items-center gap-2 text-gray-400 text-xs font-medium uppercase tracking-wider"><MousePointerClick className="h-3 w-3" /> Contactos</div><p className="text-2xl font-black text-gray-900">{totalClicks}</p></div>
                                </div>
-                               <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
-                                   <h3 className="font-bold text-gray-900 mb-6">Actividad</h3>
-                                   <div className="h-64 w-full">
-                                       <ResponsiveContainer width="100%" height="100%">
-                                           <AreaChart data={metricsData}>
-                                               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                                               <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#9CA3AF'}} dy={10} />
-                                               <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#9CA3AF'}} />
-                                               <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px -4px rgba(0,0,0,0.1)'}} />
-                                               <Area type="monotone" dataKey="views" stroke="#F97316" strokeWidth={3} fillOpacity={0.1} fill="#F97316" />
-                                               <Area type="monotone" dataKey="clicks" stroke="#3B82F6" strokeWidth={3} fillOpacity={0.1} fill="#3B82F6" />
-                                           </AreaChart>
-                                       </ResponsiveContainer>
-                                   </div>
-                               </div>
+                               <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm"><h3 className="font-bold text-gray-900 mb-6">Actividad</h3><div className="h-64 w-full"><ResponsiveContainer width="100%" height="100%"><AreaChart data={metricsData}><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" /><XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#9CA3AF'}} dy={10} /><YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#9CA3AF'}} /><Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px -4px rgba(0,0,0,0.1)'}} /><Area type="monotone" dataKey="views" stroke="#F97316" strokeWidth={3} fillOpacity={0.1} fill="#F97316" /><Area type="monotone" dataKey="clicks" stroke="#3B82F6" strokeWidth={3} fillOpacity={0.1} fill="#3B82F6" /></AreaChart></ResponsiveContainer></div></div>
                                <div className="space-y-4">
-                                   <div className="flex items-center justify-between px-2"><h3 className="font-bold text-gray-900">Últimas visitas</h3>{isPlus ? (<span className="text-xs text-[#0239c7] font-bold bg-blue-50 px-2 py-1 rounded-full">PLAN PLUS</span>) : (<Lock className="h-4 w-4 text-gray-400" />)}</div>
+                                   <div className="flex items-center justify-between px-2"><h3 className="font-bold text-gray-900">Últimas visitas</h3>{!isPlus && <Lock className="h-4 w-4 text-gray-400" />}</div>
                                    {isPlus ? (
                                        recentViewers.length > 0 ? (
-                                           <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">{recentViewers.map((viewer: any, idx) => (<div key={idx} className="flex items-center gap-3 p-4"><Avatar className="h-10 w-10"><AvatarImage src={viewer.avatar_url} /><AvatarFallback>{viewer.first_name?.[0]}</AvatarFallback></Avatar><div className="flex-1 min-w-0"><p className="font-bold text-sm text-gray-900 truncate">{viewer.first_name} {viewer.last_name}</p><p className="text-xs text-gray-400">Visitó tu perfil</p></div><span className="text-[10px] text-gray-400">{new Date(viewer.visited_at).toLocaleDateString()}</span></div>))}</div>
+                                           <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden divide-y">{recentViewers.map((viewer: any, idx) => (<div key={idx} className="flex items-center gap-3 p-4"><Avatar className="h-10 w-10"><AvatarImage src={viewer.avatar_url} /><AvatarFallback>{viewer.first_name?.[0]}</AvatarFallback></Avatar><div className="flex-1 min-w-0"><p className="font-bold text-sm text-gray-900 truncate">{viewer.first_name} {viewer.last_name}</p><p className="text-xs text-gray-400">Visitó tu perfil</p></div><span className="text-[10px] text-gray-400">{new Date(viewer.visited_at).toLocaleDateString()}</span></div>))}</div>
                                        ) : (<div className="text-center py-8 bg-white rounded-3xl border border-dashed border-gray-200">No hay visitas recientes.</div>)
                                    ) : (
-                                       <div className="relative bg-white rounded-3xl border border-gray-100 shadow-sm p-6 text-center overflow-hidden"><div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-6"><Lock className="h-6 w-6 text-gray-400 mb-2" /><h3 className="font-bold text-gray-900 mb-1">Función Plus</h3><p className="text-sm text-gray-500 mb-4">Descubre quién visita tu perfil.</p><Button onClick={() => setView('serviapp-plus')} className="bg-[#0239c7] hover:bg-[#022b9e] text-white rounded-xl">Desbloquear</Button></div><div className="opacity-30 blur-sm pointer-events-none space-y-4">{[1,2,3].map(i => (<div key={i} className="flex items-center gap-3"><div className="h-10 w-10 bg-gray-200 rounded-full" /><div className="flex-1 space-y-2"><div className="h-3 w-24 bg-gray-200 rounded" /><div className="h-2 w-16 bg-gray-100 rounded" /></div></div>))}</div></div>
+                                       <div className="relative bg-white rounded-3xl border border-gray-100 shadow-sm p-6 text-center overflow-hidden"><div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-6"><Lock className="h-6 w-6 text-gray-400 mb-2" /><h3 className="font-bold text-gray-900 mb-1">Función Plus</h3><Button onClick={() => setView('serviapp-plus')} className="bg-[#0239c7] text-white rounded-xl">Desbloquear</Button></div><div className="opacity-30 blur-sm pointer-events-none space-y-4">{[1,2,3].map(i => (<div key={i} className="flex items-center gap-3"><div className="h-10 w-10 bg-gray-200 rounded-full" /><div className="flex-1 space-y-2"><div className="h-3 w-24 bg-gray-200 rounded" /><div className="h-2 w-16 bg-gray-100 rounded" /></div></div>))}</div></div>
                                    )}
                                </div>
                            </>
                        )}
                    </div>
-                </div>
+                </FullViewWrapper>
             );
 
           case 'reputation':
             return (
-              <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
+              <FullViewWrapper maxWidth="max-w-2xl">
                 <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12">
                    <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Reputación</h1></div>
                 </div>
                 <div className="p-5 space-y-6 pb-24">
                     <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center"><div className="text-5xl font-black text-[#0F172A] mb-1">{averageRating.toFixed(1)}</div><div className="flex gap-1 mb-2">{[1,2,3,4,5].map((star) => (<Star key={star} className={cn("h-5 w-5", star <= Math.round(averageRating) ? "fill-[#F97316] text-[#F97316]" : "text-gray-200 fill-gray-100")} />))}</div><p className="text-gray-400 text-sm font-medium">{reviews.length} reseñas recibidas</p></div>
-                    <div className="space-y-4"><h3 className="font-bold text-gray-900">Comentarios recientes</h3>{reviews.length === 0 ? <div className="text-center py-8 text-gray-400 bg-white rounded-2xl border border-dashed">Aún no tienes reseñas.</div> : (reviews.map((r, i) => (<div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm"><div className="flex justify-between items-start mb-2"><div className="flex gap-1">{[...Array(5)].map((_, i) => (<Star key={i} className={cn("h-3 w-3", i < r.rating ? "fill-[#F97316] text-[#F97316]" : "text-gray-200")} />))}</div><span className="text-[10px] text-gray-400">{new Date(r.created_at).toLocaleDateString()}</span></div><p className="text-gray-700 text-sm">"{r.comment}"</p></div>)))}</div>
+                    <div className="space-y-4"><h3 className="font-bold text-gray-900 px-2">Comentarios recientes</h3>{reviews.length === 0 ? <div className="text-center py-8 text-gray-400 bg-white rounded-2xl border border-dashed">Aún no tienes reseñas.</div> : (reviews.map((r, i) => (<div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm"><div className="flex justify-between items-start mb-2"><div className="flex gap-1">{[...Array(5)].map((_, i) => (<Star key={i} className={cn("h-3 w-3", i < r.rating ? "fill-[#F97316] text-[#F97316]" : "text-gray-200")} />))}</div><span className="text-[10px] text-gray-400">{new Date(r.created_at).toLocaleDateString()}</span></div><p className="text-gray-700 text-sm">"{r.comment}"</p></div>)))}</div>
                 </div>
-              </div>
+              </FullViewWrapper>
             );
 
           case 'edit':
             return (
-              <div className="fixed inset-0 z-[1000] bg-white flex flex-col animate-fade-in overflow-y-auto">
+              <FullViewWrapper maxWidth="max-w-xl">
                 <div className="flex items-center gap-4 p-4 sticky top-0 bg-white z-10 pt-12"><Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="-ml-2"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis datos personales</h1></div>
                 <div className="pb-32 px-6 pt-4">
-                    <div className="flex flex-col items-center mb-10"><div className="relative group"><div className="p-1.5 rounded-full border-2 border-dashed border-gray-200" style={{ borderColor: profileColor }}><ProfileAvatar size="xl" className="border-4 border-white shadow-sm" /></div><label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-[#F97316] p-2.5 rounded-full cursor-pointer shadow-lg border-2 border-white">{uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <Camera className="h-4 w-4 text-white" />}</label><input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={uploadAvatar} disabled={uploadingAvatar} /></div><div className="mt-6 w-full max-w-xs"><p className="text-xs font-bold text-gray-400 text-center uppercase mb-3">Color de Portada</p><div className="flex gap-3 overflow-x-auto p-2 no-scrollbar justify-center">{PROFILE_COLORS.map((color) => (<button key={color.value} onClick={() => setProfileColor(color.value)} className={cn("w-8 h-8 rounded-full transition-all shadow-sm flex-shrink-0 border-2 border-white ring-1 ring-gray-100", profileColor === color.value ? "scale-110 ring-2 ring-offset-2 ring-gray-900 z-10" : "hover:scale-105")} style={{ backgroundColor: color.value }} />))}</div></div></div>
-                    <div className="space-y-8"><div className="space-y-5"><h3 className="text-lg font-bold">¿Cómo te llamas?</h3><div className="space-y-5"><div className="relative"><label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Nombre(s)*</label><Input value={firstName} onChange={e => setFirstName(e.target.value)} className="h-14 rounded-xl border-gray-300" /></div><div className="relative"><label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Apellido(s)*</label><Input value={lastName} onChange={e => setLastName(e.target.value)} className="h-14 rounded-xl border-gray-300" /></div></div></div><div className="space-y-5"><h3 className="text-lg font-bold">Contacto y Ubicación</h3><div className="relative"><label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Teléfono móvil</label><div className="relative"><Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" /><Input value={phone} onChange={e => setPhone(e.target.value)} type="tel" className="h-14 pl-12 rounded-xl border-gray-300" /></div></div><div className="relative"><label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Provincia</label><Select value={city} onValueChange={setCity}><SelectTrigger className="h-14 rounded-xl border-gray-300"><SelectValue placeholder="Selecciona..." /></SelectTrigger><SelectContent className="bg-white max-h-[250px] z-[1100]"><ScrollArea className="h-64">{DR_PROVINCES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</ScrollArea></SelectContent></Select></div></div></div>
+                    <div className="flex flex-col items-center mb-10"><div className="relative group"><div className="p-1.5 rounded-full border-2 border-dashed border-gray-200" style={{ borderColor: profileColor }}><ProfileAvatar size="xl" className="border-4 border-white shadow-sm" /></div><label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-[#F97316] p-2.5 rounded-full cursor-pointer shadow-lg border-2 border-white">{uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <Camera className="h-4 w-4 text-white" />}</label><input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={uploadAvatar} disabled={uploadingAvatar} /></div><div className="mt-6 w-full max-w-xs"><p className="text-xs font-bold text-gray-400 text-center uppercase mb-3">Color de Portada</p><div className="flex gap-3 overflow-x-auto p-2 no-scrollbar justify-center">{PROFILE_COLORS.map((color) => (<button key={color.value} onClick={() => setProfileColor(color.value)} className={cn("w-8 h-8 rounded-full transition-all shadow-sm border-2 border-white ring-1 ring-gray-100", profileColor === color.value ? "scale-110 ring-2 ring-offset-2 ring-gray-900 z-10" : "hover:scale-105")} style={{ backgroundColor: color.value }} />))}</div></div></div>
+                    <div className="space-y-8"><div className="space-y-5"><h3 className="text-lg font-bold">¿Cómo te llamas?</h3><div className="space-y-5"><div className="relative"><label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Nombre(s)*</label><Input value={firstName} onChange={e => setFirstName(e.target.value)} className="h-14 rounded-xl" /></div><div className="relative"><label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Apellido(s)*</label><Input value={lastName} onChange={e => setLastName(e.target.value)} className="h-14 rounded-xl" /></div></div></div><div className="space-y-5"><h3 className="text-lg font-bold">Contacto y Ubicación</h3><div className="relative"><label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Teléfono móvil</label><div className="relative"><Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" /><Input value={phone} onChange={e => setPhone(e.target.value)} type="tel" className="h-14 pl-12 rounded-xl" /></div></div><div className="relative"><label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Provincia</label><Select value={city} onValueChange={setCity}><SelectTrigger className="h-14 rounded-xl"><SelectValue placeholder="Selecciona..." /></SelectTrigger><SelectContent className="bg-white max-h-[250px]"><ScrollArea className="h-64">{DR_PROVINCES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</ScrollArea></SelectContent></Select></div></div></div>
                 </div>
-                <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t pb-safe z-20"><Button onClick={updateProfile} disabled={updating} className="w-full h-12 rounded-full bg-[#F97316] font-bold text-lg">{updating ? <Loader2 className="h-5 w-5 animate-spin" /> : "Guardar datos"}</Button></div>
-              </div>
+                <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t pb-safe z-20 md:relative md:mt-auto"><div className="md:max-w-xl md:mx-auto w-full"><Button onClick={updateProfile} disabled={updating} className="w-full h-12 rounded-full bg-[#F97316] font-bold text-lg">{updating ? <Loader2 className="h-5 w-5 animate-spin" /> : "Guardar datos"}</Button></div></div>
+              </FullViewWrapper>
             );
 
           case 'my-services':
             return (
-              <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
+              <FullViewWrapper maxWidth="max-w-4xl" bg="bg-gray-50">
                 <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Publicaciones</h1></div></div>
                 <div className="p-4 space-y-4 pb-24">
                    <div className="flex items-center justify-between px-1"><span className="text-sm font-medium text-gray-500">Espacios utilizados</span><span className="text-sm font-bold text-gray-900">{myServices.length} / {maxSlots}</span></div>
-                   {Array.from({ length: TOTAL_DISPLAY_SLOTS }).map((_, index) => {
-                     const s = myServices[index];
-                     const isPlusSlot = index >= SLOT_LIMIT_FREE; 
-                     const isLocked = isPlusSlot && !isPlus;
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       {Array.from({ length: TOTAL_DISPLAY_SLOTS }).map((_, index) => {
+                         const s = myServices[index];
+                         const isPlusSlot = index >= SLOT_LIMIT_FREE; 
+                         const isLocked = isPlusSlot && !isPlus;
 
-                     if (s) {
-                       const isPromoted = s.is_promoted && s.promoted_until && new Date(s.promoted_until) > new Date();
-                       return (
-                         <div key={s.id} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-6 group relative">
-                           {isPromoted && (<div className="absolute top-3 left-3 bg-[#F97316] text-white text-xs font-bold px-3 py-1.5 rounded-full z-10 flex items-center gap-1 shadow-lg shadow-orange-500/20"><Crown className="h-3 w-3 fill-white" /> DESTACADO</div>)}
-                           {isPlusSlot && (<div className="absolute top-3 right-3 bg-[#0239c7] text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10 shadow-sm border border-white/20">PLUS SLOT</div>)}
-                           <div className="w-full h-48 bg-gray-100"><img src={s.image_url || "/placeholder.svg"} className="w-full h-full object-cover cursor-pointer" onClick={()=>navigate(`/service/${s.id}`)}/></div>
-                           <div className="p-5">
-                               <div className="flex justify-between items-start mb-3"><h3 className="font-bold text-gray-900 text-lg flex-1 mr-4 truncate">{s.title}</h3><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400"><MoreHorizontal className="h-5 w-5" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end" className="rounded-xl w-48 p-2 z-[1100]"><DropdownMenuItem onClick={()=>navigate(`/service/${s.id}`)} className="rounded-lg h-10"><Check className="mr-2 h-4 w-4" /> Ver detalle</DropdownMenuItem><DropdownMenuItem onClick={()=>handleEditService(s.id)} className="rounded-lg h-10"><Edit2 className="mr-2 h-4 w-4" /> Editar</DropdownMenuItem><DropdownMenuItem className="text-red-600 rounded-lg h-10" onClick={()=>handleClickDelete(s)}><Trash2 className="mr-2 h-4 w-4" /> Eliminar</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div>
-                               <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-5"><CalendarRange className="h-3.5 w-3.5" /> Publicado el {new Date(s.created_at).toLocaleDateString()}</div>
-                               <div className="flex items-center gap-3">
-                                  {!isPromoted ? (
-                                    <Button onClick={() => {setSelectedServiceToBoost(s);setSelectedBoostOption(72);setBoostModalOpen(true);}} className="flex-1 bg-gray-900 text-white h-11 rounded-xl text-sm font-bold"><TrendingUp className="h-4 w-4 mr-2 text-yellow-400" /> Impulsar</Button>
-                                  ) : (<div className="flex-1 bg-orange-50 border border-orange-100 h-11 rounded-xl flex items-center justify-center text-sm font-bold text-[#F97316]"><Clock className="h-4 w-4 mr-2" /> Destacado Activo</div>)}
+                         if (s) {
+                           const isPromoted = s.is_promoted && s.promoted_until && new Date(s.promoted_until) > new Date();
+                           return (
+                             <div key={s.id} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden group relative">
+                               {isPromoted && (<div className="absolute top-3 left-3 bg-[#F97316] text-white text-xs font-bold px-3 py-1.5 rounded-full z-10 flex items-center gap-1 shadow-lg shadow-orange-500/20"><Crown className="h-3 w-3 fill-white" /> DESTACADO</div>)}
+                               <div className="w-full h-48 bg-gray-100"><img src={s.image_url || "/placeholder.svg"} className="w-full h-full object-cover cursor-pointer" onClick={()=>navigate(`/service/${s.id}`)}/></div>
+                               <div className="p-5">
+                                   <div className="flex justify-between items-start mb-3"><h3 className="font-bold text-gray-900 text-lg flex-1 mr-4 truncate">{s.title}</h3><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400"><MoreHorizontal className="h-5 w-5" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end" className="rounded-xl w-48 p-2 z-[1100]"><DropdownMenuItem onClick={()=>navigate(`/service/${s.id}`)} className="rounded-lg h-10"><Check className="mr-2 h-4 w-4" /> Ver detalle</DropdownMenuItem><DropdownMenuItem onClick={()=>handleEditService(s.id)} className="rounded-lg h-10"><Edit2 className="mr-2 h-4 w-4" /> Editar</DropdownMenuItem><DropdownMenuItem className="text-red-600 rounded-lg h-10" onClick={()=>handleClickDelete(s)}><Trash2 className="mr-2 h-4 w-4" /> Eliminar</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div>
+                                   <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-5"><CalendarRange className="h-3.5 w-3.5" /> Publicado el {new Date(s.created_at).toLocaleDateString()}</div>
+                                   <div className="flex items-center gap-3">
+                                      {!isPromoted ? (
+                                        <Button onClick={() => {setSelectedServiceToBoost(s);setSelectedBoostOption(72);setBoostModalOpen(true);}} className="flex-1 bg-gray-900 text-white h-11 rounded-xl text-sm font-bold"><TrendingUp className="h-4 w-4 mr-2 text-yellow-400" /> Impulsar</Button>
+                                      ) : (<div className="flex-1 bg-orange-50 border border-orange-100 h-11 rounded-xl flex items-center justify-center text-sm font-bold text-[#F97316]"><Clock className="h-4 w-4 mr-2" /> Destacado Activo</div>)}
+                                   </div>
                                </div>
-                           </div>
-                         </div>
-                       );
-                     } else if (isLocked) {
-                        return (
-                           <div key={`locked-${index}`} onClick={() => setView('serviapp-plus')} className="h-32 rounded-3xl border border-gray-100 bg-gray-50 flex flex-col items-center justify-center gap-2 cursor-pointer relative overflow-hidden group">
-                               <div className="absolute inset-0 bg-white/40 group-hover:bg-white/0 transition-colors" />
-                               <div className="absolute top-3 right-3"><Lock className="h-4 w-4 text-gray-400" /></div>
-                               <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
-                                   <Crown className="h-5 w-5 text-gray-500" />
+                             </div>
+                           );
+                         } else if (isLocked) {
+                            return (
+                               <div key={`locked-${index}`} onClick={() => setView('serviapp-plus')} className="h-48 rounded-3xl border border-gray-100 bg-gray-50 flex flex-col items-center justify-center gap-2 cursor-pointer relative overflow-hidden group">
+                                   <div className="absolute inset-0 bg-white/40 group-hover:bg-white/0 transition-colors" />
+                                   <div className="absolute top-3 right-3"><Lock className="h-4 w-4 text-gray-400" /></div>
+                                   <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mb-1 group-hover:scale-110 transition-transform"><Crown className="h-5 w-5 text-gray-500" /></div>
+                                   <span className="text-sm font-bold text-gray-500">Espacio Exclusivo Plus</span>
+                                   <span className="text-xs text-[#0239c7] font-semibold group-hover:underline">Mejorar a Plus</span>
                                </div>
-                               <span className="text-sm font-bold text-gray-500">Espacio Exclusivo Plus</span>
-                               <span className="text-xs text-[#0239c7] font-semibold group-hover:underline">Mejorar a Plus</span>
-                           </div>
-                        );
-                     } else {
-                       return (
-                           <div key={`empty-${index}`} onClick={() => navigate('/publish')} className={cn(
-                               "h-32 rounded-3xl border-2 border-dashed flex flex-col items-center justify-center gap-2 cursor-pointer transition-all relative",
-                               isPlusSlot 
-                                ? "border-blue-200 bg-blue-50/50 hover:bg-blue-50"
-                                : "border-gray-200 bg-gray-50 hover:bg-gray-100"
-                           )}>
-                               {isPlusSlot && <div className="absolute top-3 right-3 bg-[#0239c7] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm">PLUS</div>}
-                               <div className={cn("p-2 rounded-full", isPlusSlot ? "bg-blue-100 text-[#0239c7]" : "bg-white text-gray-400")}>
-                                   <Plus className="h-6 w-6" />
+                            );
+                         } else {
+                           return (
+                               <div key={`empty-${index}`} onClick={() => navigate('/publish')} className={cn("h-48 rounded-3xl border-2 border-dashed flex flex-col items-center justify-center gap-2 cursor-pointer transition-all relative", isPlusSlot ? "border-blue-200 bg-blue-50/50 hover:bg-blue-50" : "border-gray-200 bg-gray-50 hover:bg-gray-100")}>
+                                   {isPlusSlot && <div className="absolute top-3 right-3 bg-[#0239c7] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm">PLUS</div>}
+                                   <div className={cn("p-2 rounded-full", isPlusSlot ? "bg-blue-100 text-[#0239c7]" : "bg-white text-gray-400")}><Plus className="h-6 w-6" /></div>
+                                   <span className={cn("text-sm font-medium", isPlusSlot ? "text-[#0239c7]" : "text-gray-400")}>Crear nuevo servicio</span>
                                </div>
-                               <span className={cn("text-sm font-medium", isPlusSlot ? "text-[#0239c7]" : "text-gray-400")}>
-                                   Crear nuevo servicio
-                               </span>
-                           </div>
-                       );
-                     }
-                   })}
+                           );
+                         }
+                       })}
+                   </div>
                 </div>
-              </div>
+              </FullViewWrapper>
             );
 
           case 'favorites':
             return (
-              <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
+              <FullViewWrapper maxWidth="max-w-4xl" bg="bg-gray-50">
                 <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={handleBackToDashboard}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Favoritos</h1></div></div>
-                <div className="p-4 pb-24">{myFavorites.length === 0 ? <div className="text-center py-10 text-gray-500">Sin favoritos</div> : (<div className="grid grid-cols-2 gap-4">{myFavorites.map((s) => <div key={s.id} onClick={()=>navigate(`/service/${s.id}`)}><ServiceCard title={s.title} price={`RD$ ${s.price}`} image={s.image_url} /></div>)}</div>)}</div>
-              </div>
+                <div className="p-4 pb-24">{myFavorites.length === 0 ? <div className="text-center py-10 text-gray-500">Sin favoritos</div> : (<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">{myFavorites.map((s) => <div key={s.id} onClick={()=>navigate(`/service/${s.id}`)}><ServiceCard title={s.title} price={`RD$ ${s.price}`} image={s.image_url} /></div>)}</div>)}</div>
+              </FullViewWrapper>
             );
 
           case 'preview':
             return (
-              <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
+              <FullViewWrapper maxWidth="max-w-xl">
                 <div className="absolute top-0 left-0 right-0 h-72 rounded-b-[3rem] z-0" style={{ backgroundColor: profileColor }} />
                 <div className="relative z-10 px-4 pt-12">
                   <div className="flex justify-between items-center text-white mb-2"><Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="text-white hover:bg-white/20"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mi Perfil</h1><Button variant="ghost" size="icon" onClick={() => setView('edit')} className="text-white hover:bg-white/20"><Edit2 className="h-5 w-5" /></Button></div>
@@ -1095,13 +885,13 @@ const Profile = () => {
                     <div className="grid grid-cols-1 gap-4 pt-4 text-left border-t border-gray-50"><div className="flex gap-3"><Phone className="text-gray-400 h-4 w-4"/><span>{phone || "No agregado"}</span></div><div className="flex gap-3"><MapPin className="text-gray-400 h-4 w-4"/><span>{city || "No agregado"}</span></div></div>
                   </div>
                 </div>
-              </div>
+              </FullViewWrapper>
             );
 
           default: // DASHBOARD
             return (
-                <div className="min-h-screen bg-gray-50 pb-24 pt-12 animate-fade-in">
-                  <div className="bg-white pt-4 pb-4 px-6 shadow-sm rounded-b-[2.5rem] relative z-10">
+                <div className="min-h-screen bg-gray-50 pb-24 pt-12 animate-fade-in md:max-w-4xl md:mx-auto">
+                  <div className="bg-white pt-4 pb-4 px-6 shadow-sm rounded-b-[2.5rem] relative z-10 md:rounded-3xl md:mt-4 md:border md:border-gray-100">
                     <div className="flex justify-between items-center mb-6">
                       <div className="flex-1"><p className="text-gray-400 text-sm">Bienvenido,</p><div className="flex items-center gap-1.5"><h1 className="text-2xl font-bold truncate max-w-[200px]">{firstName || 'Usuario'}</h1>{isPlus && <Badge className="bg-[#0239c7] text-white text-[10px]"><Crown className="h-3 w-3 mr-1" />PLUS</Badge>}</div></div>
                       <div onClick={() => setView('preview')} className="cursor-pointer relative"><ProfileAvatar size="md" className={isPlus ? "border-2 border-[#0239c7]" : "border-2 border-orange-100"} />{isPlus && (<div className="absolute -bottom-1 -right-1 bg-[#0239c7] text-white p-0.5 rounded-full border-2 border-white"><Crown className="h-3 w-3 fill-white" /></div>)}</div>
@@ -1146,31 +936,21 @@ const Profile = () => {
           <AlertDialogHeader>
             {isPlus ? (
               <>
-                <div className="mx-auto bg-orange-50 w-12 h-12 rounded-full flex items-center justify-center mb-2">
-                    <ShieldCheck className="h-6 w-6 text-[#0239c7]" />
-                </div>
+                <div className="mx-auto bg-orange-50 w-12 h-12 rounded-full flex items-center justify-center mb-2"><ShieldCheck className="h-6 w-6 text-[#0239c7]" /></div>
                 <AlertDialogTitle className="text-center text-gray-900">Acción requerida</AlertDialogTitle>
-                <AlertDialogDescription className="text-center text-gray-600">
-                    Tienes una suscripción **Plus** activa. Debes cancelar tu plan antes de poder eliminar tu cuenta. 
-                    <br/><br/>
-                    Si cancelas el plan y eliminas la cuenta, perderás acceso a todas las funcionalidades Plus de forma inmediata.
-                </AlertDialogDescription>
+                <AlertDialogDescription className="text-center text-gray-600">Tienes una suscripción **Plus** activa. Debes cancelar tu plan antes de poder eliminar tu cuenta.</AlertDialogDescription>
               </>
             ) : (
               <>
                 <AlertDialogTitle className="text-red-600">¿Borrar cuenta?</AlertDialogTitle>
-                <AlertDialogDescription>
-                    Esta acción eliminará permanentemente todos tus datos de ServiAPP. No podrás recuperar tus anuncios ni reseñas.
-                </AlertDialogDescription>
+                <AlertDialogDescription>Esta acción eliminará permanentemente todos tus datos de ServiAPP.</AlertDialogDescription>
               </>
             )}
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting} className="rounded-xl">Cancelar</AlertDialogCancel>
             {!isPlus && (
-               <AlertDialogAction disabled={isDeleting} onClick={handleDeleteAccount} className="bg-red-600 hover:bg-red-700 rounded-xl">
-                    {isDeleting ? <Loader2 className="animate-spin" /> : "Sí, eliminar"}
-               </AlertDialogAction>
+               <AlertDialogAction disabled={isDeleting} onClick={handleDeleteAccount} className="bg-red-600 hover:bg-red-700 rounded-xl">{isDeleting ? <Loader2 className="animate-spin" /> : "Sí, eliminar"}</AlertDialogAction>
             )}
           </AlertDialogFooter>
         </AlertDialogContent>
