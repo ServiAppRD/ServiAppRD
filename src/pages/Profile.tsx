@@ -47,10 +47,14 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
 
-const DR_CITIES = [
-  "Santo Domingo", "Santiago de los Caballeros", "San Francisco de Macorís", 
-  "Higüey", "La Romana", "San Cristóbal", "San Pedro de Macorís", 
-  "La Vega", "Puerto Plata", "Barahona", "Punta Cana", "Bávaro"
+const DR_PROVINCES = [
+  "Azua", "Baoruco", "Barahona", "Dajabón", "Distrito Nacional", "Duarte", 
+  "Elías Piña", "El Seibo", "Espaillat", "Hato Mayor", "Hermanas Mirabal", 
+  "Independencia", "La Altagracia", "La Romana", "La Vega", "María Trinidad Sánchez", 
+  "Monseñor Nouel", "Monte Cristi", "Monte Plata", "Pedernales", "Peravia", 
+  "Puerto Plata", "Samaná", "San Cristóbal", "San José de Ocoa", "San Juan", 
+  "San Pedro de Macorís", "Sánchez Ramírez", "Santiago", "Santiago Rodríguez", 
+  "Santo Domingo", "Valverde"
 ];
 
 const PROFILE_COLORS = [
@@ -1272,13 +1276,13 @@ const Profile = () => {
                     <h3 className="text-lg font-bold text-gray-900">¿Dónde te ubicas?</h3>
                     
                     <div className="relative">
-                        <label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Ciudad</label>
+                        <label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Provincia</label>
                         <Select value={city} onValueChange={setCity}>
                             <SelectTrigger className="h-14 rounded-xl border-gray-300 focus:ring-[#F97316] text-base px-4">
                                 <SelectValue placeholder="Selecciona..." />
                             </SelectTrigger>
-                            <SelectContent className="bg-white max-h-[250px]">
-                                {DR_CITIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                            <SelectContent className="bg-white max-h-[250px] z-[1001]">
+                                {DR_PROVINCES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
