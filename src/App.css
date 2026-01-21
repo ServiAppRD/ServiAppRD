@@ -21,10 +21,9 @@
 }
 
 /* 
-  Ajuste para Android: 
-  Usamos max() para asegurar al menos 35px de espacio arriba, 
-  o el valor del sistema (notch) si es mayor.
+  Ajuste para Android/iOS: 
+  Aumentado a 45px para garantizar que no toque la barra de estado/batería.
 */
 .pt-safe {
-  padding-top: max(35px, env(safe-area-inset-top));
+  padding-top: max(45px, env(safe-area-inset-top));
 }

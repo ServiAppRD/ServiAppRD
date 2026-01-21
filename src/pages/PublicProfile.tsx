@@ -197,26 +197,28 @@ const PublicProfile = () => {
 
       {/* Header Background */}
       <div 
-        className="h-48 relative rounded-b-[2rem] transition-colors duration-500"
+        className="h-48 rounded-b-[2rem] transition-colors duration-500"
         style={{ backgroundColor: profile.profile_color || '#0F172A' }}
       >
-         <Button 
-            variant="ghost" 
-            size="icon" 
-            className="absolute top-4 left-4 text-white hover:bg-white/10"
-            onClick={() => navigate(-1)}
-         >
-            <ArrowLeft className="h-6 w-6" />
-         </Button>
+         <div className="pt-safe px-4 flex justify-between items-start">
+            <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-white hover:bg-white/10"
+                onClick={() => navigate(-1)}
+            >
+                <ArrowLeft className="h-6 w-6" />
+            </Button>
 
-         <Button 
-            variant="ghost" 
-            size="icon" 
-            className="absolute top-4 right-4 text-white hover:bg-white/10"
-            onClick={() => setIsMenuOpen(true)}
-         >
-            <MoreVertical className="h-6 w-6" />
-         </Button>
+            <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-white hover:bg-white/10"
+                onClick={() => setIsMenuOpen(true)}
+            >
+                <MoreVertical className="h-6 w-6" />
+            </Button>
+         </div>
       </div>
 
       <div className="px-5 -mt-16 pb-20">
