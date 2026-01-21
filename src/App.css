@@ -21,9 +21,9 @@
 }
 
 /* 
-  Ajuste para Android/iOS: 
-  Aumentado a 64px para garantizar espacio suficiente para notch/isla dinámica y barra de estado.
+  Ajuste para iOS (Notch): 
+  Esto se aplicará a las cabeceras para respetar el notch.
 */
 .pt-safe {
-  padding-top: max(64px, env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
 }

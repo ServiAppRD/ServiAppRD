@@ -199,7 +199,7 @@ const Index = () => {
       <div className="relative bg-[#F97316] rounded-bl-[0px] rounded-br-[70px] pt-safe shadow-lg overflow-hidden min-h-[300px] flex flex-col">
         
         {/* Search Bar (Fixed at top of Hero) */}
-        <div className="px-5 pt-4 pb-2 relative z-30">
+        <div className="px-5 pt-12 pb-2 relative z-30">
             <form onSubmit={handleSearch} className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 bg-[#F97316] p-1.5 rounded-full">
                     <Search className="h-4 w-4 text-white" strokeWidth={3} />
