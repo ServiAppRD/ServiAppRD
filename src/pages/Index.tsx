@@ -302,7 +302,6 @@ const Index = () => {
                 >
                      <div className="relative z-10">
                         <span className="font-bold text-gray-800 text-lg block">Plomería</span>
-                        <span className="text-xs text-blue-600 font-medium bg-white/60 px-2 py-0.5 rounded-full">Popular</span>
                      </div>
                      <img 
                         src="/cat-plumber.png" 
@@ -317,7 +316,6 @@ const Index = () => {
                 >
                      <div className="relative z-10">
                         <span className="font-bold text-gray-800 text-lg block">Electricidad</span>
-                        <span className="text-xs text-yellow-700 font-medium bg-white/60 px-2 py-0.5 rounded-full">24/7</span>
                      </div>
                      <img 
                         src="/cat-electrician.png" 
