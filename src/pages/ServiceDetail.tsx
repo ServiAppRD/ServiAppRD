@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, ArrowLeft, MapPin, Check, Phone, Calendar, Star, MessageCircle, Send, Facebook, Instagram, Globe, AlertCircle, Flag, MoreVertical, Share2, ShieldAlert, ChevronRight } from "lucide-react";
+import { Loader2, ArrowLeft, MapPin, Check, Phone, Calendar, Star, MessageCircle, Send, Facebook, Instagram, Globe, AlertCircle, Flag, MoreVertical, Share2, ShieldAlert, ChevronRight, Crown } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { showSuccess, showError } from "@/utils/toast";
 import { useState, useEffect, useRef } from "react";
@@ -107,7 +107,7 @@ const ServiceDetail = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('services')
-        .select(`*, profiles (id, first_name, last_name, phone, avatar_url)`)
+        .select(`*, profiles (id, first_name, last_name, phone, avatar_url, is_plus)`)
         .eq('id', id)
         .is('deleted_at', null)
         .single();
@@ -251,7 +251,7 @@ const ServiceDetail = () => {
                 <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center mr-3 shadow-sm border border-gray-100"><Share2 className="h-5 w-5 text-blue-600" /></div>Compartir publicación
              </Button>
              <Button variant="outline" className="w-full justify-start h-14 text-base font-medium rounded-xl border-red-100 bg-red-50 hover:bg-red-100 text-red-600" onClick={() => { setIsMenuOpen(false); setTimeout(() => setIsReportOpen(true), 200); }}>
-                <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center mr-3 shadow-sm border border-red-100"><ShieldAlert className="h-5 w-5 text-red-500" /></div>Reportar problema
+                <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center mr-3 shadow-sm border border-gray-100"><ShieldAlert className="h-5 w-5 text-red-500" /></div>Reportar problema
              </Button>
           </div>
           <DrawerFooter><DrawerClose asChild><Button variant="ghost" className="rounded-xl h-12 text-gray-500">Cancelar</Button></DrawerClose></DrawerFooter>
@@ -297,12 +297,25 @@ const ServiceDetail = () => {
 
         {serviceAreas.length > 0 && (<div className="bg-gray-50 rounded-xl p-4 border border-gray-100"><h3 className="font-bold text-gray-900 text-sm mb-2 flex items-center gap-2"><MapPin className="h-4 w-4 text-[#F97316]" /> Cobertura en {service.location}</h3><div className="flex flex-wrap gap-2">{serviceAreas.map((area: string, i: number) => (<span key={i} className="bg-white border border-gray-200 text-gray-600 text-xs px-2.5 py-1 rounded-md shadow-sm font-medium">{area}</span>))}</div></div>)}
 
-        {/* Perfil Clicable - AHORA CON STATS GLOBALES */}
+        {/* Perfil Clicable - AHORA CON STATS GLOBALES Y BADGE PLUS */}
         <div className="flex items-center gap-3 p-2 -mx-2 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer group" onClick={() => navigate(`/user/${service.user_id}`)}>
-          <Avatar className="h-14 w-14 border border-gray-100"><AvatarImage src={service.profiles?.avatar_url} /><AvatarFallback className="bg-orange-100 text-[#F97316] font-bold">{service.profiles?.first_name?.[0] || 'U'}</AvatarFallback></Avatar>
+          <Avatar className={cn("h-14 w-14 border", service.profiles?.is_plus ? "border-[#0239c7]" : "border-gray-100")}>
+            <AvatarImage src={service.profiles?.avatar_url} />
+            <AvatarFallback className="bg-orange-100 text-[#F97316] font-bold">{service.profiles?.first_name?.[0] || 'U'}</AvatarFallback>
+          </Avatar>
           <div className="flex-1">
             <p className="text-xs font-medium text-gray-400 uppercase">Publicado por</p>
-            <h3 className="font-bold text-gray-900 text-lg leading-tight group-hover:text-[#F97316] transition-colors">{service.profiles?.first_name} {service.profiles?.last_name}</h3>
+            <div className="flex items-center gap-2">
+                <h3 className="font-bold text-gray-900 text-lg leading-tight group-hover:text-[#F97316] transition-colors">
+                    {service.profiles?.first_name} {service.profiles?.last_name}
+                </h3>
+                {service.profiles?.is_plus && (
+                   <span className="bg-[#0239c7] text-white text-[9px] px-1.5 py-0.5 rounded-full font-black flex items-center gap-0.5 shadow-sm">
+                      <Crown className="h-2 w-2 fill-white" />
+                      PLUS
+                   </span>
+                )}
+            </div>
             <div className="mt-1 flex items-center gap-1">
                 <Star className="h-4 w-4 text-[#F97316] fill-current" />
                 <span className="font-bold text-gray-900">{providerStats?.avg || "0.0"}</span>
