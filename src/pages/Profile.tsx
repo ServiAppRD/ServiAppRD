@@ -13,7 +13,7 @@ import {
   ArrowLeft, Edit2, Briefcase, Trash2, Camera, Zap, Check,
   Clock, TrendingUp, Crown, BarChart3, ShieldCheck, Eye, MousePointerClick, CalendarRange,
   AlertTriangle, Hammer, Lock, Shield, MoreHorizontal, FileText, Bell, CreditCard, Sparkles, X,
-  Plus, Rocket as RocketIcon, Calendar, MessageCircle, Settings
+  Plus, Rocket as RocketIcon, Calendar, MessageCircle, Settings, Timer
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,6 +21,7 @@ import { ServiceCard } from "@/components/ServiceCard";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { PlusSuccessOverlay } from "@/components/PlusSuccessOverlay";
 import {
   Accordion,
   AccordionContent,
@@ -109,6 +110,7 @@ const Profile = () => {
   const [updating, setUpdating] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [buyingPlus, setBuyingPlus] = useState(false);
+  const [showPlusSuccess, setShowPlusSuccess] = useState(false);
 
   const [myServices, setMyServices] = useState<any[]>([]);
   const [myFavorites, setMyFavorites] = useState<any[]>([]);
@@ -141,6 +143,7 @@ const Profile = () => {
   const [pushEnabled, setPushEnabled] = useState(true);
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [activeBoosts, setActiveBoosts] = useState<any[]>([]);
 
   const maxSlots = isPlus ? SLOT_LIMIT_PLUS : SLOT_LIMIT_FREE;
 
@@ -164,7 +167,7 @@ const Profile = () => {
         fetchRealMetrics();
     }
     if (view === 'my-plan' && session?.user?.id) {
-        fetchTransactions();
+        fetchPlanData();
     }
   }, [view, metricsTimeRange, session]);
 
@@ -176,18 +179,53 @@ const Profile = () => {
     return () => clearTimeout(timer);
   }, [showBoostDeleteWarning, deleteTimer]);
 
-  const fetchTransactions = async () => {
+  const fetchPlanData = async () => {
       try {
-          const { data, error } = await supabase
+          // 1. Limpiar boosts vencidos en la BD
+          await supabase.rpc('handle_expired_boosts');
+
+          // 2. Fetch transacciones
+          const { data: txData } = await supabase
             .from('transactions')
             .select('*')
             .eq('user_id', session.user.id)
             .order('created_at', { ascending: false });
           
-          if (!error && data) setTransactions(data);
+          if (txData) setTransactions(txData);
+
+          // 3. Fetch Boosts Activos
+          const { data: boostData } = await supabase
+            .from('services')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .eq('is_promoted', true)
+            .gt('promoted_until', new Date().toISOString());
+          
+          setActiveBoosts(boostData || []);
+
       } catch (e) {
-          console.error("Error fetching transactions", e);
+          console.error("Error fetching plan data", e);
       }
+  };
+
+  const getBoostPrice = (serviceTitle: string) => {
+      // Intentar encontrar la transacción correspondiente
+      const tx = transactions.find(t => t.type === 'boost' && t.description.includes(serviceTitle));
+      return tx ? tx.amount : "---";
+  };
+
+  const calculateTimeLeft = (dateString: string) => {
+      const now = new Date();
+      const end = new Date(dateString);
+      const diffMs = end.getTime() - now.getTime();
+      
+      if (diffMs <= 0) return "Vencido";
+      
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffDays = Math.floor(diffHours / 24);
+
+      if (diffDays > 0) return `${diffDays} días`;
+      return `${diffHours} horas`;
   };
 
   const fetchRealMetrics = async () => {
@@ -346,8 +384,8 @@ const Profile = () => {
           
           setIsPlus(true);
           setPlusExpiresAt(nextMonth.toISOString());
-          showSuccess("¡Bienvenido a ServiAPP Plus!");
           setView('dashboard'); 
+          setShowPlusSuccess(true); // Activar la notificación
       } catch (e: any) {
           showError("Error al procesar suscripción");
       } finally {
@@ -777,6 +815,47 @@ const Profile = () => {
                            </div>
                        </div>
 
+                       {/* ACTIVE BOOSTS SECTION */}
+                       {activeBoosts.length > 0 && (
+                           <div className="mb-8">
+                               <div className="relative flex items-center justify-center mb-4">
+                                   <div className="bg-white px-4 rounded-full py-1 z-10 shadow-sm border border-gray-100">
+                                       <h3 className="text-sm font-black text-gray-900 uppercase tracking-wide flex items-center gap-2">
+                                           <TrendingUp className="h-4 w-4 text-[#F97316]" /> BOOSTS ACTIVOS
+                                       </h3>
+                                   </div>
+                                   <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-300" /></div> 
+                               </div>
+
+                               <div className="space-y-3">
+                                   {activeBoosts.map((boost) => (
+                                       <div key={boost.id} className="bg-white border border-orange-100 p-4 rounded-3xl shadow-sm relative overflow-hidden">
+                                           <div className="absolute top-0 left-0 w-1.5 h-full bg-[#F97316]" />
+                                           <div className="flex justify-between items-start mb-2 pl-2">
+                                               <div>
+                                                   <h4 className="font-bold text-gray-900 flex items-center gap-2">
+                                                       <RocketIcon className="h-4 w-4 text-[#F97316] fill-[#F97316]" />
+                                                       Boost Activo
+                                                   </h4>
+                                                   <p className="text-xs text-gray-500 font-medium mt-0.5 truncate max-w-[150px]">
+                                                       {boost.title}
+                                                   </p>
+                                               </div>
+                                               <Badge className="bg-orange-100 text-[#F97316] border-0 text-[10px]">
+                                                   <Timer className="h-3 w-3 mr-1" />
+                                                   {calculateTimeLeft(boost.promoted_until)}
+                                               </Badge>
+                                           </div>
+                                           <div className="mt-3 pt-3 border-t border-gray-50 flex justify-between items-center text-xs pl-2">
+                                               <span className="text-gray-400">Pagado: <span className="text-gray-900 font-bold">RD$ {getBoostPrice(boost.title)}</span></span>
+                                               <span className="text-gray-400">Vence: {new Date(boost.promoted_until).toLocaleDateString()}</span>
+                                           </div>
+                                       </div>
+                                   ))}
+                               </div>
+                           </div>
+                       )}
+
                        {!isPlus && (
                            <div onClick={() => setView('serviapp-plus')} className="bg-[#0239c7] rounded-[2rem] p-6 shadow-lg shadow-blue-200 mb-8 cursor-pointer flex items-center justify-between">
                                 <div className="text-white">
@@ -1125,6 +1204,8 @@ const Profile = () => {
   return (
     <>
       {renderCurrentView()}
+
+      {showPlusSuccess && <PlusSuccessOverlay onClose={() => setShowPlusSuccess(false)} />}
 
       <Dialog open={boostModalOpen} onOpenChange={setBoostModalOpen}>
         <DialogContent className="sm:max-w-md rounded-3xl border-0 shadow-2xl z-[2000]">
