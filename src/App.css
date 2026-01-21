@@ -21,9 +21,11 @@
 }
 
 /* 
-  Ajuste para iOS (Notch): 
-  Esto se aplicará a las cabeceras para respetar el notch.
+  Ajuste para Android/iOS:
+  Añade un padding base de 1rem (16px) para la barra de estado de Android,
+  y suma el espacio del notch/isla en iOS.
 */
 .pt-safe {
-  padding-top: env(safe-area-inset-top);
+  padding-top: 1rem; /* Fallback y base para Android */
+  padding-top: calc(1rem + env(safe-area-inset-top)); /* Espacio extra para iOS */
 }
