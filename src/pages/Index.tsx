@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Wrench, Loader2, Info, Crown, Sparkles, Clock, 
-  Search, Droplets, Zap, Car, Laptop, ArrowRight, Grid
+  Search, Droplets, Zap, Car, Laptop, ArrowRight, Grid, ShieldCheck, Rocket
 } from "lucide-react";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { useNavigate, Link } from "react-router-dom";
@@ -277,21 +277,40 @@ const Index = () => {
       </div>
 
       <AlertDialog open={showWelcomeDialog} onOpenChange={setShowWelcomeDialog}>
-        <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto">
-          <AlertDialogHeader className="text-center">
-            <div className="mx-auto bg-orange-100 w-12 h-12 rounded-full flex items-center justify-center mb-2"><Info className="h-6 w-6 text-[#F97316]" /></div>
-            <AlertDialogTitle className="text-xl font-bold text-center">¡Bienvenido a la comunidad ServiAPP!</AlertDialogTitle>
-            <AlertDialogDescription className="text-center text-gray-600 mt-2 space-y-3 text-sm">
-              <p>¡Hola! Estás entrando en la primera etapa de una plataforma hecha por y para dominicanos.</p>
-              <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 text-xs">
-                <p className="font-bold mb-1">Nota importante:</p>
-                <p>Como estamos lanzando oficialmente hoy, es posible que aún no encuentres técnicos en todos los sectores. Estamos verificando profesionales cada hora para asegurar tu seguridad.</p>
-              </div>
-              <p>🚀 <strong>¿Eres profesional?</strong> ¡Sé de los primeros en ofrecer tus servicios y domina tu zona desde el principio!</p>
-              <p className="text-xs pt-2">Gracias por ser parte del inicio de algo grande.</p>
-            </AlertDialogDescription>
+        <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto border-0 shadow-2xl">
+          <AlertDialogHeader className="text-center space-y-4">
+            <div className="mx-auto bg-orange-50 w-16 h-16 rounded-full flex items-center justify-center mb-2 ring-8 ring-orange-50/50">
+               <Sparkles className="h-8 w-8 text-[#F97316]" />
+            </div>
+            <div className="space-y-2">
+               <AlertDialogTitle className="text-xl font-bold text-gray-900">Bienvenido a ServiAPP</AlertDialogTitle>
+               <AlertDialogDescription className="text-gray-500 text-sm leading-relaxed">
+                  La plataforma líder que conecta a los mejores profesionales con clientes en República Dominicana.
+               </AlertDialogDescription>
+            </div>
+            
+            <div className="bg-gray-50 p-4 rounded-xl text-left space-y-3 border border-gray-100">
+               <div className="flex gap-3">
+                  <div className="mt-0.5 bg-white p-1 rounded-md shadow-sm h-fit"><ShieldCheck className="h-4 w-4 text-[#F97316]" /></div>
+                  <div>
+                     <h4 className="font-bold text-gray-900 text-xs">Seguridad Primero</h4>
+                     <p className="text-xs text-gray-500 leading-snug mt-0.5">Verificamos perfiles para tu tranquilidad.</p>
+                  </div>
+               </div>
+               <div className="flex gap-3">
+                  <div className="mt-0.5 bg-white p-1 rounded-md shadow-sm h-fit"><Rocket className="h-4 w-4 text-[#F97316]" /></div>
+                  <div>
+                     <h4 className="font-bold text-gray-900 text-xs">Crecimiento Constante</h4>
+                     <p className="text-xs text-gray-500 leading-snug mt-0.5">Estamos sumando nuevos expertos cada día en tu zona.</p>
+                  </div>
+               </div>
+            </div>
           </AlertDialogHeader>
-          <AlertDialogFooter><AlertDialogAction onClick={handleCloseWelcome} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl">Entendido</AlertDialogAction></AlertDialogFooter>
+          <AlertDialogFooter className="pt-2">
+            <AlertDialogAction onClick={handleCloseWelcome} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl font-bold h-12 shadow-lg shadow-orange-200">
+              Comenzar a explorar
+            </AlertDialogAction>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 

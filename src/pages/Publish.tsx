@@ -23,7 +23,8 @@ import {
   ArrowLeft, Check, ChevronRight, 
   DollarSign, Sparkles, UploadCloud, X, Loader2, Rocket, User, Zap,
   Facebook, Instagram, Globe, MapPin,
-  Wrench, Droplets, Car, Hammer, Leaf, Laptop, Scissors, HardHat, Truck, GraduationCap, Heart, Calendar, MoreHorizontal, Crown
+  Wrench, Droplets, Car, Hammer, Leaf, Laptop, Scissors, HardHat, Truck, GraduationCap, Heart, Calendar, MoreHorizontal, Crown,
+  TrendingUp, CheckCircle2, ShieldCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ServiceCard } from "@/components/ServiceCard";
@@ -574,26 +575,39 @@ const Publish = () => {
     <div className="min-h-screen bg-white pb-safe">
       <AlertDialog open={showPublishWelcome} onOpenChange={setShowPublishWelcome}>
         <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto border-0 shadow-2xl">
-          <AlertDialogHeader className="text-left">
-            <div className="mx-auto bg-orange-100 w-12 h-12 rounded-full flex items-center justify-center mb-2"><Rocket className="h-6 w-6 text-[#F97316]" /></div>
-            <AlertDialogTitle className="text-xl font-bold text-center text-gray-900">¡Estás a punto de crecer con nosotros! 📈</AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-600 mt-4 space-y-4 text-sm">
-              <p className="text-center pb-2">Antes de publicar, recuerda:</p>
-              <div>
-                <p className="font-bold">Paciencia:</p>
-                <p>ServiAPP es una plataforma nueva. Los primeros días estamos enfocados en traer a los mejores profesionales como tú. Las solicitudes de clientes empezarán a llegar a medida que más personas descarguen la app en tu sector.</p>
-              </div>
-              <div>
-                <p className="font-bold">Perfil Completo:</p>
-                <p>Mientras más fotos realistas de tus trabajos subas, más confianza darás a los primeros usuarios que entren.</p>
-              </div>
-              <div>
-                <p className="font-bold">Apoyo Total:</p>
-                <p>Si necesitas ayuda para mejorar tu anuncio, usa el botón de "Ayuda" en tu perfil.</p>
-              </div>
-            </AlertDialogDescription>
+          <AlertDialogHeader className="text-center space-y-4">
+            <div className="mx-auto bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center mb-2 ring-8 ring-blue-50/50">
+               <TrendingUp className="h-8 w-8 text-blue-600" />
+            </div>
+            <div className="space-y-2">
+               <AlertDialogTitle className="text-xl font-bold text-gray-900">Potencia tu Negocio</AlertDialogTitle>
+               <AlertDialogDescription className="text-gray-500 text-sm leading-relaxed">
+                  Estás a punto de conectar con miles de clientes potenciales. Para asegurar tu éxito, te recomendamos:
+               </AlertDialogDescription>
+            </div>
+
+            <div className="space-y-3 pt-2">
+               <div className="flex items-start gap-3 text-left p-3 rounded-xl bg-gray-50 border border-gray-100 hover:bg-gray-100 transition-colors">
+                  <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 shrink-0" />
+                  <div>
+                     <h4 className="font-bold text-gray-900 text-xs">Perfil Completo</h4>
+                     <p className="text-xs text-gray-500 leading-snug">Sube fotos reales y una descripción detallada.</p>
+                  </div>
+               </div>
+               <div className="flex items-start gap-3 text-left p-3 rounded-xl bg-gray-50 border border-gray-100 hover:bg-gray-100 transition-colors">
+                  <ShieldCheck className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
+                  <div>
+                     <h4 className="font-bold text-gray-900 text-xs">Verificación</h4>
+                     <p className="text-xs text-gray-500 leading-snug">Mantén tus datos actualizados para generar confianza.</p>
+                  </div>
+               </div>
+            </div>
           </AlertDialogHeader>
-          <AlertDialogFooter><AlertDialogAction onClick={handleClosePublishWelcome} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl font-bold h-12">¡Entendido!</AlertDialogAction></AlertDialogFooter>
+          <AlertDialogFooter className="pt-2">
+            <AlertDialogAction onClick={handleClosePublishWelcome} className="w-full bg-[#0F172A] hover:bg-slate-800 text-white rounded-xl font-bold h-12 shadow-lg">
+              Crear mi anuncio
+            </AlertDialogAction>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
