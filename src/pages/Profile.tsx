@@ -604,7 +604,7 @@ const Profile = () => {
           case 'my-plan':
             return (
                 <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
-                   <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12">
+                   <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-6">
                       <div className="flex items-center gap-3">
                          <Button variant="ghost" size="icon" onClick={() => setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button>
                          <h1 className="text-lg font-bold">Mi Plan</h1>
@@ -615,7 +615,7 @@ const Profile = () => {
                            <div className="absolute top-0 right-0 p-4 opacity-10"><CreditCard className="h-32 w-32" /></div>
                            <div className="relative z-10">
                                <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">Plan Actual</p>
-                               <h2 className="text-3xl font-black text-gray-900 mb-4">{isPlus ? "ServiAPP Plus" : "Gratuito"}</h2>
+                               <h2 className="text-3xl font-black text-gray-900 mb-4">{isPlus ? "Plus" : "Gratuito"}</h2>
                                <div className="flex items-center gap-2 mb-6">
                                   <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">Activo</span>
                                   <span className="text-xs text-gray-400">Vence: {isPlus ? "Renovación Mensual" : "Nunca"}</span>
