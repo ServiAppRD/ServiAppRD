@@ -97,6 +97,7 @@ const Profile = () => {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [profileColor, setProfileColor] = useState("#0F172A");
   const [isPlus, setIsPlus] = useState(false);
+  const [plusExpiresAt, setPlusExpiresAt] = useState<string | null>(null);
   
   const [updating, setUpdating] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -273,7 +274,7 @@ const Profile = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('profiles')
-        .select('first_name, last_name, phone, city, address, avatar_url, profile_color, is_verified, verification_status, is_plus')
+        .select('first_name, last_name, phone, city, address, avatar_url, profile_color, is_verified, verification_status, is_plus, plus_expires_at')
         .eq('id', userId)
         .single();
 
@@ -287,6 +288,7 @@ const Profile = () => {
         setAvatarUrl(data.avatar_url || "");
         setProfileColor(data.profile_color || "#0F172A");
         setIsPlus(data.is_plus || false);
+        setPlusExpiresAt(data.plus_expires_at || null);
         calculateCompletion(data);
       }
     } catch (error) {
@@ -301,13 +303,18 @@ const Profile = () => {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       try {
+          const nextMonth = new Date();
+          nextMonth.setMonth(nextMonth.getMonth() + 1);
+
           const { error } = await supabase.from('profiles').update({ 
               is_plus: true, 
+              plus_expires_at: nextMonth.toISOString()
           }).eq('id', session.user.id);
           
           if (error) throw error;
           
           setIsPlus(true);
+          setPlusExpiresAt(nextMonth.toISOString());
           showSuccess("¡Bienvenido a ServiAPP Plus!");
           setView('dashboard'); 
       } catch (e: any) {
@@ -602,6 +609,8 @@ const Profile = () => {
             );
 
           case 'my-plan':
+            const renewalDate = plusExpiresAt ? new Date(plusExpiresAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : "Renovación Mensual";
+            
             return (
                 <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
                    <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-6">
@@ -611,21 +620,33 @@ const Profile = () => {
                       </div>
                    </div>
                    <div className="p-5 space-y-6 pb-24">
-                       <div className="bg-white rounded-3xl p-6 border-2 border-gray-100 shadow-sm relative overflow-hidden">
-                           <div className="absolute top-0 right-0 p-4 opacity-10"><CreditCard className="h-32 w-32" /></div>
+                       <div className={cn(
+                           "rounded-3xl p-6 relative overflow-hidden shadow-sm transition-all",
+                           isPlus 
+                               ? "bg-gradient-to-br from-[#0239c7] to-[#3b82f6] text-white border-0" 
+                               : "bg-white border-2 border-gray-100 text-gray-900"
+                       )}>
+                           <div className={cn("absolute top-0 right-0 p-4 opacity-10", isPlus ? "text-white" : "text-gray-900")}>
+                               <CreditCard className="h-32 w-32" />
+                           </div>
+                           
                            <div className="relative z-10">
-                               <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">Plan Actual</p>
-                               <h2 className="text-3xl font-black text-gray-900 mb-4">{isPlus ? "Plus" : "Gratuito"}</h2>
+                               <p className={cn("text-sm font-medium uppercase tracking-wider mb-1", isPlus ? "text-blue-100" : "text-gray-500")}>Plan Actual</p>
+                               <h2 className={cn("text-3xl font-black mb-4", isPlus ? "text-white" : "text-gray-900")}>{isPlus ? "Plus" : "Gratuito"}</h2>
+                               
                                <div className="flex items-center gap-2 mb-6">
-                                  <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">Activo</span>
-                                  <span className="text-xs text-gray-400">Vence: {isPlus ? "Renovación Mensual" : "Nunca"}</span>
+                                  <span className={cn("px-3 py-1 rounded-full text-xs font-bold", isPlus ? "bg-white/20 text-white backdrop-blur-md" : "bg-green-100 text-green-700")}>Activo</span>
+                                  <span className={cn("text-xs", isPlus ? "text-blue-100" : "text-gray-400")}>
+                                      {isPlus ? `Renueva: ${renewalDate}` : "Vence: Nunca"}
+                                  </span>
                                </div>
-                               <div className="space-y-3 border-t border-gray-100 pt-4">
+
+                               <div className={cn("space-y-3 pt-4 border-t", isPlus ? "border-white/20" : "border-gray-100")}>
                                    <div className="flex justify-between text-sm">
-                                       <span className="text-gray-600">Publicaciones activas</span>
-                                       <span className="font-bold text-gray-900">{myServices.length} / {maxSlots}</span>
+                                       <span className={isPlus ? "text-blue-100" : "text-gray-600"}>Publicaciones activas</span>
+                                       <span className={cn("font-bold", isPlus ? "text-white" : "text-gray-900")}>{myServices.length} / {maxSlots}</span>
                                    </div>
-                                   <Progress value={(myServices.length / maxSlots) * 100} className="h-2" />
+                                   <Progress value={(myServices.length / maxSlots) * 100} className={cn("h-2", isPlus ? "bg-black/20 [&>div]:bg-white" : "")} />
                                </div>
                            </div>
                        </div>
