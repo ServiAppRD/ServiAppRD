@@ -99,8 +99,6 @@ const Publish = () => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [session, setSession] = useState<any>(null);
-  const [userBoosts, setUserBoosts] = useState(0);
-  const [useBoostToPay, setUseBoostToPay] = useState(false);
   
   // Dialogs State
   const [showPublishWelcome, setShowPublishWelcome] = useState(false);
@@ -138,10 +136,6 @@ const Publish = () => {
         return;
       }
       setSession(session);
-
-      // Fetch user boosts
-      const { data: stats } = await supabase.from('user_stats').select('boosts').eq('user_id', session.user.id).maybeSingle();
-      if (stats) setUserBoosts(stats.boosts || 0);
 
       // Verificar perfil - Eliminada validación de 'city'
       const { data: profile } = await supabase.from('profiles').select('first_name, last_name, phone').eq('id', session.user.id).single();
@@ -223,14 +217,6 @@ const Publish = () => {
       const selectedPlan = BOOST_PLANS.find(p => p.id === formData.selectedPlanId) || BOOST_PLANS[0];
       const isPromoted = selectedPlan.id !== 'free';
 
-      if (isPromoted && useBoostToPay) {
-        if (userBoosts > 0) {
-           await supabase.from('user_stats').update({ boosts: userBoosts - 1 }).eq('user_id', session.user.id);
-        } else {
-           throw new Error("No tienes suficientes boosts");
-        }
-      }
-
       let imageUrl = null;
       if (formData.imageFile) {
         const fileExt = formData.imageFile.name.split('.').pop();
@@ -271,6 +257,17 @@ const Publish = () => {
       });
 
       if (error) throw error;
+      
+      // Registrar transacción de Boost si hubo pago
+      if (isPromoted && selectedPlan.price > 0) {
+        await supabase.from('transactions').insert({
+          user_id: session.user.id,
+          amount: selectedPlan.price,
+          description: `Boost inicial (${selectedPlan.label}) - ${formData.title}`,
+          type: "boost"
+        });
+      }
+
       showSuccess("¡Servicio publicado con éxito!");
       navigate("/profile");
       
@@ -453,8 +450,6 @@ const Publish = () => {
               key={plan.id}
               onClick={() => {
                  setFormData({ ...formData, selectedPlanId: plan.id });
-                 // Resetear pago con boost si se cambia a gratis
-                 if(plan.id === 'free') setUseBoostToPay(false);
               }}
               className={cn(
                 "relative p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between group overflow-hidden",
@@ -493,30 +488,6 @@ const Publish = () => {
           );
         })}
       </div>
-
-      {/* Pay with Boost Option - Only if a paid plan is selected */}
-      {formData.selectedPlanId !== 'free' && userBoosts > 0 && (
-          <div onClick={() => setUseBoostToPay(!useBoostToPay)} className={cn(
-             "mt-4 p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all animate-fade-in", 
-             useBoostToPay ? "bg-purple-50 border-purple-500" : "bg-white border-gray-200 hover:border-purple-200"
-          )}>
-             <div className="flex items-center gap-3">
-                <div className={cn("p-2 rounded-full", useBoostToPay ? "bg-purple-600 text-white" : "bg-purple-100 text-purple-600")}>
-                   <Zap className="h-5 w-5" />
-                </div>
-                <div>
-                   <p className="text-sm font-bold text-gray-900">Usar 1 Boost de mi cuenta</p>
-                   <p className="text-xs text-purple-600 font-medium">Tienes {userBoosts} disponibles</p>
-                </div>
-             </div>
-             <div className={cn(
-                "h-6 w-6 rounded border flex items-center justify-center transition-colors", 
-                useBoostToPay ? "bg-purple-600 border-purple-600" : "border-gray-300"
-             )}>
-                {useBoostToPay && <Check className="h-4 w-4 text-white" />}
-             </div>
-          </div>
-      )}
     </div>
   );
 
@@ -556,11 +527,7 @@ const Publish = () => {
              <span className="text-gray-500 font-bold">Total a pagar</span>
              <span className="font-bold text-[#F97316] text-lg">
                 {selectedPlan.price > 0 ? (
-                   useBoostToPay ? (
-                     <span className="text-purple-600 flex items-center gap-1"><Zap className="h-4 w-4"/> 1 Boost</span>
-                   ) : (
-                     `RD$ ${selectedPlan.price}`
-                   )
+                   `RD$ ${selectedPlan.price}`
                 ) : (
                    "Gratis"
                 )}
