@@ -78,7 +78,7 @@ const Terms = () => {
             <p>Para dudas legales o soporte:</p>
             <div className="flex items-center gap-2 mt-2 font-medium text-[#F97316]">
                 <Mail className="h-4 w-4" />
-                <a href="mailto:serviapp.help@gmail.com" className="hover:underline">serviapp.help@gmail.com</a>
+                <a href="mailto:soporte@serviapprd.com" className="hover:underline">soporte@serviapprd.com</a>
             </div>
           </div>
         </div>

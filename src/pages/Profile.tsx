@@ -643,7 +643,7 @@ const Profile = () => {
                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mt-4 text-center space-y-4">
                            <h3 className="font-bold text-gray-900">¿Todavía tienes dudas?</h3>
                            <p className="text-xs text-gray-500">Nuestro equipo de soporte está disponible por correo electrónico.</p>
-                           <Button variant="outline" className="w-full h-12 rounded-xl border-[#F97316] text-[#F97316] hover:bg-orange-50 font-bold" onClick={() => window.location.href = 'mailto:serviapp.help@gmail.com'}>
+                           <Button variant="outline" className="w-full h-12 rounded-xl border-[#F97316] text-[#F97316] hover:bg-orange-50 font-bold" onClick={() => window.location.href = 'mailto:soporte@serviapprd.com'}>
                                <MessageCircle className="mr-2 h-5 w-5" /> Contactar Soporte
                            </Button>
                        </div>
