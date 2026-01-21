@@ -13,7 +13,7 @@ import {
   ArrowLeft, Settings, Edit2, Briefcase, Trash2, Camera, Zap, Check,
   Clock, TrendingUp, Crown, BarChart3, ShieldCheck, Eye, MousePointerClick, CalendarRange,
   AlertTriangle, Hammer, Lock, Shield, MoreHorizontal, FileText, Bell, CreditCard, Sparkles, X,
-  Plus
+  Plus, Palette
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -1172,44 +1172,133 @@ const Profile = () => {
     )
   }
 
-  // --- EDIT PROFILE VIEW ---
+  // --- REDESIGNED EDIT PROFILE VIEW ---
   if (view === 'edit') {
     return (
-      <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
-        <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-safe">
-          <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6"/></Button><h1 className="text-lg font-bold">Editar Perfil</h1></div>
-          <Button onClick={updateProfile} disabled={updating} size="sm" className="bg-[#0F172A] text-white rounded-full px-4">{updating ? <Loader2 className="h-4 w-4 animate-spin"/> : "Guardar"}</Button>
+      <div className="fixed inset-0 z-[1000] bg-white flex flex-col animate-fade-in overflow-y-auto">
+        
+        {/* Header simple */}
+        <div className="flex items-center gap-4 p-4 sticky top-0 bg-white z-10 pt-safe">
+           <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="hover:bg-gray-50 -ml-2"><ArrowLeft className="h-6 w-6 text-gray-900" /></Button>
+           <h1 className="text-lg font-bold text-gray-900">Mis datos personales</h1>
         </div>
-        <div className="pb-24">
-            <div className="relative mb-16">
-                <div className="h-40 w-full transition-colors duration-500 shadow-inner" style={{ backgroundColor: profileColor }} />
-                <div className="absolute -bottom-12 left-0 right-0 flex justify-center">
-                    <div className="relative group">
-                         <div className="p-1 bg-white rounded-full shadow-lg"><ProfileAvatar size="xl" className="border-4 border-white" /></div>
-                         <label htmlFor="avatar-upload" className="absolute bottom-1 right-1 bg-[#F97316] text-white p-2.5 rounded-full cursor-pointer shadow-lg hover:bg-orange-600 transition-transform hover:scale-110 active:scale-95 border-2 border-white">{uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}</label>
-                         <input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={uploadAvatar} disabled={uploadingAvatar} />
+
+        <div className="pb-32 px-6 pt-4">
+            
+            {/* Visual Section: Avatar & Color */}
+            <div className="flex flex-col items-center mb-10">
+                <div className="relative group">
+                    {/* Ring showing profile color */}
+                    <div className="p-1.5 rounded-full border-2 border-dashed border-gray-200" style={{ borderColor: profileColor }}>
+                        <ProfileAvatar size="xl" className="border-4 border-white shadow-sm" />
+                    </div>
+                    
+                    <label 
+                        htmlFor="avatar-upload" 
+                        className="absolute bottom-0 right-0 bg-[#F97316] p-2.5 rounded-full cursor-pointer shadow-lg hover:bg-orange-600 transition-transform active:scale-95 border-2 border-white"
+                    >
+                        {uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <Camera className="h-4 w-4 text-white" />}
+                    </label>
+                    <input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={uploadAvatar} disabled={uploadingAvatar} />
+                </div>
+
+                <div className="mt-6 w-full max-w-xs">
+                    <p className="text-xs font-bold text-gray-400 text-center uppercase tracking-wider mb-3">Color de Portada</p>
+                    <div className="flex gap-3 overflow-x-auto p-2 no-scrollbar justify-center">
+                        {PROFILE_COLORS.map((color) => (
+                            <button 
+                                key={color.value} 
+                                onClick={() => setProfileColor(color.value)} 
+                                className={cn(
+                                    "w-8 h-8 rounded-full transition-all shadow-sm flex-shrink-0 border-2 border-white ring-1 ring-gray-100", 
+                                    profileColor === color.value ? "scale-110 ring-2 ring-offset-2 ring-gray-900 z-10" : "hover:scale-105"
+                                )} 
+                                style={{ backgroundColor: color.value }} 
+                            />
+                        ))}
                     </div>
                 </div>
             </div>
-            <div className="px-6 space-y-8 mt-4">
-                <div className="space-y-3 text-center">
-                   <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Color de Portada</Label>
-                   <div className="flex flex-wrap justify-center gap-3">
-                      {PROFILE_COLORS.map((color) => (
-                        <button key={color.value} onClick={() => setProfileColor(color.value)} className={cn("w-10 h-10 rounded-full transition-all shadow-sm flex items-center justify-center relative", profileColor === color.value ? "ring-2 ring-offset-2 ring-gray-900 scale-110" : "hover:scale-105")} style={{ backgroundColor: color.value }} title={color.name}>{profileColor === color.value && <Check className="h-5 w-5 text-white drop-shadow-md" />}</button>
-                      ))}
-                   </div>
-                </div>
-                <div className="space-y-5 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2"><Label className="text-gray-500 font-medium">Nombre</Label><Input value={firstName} onChange={e=>setFirstName(e.target.value)} className="h-11 bg-gray-50 border-gray-200 focus:bg-white transition-colors rounded-xl" /></div>
-                        <div className="space-y-2"><Label className="text-gray-500 font-medium">Apellido</Label><Input value={lastName} onChange={e=>setLastName(e.target.value)} className="h-11 bg-gray-50 border-gray-200 focus:bg-white transition-colors rounded-xl" /></div>
+
+            {/* Form Section - Clean Layout */}
+            <div className="space-y-8">
+                
+                {/* Section 1: Names */}
+                <div className="space-y-5">
+                    <h3 className="text-lg font-bold text-gray-900">¿Cómo te llamas?</h3>
+                    
+                    <div className="space-y-5">
+                        <div className="relative">
+                            <label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Nombre(s)*</label>
+                            <Input 
+                                value={firstName} 
+                                onChange={e => setFirstName(e.target.value)} 
+                                className="h-14 rounded-xl border-gray-300 focus-visible:ring-[#F97316] focus-visible:border-[#F97316] text-base px-4"
+                            />
+                        </div>
+
+                        <div className="relative">
+                            <label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Apellido(s)*</label>
+                            <Input 
+                                value={lastName} 
+                                onChange={e => setLastName(e.target.value)} 
+                                className="h-14 rounded-xl border-gray-300 focus-visible:ring-[#F97316] focus-visible:border-[#F97316] text-base px-4"
+                            />
+                        </div>
                     </div>
-                    <div className="space-y-2"><Label className="text-gray-500 font-medium">Teléfono</Label><div className="relative"><Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /><Input value={phone} onChange={e=>setPhone(e.target.value)} type="tel" className="pl-10 h-11 bg-gray-50 border-gray-200 focus:bg-white transition-colors rounded-xl" /></div></div>
-                    <div className="space-y-2"><Label className="text-gray-500 font-medium">Ciudad</Label><Select value={city} onValueChange={setCity}><SelectTrigger className="h-11 bg-gray-50 border-gray-200 focus:bg-white rounded-xl"><SelectValue placeholder="Selecciona tu ciudad"/></SelectTrigger><SelectContent className="bg-white max-h-[200px]">{DR_CITIES.map(c=><SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
                 </div>
+
+                {/* Section 2: Contact */}
+                <div className="space-y-5">
+                    <h3 className="text-lg font-bold text-gray-900">¿Dónde te contactamos?</h3>
+                    
+                    <div className="relative">
+                        <label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Teléfono móvil</label>
+                        <div className="relative">
+                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                            <Input 
+                                value={phone} 
+                                onChange={e => setPhone(e.target.value)} 
+                                type="tel"
+                                className="h-14 pl-12 rounded-xl border-gray-300 focus-visible:ring-[#F97316] focus-visible:border-[#F97316] text-base"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Section 3: Location */}
+                <div className="space-y-5">
+                    <h3 className="text-lg font-bold text-gray-900">¿Dónde te ubicas?</h3>
+                    
+                    <div className="relative">
+                        <label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Ciudad</label>
+                        <Select value={city} onValueChange={setCity}>
+                            <SelectTrigger className="h-14 rounded-xl border-gray-300 focus:ring-[#F97316] text-base px-4">
+                                <SelectValue placeholder="Selecciona..." />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white max-h-[250px]">
+                                {DR_CITIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+
             </div>
         </div>
+
+        {/* Fixed Bottom Button */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 pb-safe z-20 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.05)]">
+            <div className="max-w-md mx-auto">
+                <Button 
+                    onClick={updateProfile} 
+                    disabled={updating} 
+                    className="w-full h-12 rounded-full bg-[#F97316] hover:bg-orange-600 text-white font-bold text-lg shadow-lg shadow-orange-200 transition-all active:scale-95"
+                >
+                    {updating ? <Loader2 className="h-5 w-5 animate-spin" /> : "Guardar datos"}
+                </Button>
+            </div>
+        </div>
+
       </div>
     );
   }
