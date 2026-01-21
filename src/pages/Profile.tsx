@@ -78,6 +78,7 @@ const BOOST_OPTIONS = [
 
 const SLOT_LIMIT_FREE = 5;
 const SLOT_LIMIT_PLUS = 10;
+const TOTAL_DISPLAY_SLOTS = 10; // Siempre mostramos 10 espacios (5 normales + 5 plus)
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -134,6 +135,7 @@ const Profile = () => {
   const [pushEnabled, setPushEnabled] = useState(true);
   const [emailEnabled, setEmailEnabled] = useState(true);
 
+  // maxSlots define cuántos puede USAR realmente, pero visualmente mostraremos TOTAL_DISPLAY_SLOTS
   const maxSlots = isPlus ? SLOT_LIMIT_PLUS : SLOT_LIMIT_FREE;
 
   useEffect(() => {
@@ -887,14 +889,23 @@ const Profile = () => {
               <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
                 <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Publicaciones</h1></div></div>
                 <div className="p-4 space-y-4 pb-24">
-                   <div className="flex items-center justify-between px-1"><span className="text-sm font-medium text-gray-500">Espacios utilizados</span><span className="text-sm font-bold text-gray-900">{myServices.length} / {maxSlots}</span></div>
-                   {Array.from({ length: maxSlots }).map((_, index) => {
+                   <div className="flex items-center justify-between px-1"><span className="text-sm font-medium text-gray-500">Espacios disponibles</span><span className="text-sm font-bold text-gray-900">{myServices.length} / {isPlus ? 10 : 5} activos</span></div>
+                   
+                   {/* Siempre renderizamos 10 espacios (5 normales + 5 plus) */}
+                   {Array.from({ length: TOTAL_DISPLAY_SLOTS }).map((_, index) => {
                      const s = myServices[index];
+                     const isPlusSlot = index >= SLOT_LIMIT_FREE; // Espacios 6-10 son Plus
+                     const isLocked = isPlusSlot && !isPlus; // Si es slot Plus y el user no es Plus, está bloqueado
+
+                     // CASO 1: Hay un servicio publicado en este slot
                      if (s) {
                        const isPromoted = s.is_promoted && s.promoted_until && new Date(s.promoted_until) > new Date();
                        return (
                          <div key={s.id} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-6 group relative">
                            {isPromoted && (<div className="absolute top-3 left-3 bg-[#F97316] text-white text-xs font-bold px-3 py-1.5 rounded-full z-10 flex items-center gap-1 shadow-lg shadow-orange-500/20"><Crown className="h-3 w-3 fill-white" /> DESTACADO</div>)}
+                           {/* Si es un slot plus ocupado, mostramos el badge también */}
+                           {isPlusSlot && (<div className="absolute top-3 right-3 bg-[#0239c7] text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10 shadow-sm border border-white/20">PLUS SLOT</div>)}
+                           
                            <div className="w-full h-48 bg-gray-100"><img src={s.image_url || "/placeholder.svg"} className="w-full h-full object-cover cursor-pointer" onClick={()=>navigate(`/service/${s.id}`)}/></div>
                            <div className="p-5">
                                <div className="flex justify-between items-start mb-3"><h3 className="font-bold text-gray-900 text-lg flex-1 mr-4 truncate">{s.title}</h3><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400"><MoreHorizontal className="h-5 w-5" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end" className="rounded-xl w-48 p-2 z-[1100]"><DropdownMenuItem onClick={()=>navigate(`/service/${s.id}`)} className="rounded-lg h-10"><Check className="mr-2 h-4 w-4" /> Ver detalle</DropdownMenuItem><DropdownMenuItem onClick={()=>handleEditService(s.id)} className="rounded-lg h-10"><Edit2 className="mr-2 h-4 w-4" /> Editar</DropdownMenuItem><DropdownMenuItem className="text-red-600 rounded-lg h-10" onClick={()=>handleClickDelete(s)}><Trash2 className="mr-2 h-4 w-4" /> Eliminar</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div>
@@ -907,8 +918,41 @@ const Profile = () => {
                            </div>
                          </div>
                        );
-                     } else {
-                       return (<div key={`empty-${index}`} onClick={() => navigate('/publish')} className="h-32 rounded-3xl border-2 border-dashed border-gray-200 bg-gray-50 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-100"><Plus className="h-6 w-6 text-gray-400" /><span className="text-sm font-medium text-gray-400">Crear nuevo servicio</span></div>);
+                     } 
+                     
+                     // CASO 2: Slot vacío pero BLOQUEADO (Usuario no es Plus)
+                     else if (isLocked) {
+                        return (
+                           <div key={`locked-${index}`} onClick={() => setView('serviapp-plus')} className="h-32 rounded-3xl border border-gray-100 bg-gray-50 flex flex-col items-center justify-center gap-2 cursor-pointer relative overflow-hidden group">
+                               <div className="absolute inset-0 bg-white/40 group-hover:bg-white/0 transition-colors" />
+                               <div className="absolute top-3 right-3"><Lock className="h-4 w-4 text-gray-400" /></div>
+                               <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
+                                   <Crown className="h-5 w-5 text-gray-500" />
+                               </div>
+                               <span className="text-sm font-bold text-gray-500">Espacio Exclusivo Plus</span>
+                               <span className="text-xs text-[#0239c7] font-semibold group-hover:underline">Mejorar a Plus</span>
+                           </div>
+                        );
+                     }
+
+                     // CASO 3: Slot vacío y DISPONIBLE (Normal o Plus habilitado)
+                     else {
+                       return (
+                           <div key={`empty-${index}`} onClick={() => navigate('/publish')} className={cn(
+                               "h-32 rounded-3xl border-2 border-dashed flex flex-col items-center justify-center gap-2 cursor-pointer transition-all relative",
+                               isPlusSlot 
+                                ? "border-blue-200 bg-blue-50/50 hover:bg-blue-50" // Estilo para slot plus habilitado
+                                : "border-gray-200 bg-gray-50 hover:bg-gray-100" // Estilo normal
+                           )}>
+                               {isPlusSlot && <div className="absolute top-3 right-3 bg-[#0239c7] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm">PLUS</div>}
+                               <div className={cn("p-2 rounded-full", isPlusSlot ? "bg-blue-100 text-[#0239c7]" : "bg-white text-gray-400")}>
+                                   <Plus className="h-6 w-6" />
+                               </div>
+                               <span className={cn("text-sm font-medium", isPlusSlot ? "text-[#0239c7]" : "text-gray-400")}>
+                                   Crear nuevo servicio
+                               </span>
+                           </div>
+                       );
                      }
                    })}
                 </div>
