@@ -574,15 +574,26 @@ const Publish = () => {
     <div className="min-h-screen bg-white pb-safe">
       <AlertDialog open={showPublishWelcome} onOpenChange={setShowPublishWelcome}>
         <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto border-0 shadow-2xl">
-          <AlertDialogHeader className="text-center">
+          <AlertDialogHeader className="text-left">
             <div className="mx-auto bg-orange-100 w-12 h-12 rounded-full flex items-center justify-center mb-2"><Rocket className="h-6 w-6 text-[#F97316]" /></div>
-            <AlertDialogTitle className="text-xl font-bold text-center text-gray-900">¡Sé un pionero!</AlertDialogTitle>
-            <AlertDialogDescription className="text-center text-gray-600 mt-2 space-y-2">
-              <p>Al ser de los primeros en publicar en ServiAPP, tendrás una ventaja única cuando lleguen más usuarios.</p>
-              <p className="text-sm font-medium text-orange-800">¡Ayúdanos a llenar la app de buenos servicios!</p>
+            <AlertDialogTitle className="text-xl font-bold text-center text-gray-900">¡Estás a punto de crecer con nosotros! 📈</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-600 mt-4 space-y-4 text-sm">
+              <p className="text-center pb-2">Antes de publicar, recuerda:</p>
+              <div>
+                <p className="font-bold">Paciencia:</p>
+                <p>ServiAPP es una plataforma nueva. Los primeros días estamos enfocados en traer a los mejores profesionales como tú. Las solicitudes de clientes empezarán a llegar a medida que más personas descarguen la app en tu sector.</p>
+              </div>
+              <div>
+                <p className="font-bold">Perfil Completo:</p>
+                <p>Mientras más fotos realistas de tus trabajos subas, más confianza darás a los primeros usuarios que entren.</p>
+              </div>
+              <div>
+                <p className="font-bold">Apoyo Total:</p>
+                <p>Si necesitas ayuda para mejorar tu anuncio, usa el botón de "Ayuda" en tu perfil.</p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter><AlertDialogAction onClick={handleClosePublishWelcome} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl font-bold h-12">¡Vamos a ello!</AlertDialogAction></AlertDialogFooter>
+          <AlertDialogFooter><AlertDialogAction onClick={handleClosePublishWelcome} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl font-bold h-12">¡Entendido!</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 

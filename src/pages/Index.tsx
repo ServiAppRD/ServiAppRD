@@ -280,10 +280,15 @@ const Index = () => {
         <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto">
           <AlertDialogHeader className="text-center">
             <div className="mx-auto bg-orange-100 w-12 h-12 rounded-full flex items-center justify-center mb-2"><Info className="h-6 w-6 text-[#F97316]" /></div>
-            <AlertDialogTitle className="text-xl font-bold text-center">¡Bienvenido a ServiAPP!</AlertDialogTitle>
-            <AlertDialogDescription className="text-center text-gray-600 mt-2">
-              <p className="mb-2">Estamos creciendo día a día.</p>
-              <p className="mt-2 text-xs bg-gray-50 p-2 rounded-lg border border-gray-100">Si publicas un servicio, ayudas a que la comunidad crezca.</p>
+            <AlertDialogTitle className="text-xl font-bold text-center">¡Bienvenido a la comunidad ServiAPP!</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-gray-600 mt-2 space-y-3 text-sm">
+              <p>¡Hola! Estás entrando en la primera etapa de una plataforma hecha por y para dominicanos.</p>
+              <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 text-xs">
+                <p className="font-bold mb-1">Nota importante:</p>
+                <p>Como estamos lanzando oficialmente hoy, es posible que aún no encuentres técnicos en todos los sectores. Estamos verificando profesionales cada hora para asegurar tu seguridad.</p>
+              </div>
+              <p>🚀 <strong>¿Eres profesional?</strong> ¡Sé de los primeros en ofrecer tus servicios y domina tu zona desde el principio!</p>
+              <p className="text-xs pt-2">Gracias por ser parte del inicio de algo grande.</p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter><AlertDialogAction onClick={handleCloseWelcome} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl">Entendido</AlertDialogAction></AlertDialogFooter>
