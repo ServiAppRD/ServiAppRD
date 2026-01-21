@@ -22,8 +22,8 @@
 
 /* 
   Ajuste para Android/iOS: 
-  Aumentado a 45px para garantizar que no toque la barra de estado/batería.
+  Aumentado a 64px para garantizar espacio suficiente para notch/isla dinámica y barra de estado.
 */
 .pt-safe {
-  padding-top: max(45px, env(safe-area-inset-top));
+  padding-top: max(64px, env(safe-area-inset-top));
 }
