@@ -1,4 +1,4 @@
-import { Heart } from "lucide-react";
+import { Heart, Crown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,9 +11,10 @@ interface ServiceCardProps {
   price: string;
   image: string;
   badge?: { text: string; color: "yellow" | "blue" | "orange" | "gray" };
+  ownerIsPlus?: boolean;
 }
 
-export const ServiceCard = ({ id, title, price, image, badge }: ServiceCardProps) => {
+export const ServiceCard = ({ id, title, price, image, badge, ownerIsPlus }: ServiceCardProps) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -66,7 +67,8 @@ export const ServiceCard = ({ id, title, price, image, badge }: ServiceCardProps
           className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
         />
         
-        {badge && (
+        {/* Prioridad: Badge de Boost > Badge de Plus */}
+        {badge ? (
           <Badge 
             className={`absolute top-2 left-2 border-0 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md shadow-sm ${
               badge.color === "yellow" 
@@ -80,7 +82,11 @@ export const ServiceCard = ({ id, title, price, image, badge }: ServiceCardProps
           >
             {badge.text}
           </Badge>
-        )}
+        ) : ownerIsPlus ? (
+          <Badge className="absolute top-2 left-2 border-0 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md shadow-sm bg-[#0239c7] text-white hover:bg-[#022b9e] flex items-center gap-1">
+            <Crown className="h-3 w-3 fill-white" /> PLUS
+          </Badge>
+        ) : null}
 
         <button 
           onClick={toggleFavorite}

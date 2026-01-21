@@ -146,7 +146,7 @@ const Index = () => {
     queryFn: async () => {
       const blockedIds = await getBlockedIds();
       const now = new Date().toISOString();
-      let query = supabase.from('services').select('*').eq('is_promoted', true).gt('promoted_until', now).is('deleted_at', null).order('promoted_until', { ascending: true }).limit(10);
+      let query = supabase.from('services').select('*, profiles(is_plus)').eq('is_promoted', true).gt('promoted_until', now).is('deleted_at', null).order('promoted_until', { ascending: true }).limit(10);
       
       if (blockedIds.length > 0) query = query.not('user_id', 'in', `(${blockedIds.join(',')})`);
       
@@ -161,7 +161,7 @@ const Index = () => {
     queryFn: async () => {
       const blockedIds = await getBlockedIds();
       const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-      let query = supabase.from('services').select('*').gt('created_at', yesterday.toISOString()).is('deleted_at', null).order('created_at', { ascending: false }).limit(10);
+      let query = supabase.from('services').select('*, profiles(is_plus)').gt('created_at', yesterday.toISOString()).is('deleted_at', null).order('created_at', { ascending: false }).limit(10);
       
       if (blockedIds.length > 0) query = query.not('user_id', 'in', `(${blockedIds.join(',')})`);
 
@@ -176,7 +176,7 @@ const Index = () => {
     queryFn: async () => {
       if (!recommendedCategory) return [];
       const blockedIds = await getBlockedIds();
-      let query = supabase.from('services').select('*').eq('category', recommendedCategory).is('deleted_at', null).limit(10);
+      let query = supabase.from('services').select('*, profiles(is_plus)').eq('category', recommendedCategory).is('deleted_at', null).limit(10);
       
       if (blockedIds.length > 0) query = query.not('user_id', 'in', `(${blockedIds.join(',')})`);
 
@@ -362,9 +362,16 @@ const Index = () => {
           <section>
             <SectionHeader title="Profesionales Destacados" icon={Crown} />
             <ResponsiveGrid isLoading={loadingFeatured} emptyMessage="¡Vaya! Parece que no hay servicios destacados aún. ¿Quieres ser el primero?" icon={Crown}>
-              {featuredServices?.map((item) => (
+              {featuredServices?.map((item: any) => (
                   <div key={item.id} onClick={() => navigate(`/service/${item.id}`)} className="h-full">
-                    <ServiceCard id={item.id} title={item.title} price={`RD$ ${item.price}`} image={item.image_url || "/placeholder.svg"} badge={{ text: "Top", color: "orange" }} />
+                    <ServiceCard 
+                        id={item.id} 
+                        title={item.title} 
+                        price={`RD$ ${item.price}`} 
+                        image={item.image_url || "/placeholder.svg"} 
+                        badge={{ text: "Top", color: "orange" }} 
+                        ownerIsPlus={item.profiles?.is_plus}
+                    />
                   </div>
               ))}
             </ResponsiveGrid>
@@ -374,9 +381,16 @@ const Index = () => {
           <section className="-mt-2 md:mt-0">
             <SectionHeader title="Recién Publicados" icon={Clock} />
             <ResponsiveGrid isLoading={loadingRecent} emptyMessage="¡Vaya! Parece que no hay servicios recientes aún. ¿Quieres ser el primero?" icon={Clock}>
-              {recentServices?.map((item) => (
+              {recentServices?.map((item: any) => (
                   <div key={item.id} onClick={() => navigate(`/service/${item.id}`)} className="h-full">
-                    <ServiceCard id={item.id} title={item.title} price={`RD$ ${item.price}`} image={item.image_url || "/placeholder.svg"} badge={{ text: "Nuevo", color: "blue" }} />
+                    <ServiceCard 
+                        id={item.id} 
+                        title={item.title} 
+                        price={`RD$ ${item.price}`} 
+                        image={item.image_url || "/placeholder.svg"} 
+                        badge={{ text: "Nuevo", color: "blue" }} 
+                        ownerIsPlus={item.profiles?.is_plus}
+                    />
                   </div>
               ))}
             </ResponsiveGrid>
@@ -386,9 +400,15 @@ const Index = () => {
           <section className="-mt-2 md:mt-0">
             <SectionHeader title={recommendedCategory ? `Porque buscaste: ${recommendedCategory}` : "Recomendados para ti"} icon={Sparkles} />
             <ResponsiveGrid isLoading={loadingRecommended} emptyMessage={recommendedCategory ? "¡Vaya! Parece que no hay recomendaciones aún. ¿Quieres ser el primero?" : "Explora categorías para recibir recomendaciones."} icon={Sparkles}>
-              {recommendedServices?.map((item) => (
+              {recommendedServices?.map((item: any) => (
                   <div key={item.id} onClick={() => navigate(`/service/${item.id}`)} className="h-full">
-                    <ServiceCard id={item.id} title={item.title} price={`RD$ ${item.price}`} image={item.image_url} />
+                    <ServiceCard 
+                        id={item.id} 
+                        title={item.title} 
+                        price={`RD$ ${item.price}`} 
+                        image={item.image_url} 
+                        ownerIsPlus={item.profiles?.is_plus}
+                    />
                   </div>
               ))}
             </ResponsiveGrid>

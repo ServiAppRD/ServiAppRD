@@ -1,7 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, PlusCircle, User, Heart, Bell } from "lucide-react";
+import { Search, PlusCircle, User, Heart, Crown } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,14 +12,18 @@ export const DesktopNavbar = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [user, setUser] = useState<any>(null);
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [isPlus, setIsPlus] = useState(false);
 
   useEffect(() => {
     const getUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         setUser(session.user);
-        const { data } = await supabase.from('profiles').select('avatar_url').eq('id', session.user.id).single();
-        if (data) setAvatarUrl(data.avatar_url);
+        const { data } = await supabase.from('profiles').select('avatar_url, is_plus').eq('id', session.user.id).single();
+        if (data) {
+           setAvatarUrl(data.avatar_url);
+           setIsPlus(data.is_plus || false);
+        }
       }
     };
     getUser();
@@ -78,10 +82,18 @@ export const DesktopNavbar = () => {
           {user ? (
             <Link to="/profile" className="flex items-center gap-3 ml-2 pl-2 border-l border-gray-100 cursor-pointer hover:opacity-80 transition-opacity">
               <div className="text-right hidden lg:block">
-                <p className="text-xs font-bold text-gray-900">Mi Cuenta</p>
+                <div className="flex items-center justify-end gap-1">
+                   <p className="text-xs font-bold text-gray-900">Mi Cuenta</p>
+                   {isPlus && (
+                      <span className="bg-[#0239c7] text-white text-[9px] px-1.5 py-0.5 rounded-full font-black flex items-center gap-0.5">
+                         <Crown className="h-2 w-2 fill-white" />
+                         PLUS
+                      </span>
+                   )}
+                </div>
                 <p className="text-[10px] text-gray-500">Gestión</p>
               </div>
-              <Avatar className="h-10 w-10 border-2 border-orange-100">
+              <Avatar className={`h-10 w-10 border-2 ${isPlus ? "border-[#0239c7]" : "border-orange-100"}`}>
                 <AvatarImage src={avatarUrl} />
                 <AvatarFallback className="bg-orange-50 text-[#F97316] font-bold">
                     <User className="h-5 w-5" />
