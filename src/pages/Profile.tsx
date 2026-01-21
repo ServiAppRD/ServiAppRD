@@ -13,7 +13,7 @@ import {
   ArrowLeft, Edit2, Briefcase, Trash2, Camera, Zap, Check,
   Clock, TrendingUp, Crown, BarChart3, ShieldCheck, Eye, MousePointerClick, CalendarRange,
   AlertTriangle, Hammer, Lock, Shield, MoreHorizontal, FileText, Bell, CreditCard, Sparkles, X,
-  Plus, Rocket as RocketIcon, Calendar, MessageCircle
+  Plus, Rocket as RocketIcon, Calendar, MessageCircle, Settings
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
