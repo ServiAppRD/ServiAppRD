@@ -1,4 +1,4 @@
-import { X, Smartphone, Play } from "lucide-react";
+import { X, Smartphone } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export const InstallAppBanner = () => {
@@ -15,36 +15,48 @@ export const InstallAppBanner = () => {
   if (!show) return null;
 
   return (
-    <div className="hidden md:block bg-[#0F172A] border-b border-gray-800 relative z-40 animate-fade-in">
-        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between text-white">
-            <div className="flex items-center gap-4">
-                <div className="bg-white/10 p-2 rounded-xl">
-                    <Smartphone className="h-5 w-5 text-[#F97316]" />
+    <div className="hidden md:block w-full bg-white animate-fade-in">
+        {/* Contenedor limitado al ancho de la web (max-w-7xl) */}
+        <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="bg-[#0F172A] rounded-2xl p-4 md:px-8 flex items-center justify-between text-white shadow-xl relative overflow-hidden">
+                
+                {/* Decoración de fondo */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#F97316] rounded-full blur-[80px] opacity-10 -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+
+                <div className="flex items-center gap-5 relative z-10">
+                    <div className="bg-white/10 p-3 rounded-xl border border-white/5 backdrop-blur-sm">
+                        <Smartphone className="h-6 w-6 text-[#F97316]" />
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-lg leading-tight">Descarga ServiAPP</h3>
+                        <p className="text-sm text-gray-400 mt-1">La mejor experiencia para contratar servicios, ahora en tu celular.</p>
+                    </div>
                 </div>
-                <div>
-                    <p className="font-bold text-sm leading-tight">Descarga ServiAPP en tu celular</p>
-                    <p className="text-xs text-gray-400 leading-tight mt-0.5">La mejor experiencia para contratar servicios.</p>
+
+                <div className="flex items-center gap-6 relative z-10">
+                    <a 
+                        href="https://play.google.com/store/apps" 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="transition-transform hover:scale-105"
+                    >
+                        <img 
+                            src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
+                            alt="Disponible en Google Play" 
+                            className="h-12 w-auto"
+                        />
+                    </a>
+                    <button 
+                        onClick={() => {
+                            setShow(false);
+                            localStorage.setItem('hideInstallBanner', 'true');
+                        }}
+                        className="p-2 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors"
+                        aria-label="Cerrar anuncio"
+                    >
+                        <X className="h-5 w-5" />
+                    </button>
                 </div>
-            </div>
-            <div className="flex items-center gap-4">
-                <a 
-                    href="https://play.google.com/store/apps" 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="flex items-center gap-2 bg-[#F97316] hover:bg-orange-600 text-white px-5 py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-orange-900/20 hover:scale-105"
-                >
-                    <Play className="h-3 w-3 fill-current" />
-                    Instalar en Play Store
-                </a>
-                <button 
-                    onClick={() => {
-                        setShow(false);
-                        localStorage.setItem('hideInstallBanner', 'true');
-                    }}
-                    className="p-1.5 hover:bg-white/10 rounded-full text-gray-500 hover:text-white transition-colors"
-                >
-                    <X className="h-4 w-4" />
-                </button>
             </div>
         </div>
     </div>
