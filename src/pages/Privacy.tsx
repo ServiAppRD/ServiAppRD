@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Shield } from "lucide-react";
+import { ArrowLeft, Shield, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Privacy = () => {
@@ -21,26 +21,65 @@ const Privacy = () => {
           </div>
 
           <div className="prose prose-blue max-w-none text-gray-600">
-            <p className="lead text-lg text-gray-800 font-medium">Tu privacidad es nuestra prioridad.</p>
+            <p className="lead text-lg text-gray-800 font-medium">Última actualización: 21/1/2026</p>
+            <p>Esta política explica cómo ServiAPP recopila, usa y protege tus datos.</p>
             
             <h3>1. Información que recopilamos</h3>
-            <p>Recopilamos información que nos proporcionas directamente, como tu nombre, correo electrónico, número de teléfono y datos de ubicación cuando publicas un servicio. También recopilamos datos técnicos sobre tu dispositivo y uso de la app para mejorar el rendimiento.</p>
+            <p>Podemos recopilar:</p>
+            <ul className="list-disc pl-5 mt-2 space-y-1">
+                <li>Nombre y apellido</li>
+                <li>Número de teléfono</li>
+                <li>Correo electrónico</li>
+                <li>Fotos de perfil</li>
+                <li>Datos de servicios publicados</li>
+                <li>Reseñas y calificaciones</li>
+                <li>Uso de la app</li>
+            </ul>
+            <p className="mt-2">No recopilamos información sensible sin tu consentimiento.</p>
 
-            <h3>2. Uso de la información</h3>
-            <p>Utilizamos tu información para:
-              <ul className="list-disc pl-5 mt-2 space-y-1">
-                <li>Proporcionar, mantener y mejorar nuestros servicios.</li>
-                <li>Procesar transacciones y enviar notificaciones relacionadas.</li>
-                <li>Verificar tu identidad y prevenir fraudes.</li>
-                <li>Responder a tus comentarios y preguntas.</li>
-              </ul>
-            </p>
+            <h3>2. Cómo usamos tu información</h3>
+            <p>Usamos tus datos para:</p>
+            <ul className="list-disc pl-5 mt-2 space-y-1">
+                <li>Permitir la publicación de servicios</li>
+                <li>Mostrar tu perfil a otros usuarios</li>
+                <li>Verificar identidad</li>
+                <li>Mejorar la experiencia de la app</li>
+                <li>Evitar fraudes y abusos</li>
+            </ul>
 
-            <h3>3. Compartir información</h3>
-            <p>No vendemos tus datos personales. Solo compartimos tu información pública (perfil de servicio) con otros usuarios para facilitar la conexión laboral. Podemos compartir datos con autoridades si es requerido por ley.</p>
+            <h3>3. Compartición de datos</h3>
+            <p>No vendemos tus datos personales a terceros.</p>
+            <p>Podemos compartir información cuando sea necesario para:</p>
+            <ul className="list-disc pl-5 mt-2 space-y-1">
+                <li>Cumplir con la ley</li>
+                <li>Prevenir fraudes</li>
+                <li>Mantener la seguridad de la app</li>
+            </ul>
 
-            <h3>4. Seguridad de datos</h3>
-            <p>Implementamos medidas de seguridad técnicas y organizativas para proteger tus datos personales contra el acceso no autorizado, la pérdida o alteración.</p>
+            <h3>4. Almacenamiento de datos</h3>
+            <p>Tus datos se almacenan en servidores seguros.</p>
+            <p>ServiAPP toma medidas técnicas para proteger tu información.</p>
+
+            <h3>5. Eliminación de datos</h3>
+            <p>Puedes solicitar la eliminación total de tus datos desde:</p>
+            <ul className="list-disc pl-5 mt-2 space-y-1">
+                <li>La app</li>
+                <li>O escribiendo al correo de soporte</li>
+            </ul>
+
+            <h3>6. Uso por menores de edad</h3>
+            <p>Si eres menor de 18 años, debes usar ServiAPP con autorización de tus padres o tutor legal.</p>
+
+            <h3>7. Cambios en la política</h3>
+            <p>ServiAPP puede actualizar esta política en cualquier momento.</p>
+            <p>Te notificaremos dentro de la app si hay cambios importantes.</p>
+
+            <h3>8. Contacto</h3>
+            <p>Si tienes preguntas sobre tu privacidad:</p>
+            <div className="flex items-center gap-2 mt-2 font-medium text-blue-600">
+                <Mail className="h-4 w-4" />
+                <a href="mailto:serviapp.help@gmail.com" className="hover:underline">serviapp.help@gmail.com</a>
+            </div>
           </div>
         </div>
       </div>
