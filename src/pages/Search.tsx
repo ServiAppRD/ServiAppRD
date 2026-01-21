@@ -1,4 +1,3 @@
-Sector) con botones grandes y scroll nativo para mejor UX móvil.">
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
