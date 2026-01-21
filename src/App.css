@@ -19,13 +19,3 @@
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom);
 }
-
-/* 
-  Ajuste para Android/iOS:
-  Añade un padding base de 1rem (16px) para la barra de estado de Android,
-  y suma el espacio del notch/isla en iOS.
-*/
-.pt-safe {
-  padding-top: 1rem; /* Fallback y base para Android */
-  padding-top: calc(1rem + env(safe-area-inset-top)); /* Espacio extra para iOS */
-}
