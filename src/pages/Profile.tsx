@@ -10,10 +10,10 @@ import { showSuccess, showError } from "@/utils/toast";
 import { 
   Loader2, LogOut, User, Phone, MapPin, Heart, 
   HelpCircle, ChevronRight, Star, 
-  ArrowLeft, Settings, Edit2, Briefcase, Trash2, Camera, Zap, Check,
+  ArrowLeft, Edit2, Briefcase, Trash2, Camera, Zap, Check,
   Clock, TrendingUp, Crown, BarChart3, ShieldCheck, Eye, MousePointerClick, CalendarRange,
   AlertTriangle, Hammer, Lock, Shield, MoreHorizontal, FileText, Bell, CreditCard, Sparkles, X,
-  Plus, Palette, Rocket as RocketIcon, Calendar
+  Plus, Rocket as RocketIcon, Calendar, MessageCircle
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,6 +21,12 @@ import { ServiceCard } from "@/components/ServiceCard";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   Dialog,
   DialogContent,
@@ -85,7 +91,7 @@ const Profile = () => {
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   
-  const [view, setView] = useState<'dashboard' | 'edit' | 'preview' | 'my-services' | 'reputation' | 'favorites' | 'metrics' | 'verification' | 'account-settings' | 'change-password' | 'serviapp-plus' | 'my-plan' | 'notifications'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'edit' | 'preview' | 'my-services' | 'reputation' | 'favorites' | 'metrics' | 'verification' | 'account-settings' | 'change-password' | 'serviapp-plus' | 'my-plan' | 'notifications' | 'help'>('dashboard');
   
   const [session, setSession] = useState<any>(null);
   
@@ -136,7 +142,6 @@ const Profile = () => {
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [transactions, setTransactions] = useState<any[]>([]);
 
-  // maxSlots define cuántos puede USAR realmente
   const maxSlots = isPlus ? SLOT_LIMIT_PLUS : SLOT_LIMIT_FREE;
 
   useEffect(() => {
@@ -325,7 +330,6 @@ const Profile = () => {
           const nextMonth = new Date();
           nextMonth.setMonth(nextMonth.getMonth() + 1);
 
-          // 1. Update Profile
           const { error } = await supabase.from('profiles').update({ 
               is_plus: true, 
               plus_expires_at: nextMonth.toISOString()
@@ -333,7 +337,6 @@ const Profile = () => {
           
           if (error) throw error;
 
-          // 2. Record Transaction
           await supabase.from('transactions').insert({
               user_id: session.user.id,
               amount: 499,
@@ -424,7 +427,6 @@ const Profile = () => {
         const now = new Date();
         const futureDate = new Date(now.getTime() + option.duration * 60 * 60 * 1000);
 
-        // 1. Update Service
         const { error } = await supabase
             .from('services')
             .update({ is_promoted: true, promoted_until: futureDate.toISOString() })
@@ -432,7 +434,6 @@ const Profile = () => {
         
         if (error) throw error;
 
-        // 2. Record Transaction
         await supabase.from('transactions').insert({
             user_id: session.user.id,
             amount: option.price,
@@ -533,7 +534,6 @@ const Profile = () => {
     }
   };
 
-  // --- UPDATED HANDLER ---
   const handleEditService = (serviceId: string) => {
      navigate(`/edit-service/${serviceId}`);
   };
@@ -556,10 +556,97 @@ const Profile = () => {
 
   if (loading) return <div className="min-h-screen bg-white flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[#F97316]" /></div>;
 
-  // --- HELPERS PARA RENDERIZADO DE VISTAS ---
-
   const renderCurrentView = () => {
       switch (view) {
+          case 'help':
+            return (
+                <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
+                   <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12">
+                      <div className="flex items-center gap-3">
+                         <Button variant="ghost" size="icon" onClick={() => setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button>
+                         <h1 className="text-lg font-bold">Centro de Ayuda</h1>
+                      </div>
+                   </div>
+                   <div className="p-5 space-y-6 pb-24">
+                       <div className="text-center space-y-2 py-4">
+                           <div className="bg-orange-100 w-16 h-16 rounded-3xl flex items-center justify-center mx-auto text-[#F97316] mb-2">
+                               <HelpCircle className="h-8 w-8" />
+                           </div>
+                           <h2 className="text-xl font-bold text-gray-900">¿Cómo podemos ayudarte?</h2>
+                           <p className="text-sm text-gray-500">Encuentra respuestas a las dudas más comunes.</p>
+                       </div>
+
+                       <Accordion type="single" collapsible className="w-full space-y-3">
+                            <AccordionItem value="item-1" className="bg-white border rounded-2xl px-4 py-1 shadow-sm border-gray-100">
+                                <AccordionTrigger className="hover:no-underline font-bold text-gray-800 text-left">¿Cómo contacto a un técnico?</AccordionTrigger>
+                                <AccordionContent className="text-gray-600 leading-relaxed pt-2">
+                                    Es muy sencillo. Solo tienes que buscar el servicio que necesitas, entrar a su publicación y en la parte inferior verás los botones de <span className="font-bold text-green-600">WhatsApp</span> y <span className="font-bold text-gray-900">Llamar</span>. El contacto es directo con el profesional.
+                                </AccordionContent>
+                            </AccordionItem>
+
+                            <AccordionItem value="item-2" className="bg-white border rounded-2xl px-4 py-1 shadow-sm border-gray-100">
+                                <AccordionTrigger className="hover:no-underline font-bold text-gray-800 text-left">¿Es seguro contratar por aquí?</AccordionTrigger>
+                                <AccordionContent className="text-gray-600 leading-relaxed pt-2 space-y-3">
+                                    <p>En ServiAPP trabajamos para que sea seguro. Contamos con dos sistemas clave:</p>
+                                    <ul className="list-disc pl-5 space-y-1">
+                                        <li><span className="font-bold">Reseñas reales:</span> Mira las estrellas y comentarios que otros clientes han dejado en el perfil del técnico.</li>
+                                        <li><span className="font-bold text-[#0239c7]">Sello Plus:</span> Los usuarios Plus han verificado su información con nosotros.</li>
+                                    </ul>
+                                    <p className="text-xs italic bg-gray-50 p-2 rounded-lg border">Consejo: Nunca pagues por adelantado sin haber conocido al técnico o revisado su trabajo.</p>
+                                </AccordionContent>
+                            </AccordionItem>
+
+                            <AccordionItem value="item-3" className="bg-white border rounded-2xl px-4 py-1 shadow-sm border-gray-100">
+                                <AccordionTrigger className="hover:no-underline font-bold text-gray-800 text-left">¿Qué hago si un técnico no llega?</AccordionTrigger>
+                                <AccordionContent className="text-gray-600 leading-relaxed pt-2">
+                                    ServiAPP es una plataforma de contacto, por lo que no gestionamos directamente las citas. Si un profesional no cumple:
+                                    <ol className="list-decimal pl-5 mt-2 space-y-2">
+                                        <li>Intenta contactarlo por WhatsApp.</li>
+                                        <li>Deja una reseña en su perfil explicando lo sucedido para alertar a otros.</li>
+                                        <li>Usa el botón de <span className="font-bold text-red-500">Reportar</span> en su anuncio si sospechas de una estafa.</li>
+                                    </ol>
+                                </AccordionContent>
+                            </AccordionItem>
+
+                            <AccordionItem value="item-4" className="bg-white border rounded-2xl px-4 py-1 shadow-sm border-gray-100">
+                                <AccordionTrigger className="hover:no-underline font-bold text-gray-800 text-left">¿Cómo funcionan los Boosts?</AccordionTrigger>
+                                <AccordionContent className="text-gray-600 leading-relaxed pt-2">
+                                    Los Boosts sirven para que tu anuncio aparezca en los **primeros lugares** de la búsqueda y en la sección de destacados de la pantalla principal. Puedes elegir duraciones de <span className="font-bold">24 horas, 3 días o 7 días</span>. Al terminar el tiempo, tu anuncio volverá a su posición normal.
+                                </AccordionContent>
+                            </AccordionItem>
+
+                            <AccordionItem value="item-5" className="bg-white border rounded-2xl px-4 py-1 shadow-sm border-gray-100">
+                                <AccordionTrigger className="hover:no-underline font-bold text-gray-800 text-left">¿Por qué no veo mi anuncio?</AccordionTrigger>
+                                <AccordionContent className="text-gray-600 leading-relaxed pt-2">
+                                    Hay varias razones:
+                                    <ul className="list-disc pl-5 mt-2 space-y-2">
+                                        <li><span className="font-bold">Expiración:</span> Si tenías un Boost, este pudo haber terminado.</li>
+                                        <li><span className="font-bold">Revisión:</span> Si el anuncio infringe normas, puede ser pausado.</li>
+                                        <li><span className="font-bold">Límite:</span> Recuerda que el plan gratis permite hasta 5 anuncios activos.</li>
+                                    </ul>
+                                    Revisa la sección "Mis Publicaciones" para ver el estado actual.
+                                </AccordionContent>
+                            </AccordionItem>
+
+                            <AccordionItem value="item-6" className="bg-white border rounded-2xl px-4 py-1 shadow-sm border-gray-100">
+                                <AccordionTrigger className="hover:no-underline font-bold text-gray-800 text-left">¿Cómo verifico mi perfil?</AccordionTrigger>
+                                <AccordionContent className="text-gray-600 leading-relaxed pt-2">
+                                    Actualmente el sello de verificación se obtiene al suscribirse al **Plan Plus**. Muy pronto habilitaremos una verificación gratuita adicional mediante escaneo de documentos con IA para aumentar la confianza en tu perfil.
+                                </AccordionContent>
+                            </AccordionItem>
+                       </Accordion>
+
+                       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mt-4 text-center space-y-4">
+                           <h3 className="font-bold text-gray-900">¿Todavía tienes dudas?</h3>
+                           <p className="text-xs text-gray-500">Nuestro equipo de soporte está disponible por correo electrónico.</p>
+                           <Button variant="outline" className="w-full h-12 rounded-xl border-[#F97316] text-[#F97316] hover:bg-orange-50 font-bold" onClick={() => window.location.href = 'mailto:serviapp.help@gmail.com'}>
+                               <MessageCircle className="mr-2 h-5 w-5" /> Contactar Soporte
+                           </Button>
+                       </div>
+                   </div>
+                </div>
+            );
+
           case 'serviapp-plus':
             return (
                 <div className="fixed inset-0 z-[1000] bg-white flex flex-col animate-fade-in">
@@ -651,7 +738,6 @@ const Profile = () => {
             
             return (
                 <div className="fixed inset-0 z-[1000] bg-gray-100 flex flex-col animate-fade-in overflow-y-auto">
-                   {/* Header */}
                    <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center pt-6">
                       <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="-ml-2 mr-2">
                           <ArrowLeft className="h-6 w-6 text-black" />
@@ -660,7 +746,6 @@ const Profile = () => {
                    </div>
 
                    <div className="p-6">
-                       {/* Main Card */}
                        <div className="bg-white rounded-[2rem] p-6 shadow-sm mb-8">
                            <div className="w-16 h-16 bg-transparent rounded-2xl flex items-center justify-center mb-4 shadow-sm overflow-hidden">
                                <img src="/serviapp-s-logo.png" className="w-full h-full object-cover" alt="Logo" /> 
@@ -688,7 +773,6 @@ const Profile = () => {
                            </div>
                        </div>
 
-                       {/* Upgrade Banner if free */}
                        {!isPlus && (
                            <div onClick={() => setView('serviapp-plus')} className="bg-[#0239c7] rounded-[2rem] p-6 shadow-lg shadow-blue-200 mb-8 cursor-pointer flex items-center justify-between">
                                 <div className="text-white">
@@ -701,7 +785,6 @@ const Profile = () => {
                            </div>
                        )}
 
-                       {/* History Header */}
                        <div className="relative flex items-center justify-center mb-6">
                            <div className="bg-white px-4 rounded-full py-1 z-10 shadow-sm border border-gray-100">
                                <h3 className="text-sm font-black text-gray-900 uppercase tracking-wide">HISTORIAL DE PAGOS</h3>
@@ -711,9 +794,7 @@ const Profile = () => {
                            </div> 
                        </div>
 
-                       {/* History List */}
                        <div className="space-y-4 pb-24">
-                           {/* Plan Base siempre visible al fondo */}
                            {transactions.length === 0 && !isPlus && (
                               <div className="bg-white p-4 rounded-3xl w-full flex items-center justify-between shadow-sm opacity-70">
                                   <div className="flex items-center gap-4">
@@ -729,7 +810,6 @@ const Profile = () => {
                               </div>
                            )}
 
-                           {/* Render Transactions */}
                            {transactions.map((tx) => (
                               <div key={tx.id} className="bg-white p-4 rounded-3xl w-full flex items-center justify-between shadow-sm">
                                   <div className="flex items-center gap-4">
@@ -1022,7 +1102,7 @@ const Profile = () => {
                       <div className="flex-1"><p className="text-gray-400 text-sm">Bienvenido,</p><div className="flex items-center gap-1.5"><h1 className="text-2xl font-bold truncate max-w-[200px]">{firstName || 'Usuario'}</h1>{isPlus && <Badge className="bg-[#0239c7] text-white text-[10px]"><Crown className="h-3 w-3 mr-1" />PLUS</Badge>}</div></div>
                       <div onClick={() => setView('preview')} className="cursor-pointer relative"><ProfileAvatar size="md" className={isPlus ? "border-2 border-[#0239c7]" : "border-2 border-orange-100"} />{isPlus && (<div className="absolute -bottom-1 -right-1 bg-[#0239c7] text-white p-0.5 rounded-full border-2 border-white"><Crown className="h-3 w-3 fill-white" /></div>)}</div>
                     </div>
-                    <div className="flex justify-between gap-2 pb-2"><QuickAction icon={User} label="Perfil" onClick={() => setView('preview')} /><QuickAction icon={Star} label="Reputación" onClick={handleOpenReputation} /><QuickAction icon={Crown} label="ServiAPP Plus" onClick={() => setView('serviapp-plus')} /><QuickAction icon={HelpCircle} label="Ayuda" /></div>
+                    <div className="flex justify-between gap-2 pb-2"><QuickAction icon={User} label="Perfil" onClick={() => setView('preview')} /><QuickAction icon={Star} label="Reputación" onClick={handleOpenReputation} /><QuickAction icon={Crown} label="ServiAPP Plus" onClick={() => setView('serviapp-plus')} /><QuickAction icon={HelpCircle} label="Ayuda" onClick={() => setView('help')} /></div>
                   </div>
                   <div className="px-5 space-y-6 mt-6">
                     {completedSteps < totalSteps && (<div className="bg-white rounded-2xl p-5 border border-orange-100"><div className="mb-2"><h3 className="font-bold">Completa tu perfil</h3><p className="text-sm text-gray-500">{completedSteps}/{totalSteps} pasos</p></div><Progress value={(completedSteps/totalSteps)*100} className="h-2 mb-3" /><Button onClick={()=>setView('edit')} className="w-full bg-[#F97316] h-9 text-sm">Terminar</Button></div>)}
@@ -1040,12 +1120,8 @@ const Profile = () => {
 
   return (
     <>
-      {/* VISTA PRINCIPAL */}
       {renderCurrentView()}
 
-      {/* --- POP-UPS / DIALOGS (FUERA DE LAS CONDICIONALES PARA EVITAR Z-INDEX ISSUES) --- */}
-
-      {/* BOOST MODAL */}
       <Dialog open={boostModalOpen} onOpenChange={setBoostModalOpen}>
         <DialogContent className="sm:max-w-md rounded-3xl border-0 shadow-2xl z-[2000]">
             <DialogHeader className="space-y-3 pb-2"><div className="mx-auto bg-gradient-to-br from-[#F97316] to-pink-500 w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg"><RocketIcon className="h-7 w-7 text-white" /></div><DialogTitle className="text-center text-xl font-bold">Impulsa tu publicación</DialogTitle><DialogDescription className="text-center text-gray-500">Elige un plan para destacar tu servicio.</DialogDescription></DialogHeader>
@@ -1054,7 +1130,6 @@ const Profile = () => {
         </DialogContent>
       </Dialog>
 
-      {/* BOOST DELETE WARNING */}
       <AlertDialog open={showBoostDeleteWarning} onOpenChange={setShowBoostDeleteWarning}>
         <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto z-[2000]">
           <AlertDialogHeader className="text-center"><div className="mx-auto bg-red-100 w-12 h-12 rounded-full flex items-center justify-center mb-2"><AlertTriangle className="h-6 w-6 text-red-600" /></div><AlertDialogTitle className="text-xl font-bold text-red-600">¡Servicio Destacado!</AlertDialogTitle><AlertDialogDescription className="text-center text-gray-600 mt-2">Este servicio tiene un Boost activo. Si lo eliminas perderás la inversión y el tiempo restante.</AlertDialogDescription></AlertDialogHeader>
@@ -1062,7 +1137,6 @@ const Profile = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* DELETE ACCOUNT DIALOG */}
       <AlertDialog open={showDeleteAccountDialog} onOpenChange={setShowDeleteAccountDialog}>
         <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto z-[2000]">
           <AlertDialogHeader><AlertDialogTitle className="text-red-600">¿Borrar cuenta?</AlertDialogTitle><AlertDialogDescription>Esta acción eliminará permanentemente todos tus datos de ServiAPP.</AlertDialogDescription></AlertDialogHeader>
