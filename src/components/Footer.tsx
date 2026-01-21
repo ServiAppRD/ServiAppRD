@@ -35,6 +35,7 @@ export const Footer = () => {
               <li><Link to="/terms" className="hover:text-[#F97316] transition-colors">Términos y Condiciones</Link></li>
               <li><Link to="/privacy" className="hover:text-[#F97316] transition-colors">Política de Privacidad</Link></li>
               <li><a href="#" className="hover:text-[#F97316] transition-colors">Normas de la Comunidad</a></li>
+              <li><Link to="/account-elimination" className="hover:text-red-500 transition-colors">Eliminar Cuenta</Link></li>
             </ul>
           </div>
 

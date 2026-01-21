@@ -12,6 +12,7 @@ import ServiceDetail from "./pages/ServiceDetail";
 import NotFound from "./pages/NotFound";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
+import AccountElimination from "./pages/AccountElimination";
 import { MobileNavbar } from "./components/MobileNavbar";
 import { DesktopNavbar } from "./components/DesktopNavbar";
 import { Footer } from "./components/Footer";
@@ -31,10 +32,10 @@ const AppLayout = () => {
   }, [location.pathname]);
 
   // Ocultamos navbar móvil en publicar, login, detalles y editar
-  const hideMobileNav = ["/publish", "/login"].includes(location.pathname) || location.pathname.startsWith("/service/") || location.pathname.startsWith("/user/") || location.pathname.startsWith("/edit-service/");
+  const hideMobileNav = ["/publish", "/login"].includes(location.pathname) || location.pathname.startsWith("/service/") || location.pathname.startsWith("/user/") || location.pathname.startsWith("/edit-service/") || location.pathname === "/account-elimination";
   
   // Ocultar Navbar Desktop en Login
-  const hideDesktopNav = ["/login"].includes(location.pathname);
+  const hideDesktopNav = ["/login", "/account-elimination"].includes(location.pathname);
 
   return (
     <div className="min-h-screen bg-white overflow-x-hidden w-full flex flex-col">
@@ -61,12 +62,13 @@ const AppLayout = () => {
           <Route path="/service/:id" element={<ServiceDetail />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/account-elimination" element={<AccountElimination />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
 
       {/* Footer solo visible en Desktop */}
-      <Footer />
+      {!hideDesktopNav && <Footer />}
 
       {/* Navbar Inferior (Solo Móvil) */}
       <MobileNavbar />
