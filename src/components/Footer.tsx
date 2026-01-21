@@ -45,7 +45,14 @@ export const Footer = () => {
               <li className="flex items-center gap-2"><Mail className="h-4 w-4" /> serviapp.help@gmail.com</li>
               <li className="flex gap-4 mt-4">
                 <a href="#" className="p-2 bg-white border border-gray-200 rounded-full hover:border-[#F97316] hover:text-[#F97316] transition-all"><Facebook className="h-4 w-4" /></a>
-                <a href="#" className="p-2 bg-white border border-gray-200 rounded-full hover:border-[#F97316] hover:text-[#F97316] transition-all"><Instagram className="h-4 w-4" /></a>
+                <a 
+                  href="https://www.instagram.com/serviapp.rd/" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="p-2 bg-white border border-gray-200 rounded-full hover:border-[#F97316] hover:text-[#F97316] transition-all"
+                >
+                  <Instagram className="h-4 w-4" />
+                </a>
                 <a href="#" className="p-2 bg-white border border-gray-200 rounded-full hover:border-[#F97316] hover:text-[#F97316] transition-all"><Twitter className="h-4 w-4" /></a>
               </li>
             </ul>
