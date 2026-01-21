@@ -613,58 +613,74 @@ const Profile = () => {
             
             return (
                 <div className="fixed inset-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto">
-                   <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-6">
-                      <div className="flex items-center gap-3">
-                         <Button variant="ghost" size="icon" onClick={() => setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button>
-                         <h1 className="text-lg font-bold">Mi Plan</h1>
-                      </div>
+                   {/* Header */}
+                   <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center pt-6">
+                      <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="-ml-2 mr-2">
+                          <ArrowLeft className="h-6 w-6 text-black" />
+                      </Button>
+                      <h1 className="text-xl font-bold text-black">Mi Plan</h1>
                    </div>
-                   <div className="p-5 space-y-6 pb-24">
-                       <div className={cn(
-                           "rounded-3xl p-6 relative overflow-hidden shadow-sm transition-all",
-                           isPlus 
-                               ? "bg-gradient-to-br from-[#0239c7] to-[#3b82f6] text-white border-0" 
-                               : "bg-white border-2 border-gray-100 text-gray-900"
-                       )}>
-                           <div className={cn("absolute top-0 right-0 p-4 opacity-10", isPlus ? "text-white" : "text-gray-900")}>
-                               <CreditCard className="h-32 w-32" />
-                           </div>
-                           
-                           <div className="relative z-10">
-                               <p className={cn("text-sm font-medium uppercase tracking-wider mb-1", isPlus ? "text-blue-100" : "text-gray-500")}>Plan Actual</p>
-                               <h2 className={cn("text-3xl font-black mb-4", isPlus ? "text-white" : "text-gray-900")}>{isPlus ? "Plus" : "Gratuito"}</h2>
-                               
-                               <div className="flex items-center gap-2 mb-6">
-                                  <span className={cn("px-3 py-1 rounded-full text-xs font-bold", isPlus ? "bg-white/20 text-white backdrop-blur-md" : "bg-green-100 text-green-700")}>Activo</span>
-                                  <span className={cn("text-xs", isPlus ? "text-blue-100" : "text-gray-400")}>
-                                      {isPlus ? `Renueva: ${renewalDate}` : "Vence: Nunca"}
-                                  </span>
-                               </div>
 
-                               <div className={cn("space-y-3 pt-4 border-t", isPlus ? "border-white/20" : "border-gray-100")}>
-                                   <div className="flex justify-between text-sm">
-                                       <span className={isPlus ? "text-blue-100" : "text-gray-600"}>Publicaciones activas</span>
-                                       <span className={cn("font-bold", isPlus ? "text-white" : "text-gray-900")}>{myServices.length} / {maxSlots}</span>
-                                   </div>
-                                   <Progress value={(myServices.length / maxSlots) * 100} className={cn("h-2", isPlus ? "bg-black/20 [&>div]:bg-white" : "")} />
+                   <div className="flex-1 bg-gray-100/50 p-6 space-y-8">
+                       {/* Plan Card */}
+                       <div className="bg-white rounded-[2rem] p-8 shadow-sm">
+                           <p className="text-gray-400 text-sm font-medium uppercase tracking-wider mb-1">PLAN ACTUAL</p>
+                           <h2 className={cn("text-5xl font-black mb-2 tracking-tight", isPlus ? "text-[#0239c7]" : "text-gray-900")}>
+                              {isPlus ? "PLUS" : "GRATIS"}
+                           </h2>
+                           <p className="text-gray-500 text-sm mb-8">
+                              {isPlus ? `Vence: ${renewalDate}` : "Vence: Nunca"}
+                           </p>
+
+                           <div className="space-y-3">
+                               <div className="flex justify-between items-baseline">
+                                   <span className="font-bold text-gray-900 text-sm">
+                                      Publicaciones Activas ({myServices.length}/{maxSlots})
+                                   </span>
                                </div>
+                               <Progress value={(myServices.length / maxSlots) * 100} className="h-3 bg-gray-100 [&>div]:bg-gray-300" />
                            </div>
                        </div>
+                       
                        {!isPlus && (
-                           <div onClick={() => setView('serviapp-plus')} className="bg-gradient-to-r from-[#0239c7] to-[#3b82f6] rounded-3xl p-6 text-white cursor-pointer hover:shadow-xl transition-shadow relative overflow-hidden group">
-                               <div className="relative z-10 flex justify-between items-center">
-                                   <div>
-                                       <h3 className="font-bold text-lg mb-1 flex items-center gap-2"><Crown className="h-5 w-5 text-yellow-400" /> Pásate a Plus</h3>
-                                       <p className="text-blue-100 text-xs">Desbloquea 10 publicaciones y métricas.</p>
-                                   </div>
-                                   <div className="bg-white/10 p-2 rounded-full group-hover:bg-white/20 transition-colors"><ChevronRight className="h-6 w-6" /></div>
+                           <div onClick={() => setView('serviapp-plus')} className="bg-white rounded-[2rem] p-6 shadow-sm cursor-pointer hover:shadow-md transition-all flex items-center justify-between group">
+                               <div>
+                                   <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                                     <Crown className="h-5 w-5 text-[#0239c7]" /> Actualizar a PLUS
+                                   </h3>
+                                   <p className="text-xs text-gray-500 mt-1">Más visibilidad y 10 publicaciones.</p>
                                </div>
+                               <div className="bg-gray-50 p-2 rounded-full group-hover:bg-gray-100"><ChevronRight className="h-5 w-5 text-gray-400" /></div>
                            </div>
                        )}
-                       <div className="space-y-4">
-                           <h3 className="font-bold text-gray-900 px-2">Historial de Pagos</h3>
-                           <div className="text-center py-8 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200">
-                               {isPlus ? "Suscripción activada recientemente." : "No hay facturas recientes."}
+
+                       {/* Payment History Section */}
+                       <div className="mt-8">
+                           <h3 className="text-center font-black text-gray-900 text-lg mb-6 uppercase tracking-wide">HISTORIAL DE PAGOS</h3>
+                           
+                           <div className="space-y-4">
+                               {isPlus ? (
+                                  <div className="bg-gray-200/50 h-24 rounded-3xl w-full flex flex-col justify-center px-6 gap-2">
+                                      <div className="flex justify-between items-center">
+                                          <div className="h-2.5 bg-gray-400/50 rounded-full w-24"></div>
+                                          <div className="h-2.5 bg-gray-400/50 rounded-full w-12"></div>
+                                      </div>
+                                      <div className="h-2.5 bg-gray-300 rounded-full w-32"></div>
+                                      <p className="text-xs text-gray-400 mt-1">Pago procesado recientemente</p>
+                                  </div>
+                               ) : (
+                                  <>
+                                     <div className="bg-gray-200/50 h-24 rounded-3xl w-full flex flex-col justify-center px-6 gap-2 opacity-50">
+                                         <div className="h-2.5 bg-gray-300 rounded-full w-3/4"></div>
+                                         <div className="h-2.5 bg-gray-300 rounded-full w-1/2"></div>
+                                     </div>
+                                     <div className="bg-gray-200/50 h-24 rounded-3xl w-full flex flex-col justify-center px-6 gap-2 opacity-30">
+                                         <div className="h-2.5 bg-gray-300 rounded-full w-3/4"></div>
+                                         <div className="h-2.5 bg-gray-300 rounded-full w-1/2"></div>
+                                     </div>
+                                     <p className="text-center text-xs text-gray-400 pt-2">No hay historial disponible.</p>
+                                  </>
+                               )}
                            </div>
                        </div>
                    </div>
