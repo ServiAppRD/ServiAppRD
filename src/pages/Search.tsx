@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search as SearchIcon, MapPin, Star, X, ArrowRight, Loader2, AlertCircle, Wrench, ChevronRight, ChevronLeft, Check, Crown, ShieldCheck } from "lucide-react";
+import { Search as SearchIcon, MapPin, Star, X, ArrowRight, Loader2, AlertCircle, Wrench, ChevronRight, ChevronLeft, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,13 +16,6 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 const CATEGORIES = [
   "Todos", "Plomería", "Electricidad", "Limpieza", "Mecánica", 
@@ -123,13 +116,10 @@ const SearchPage = () => {
           *,
           profiles (
             first_name,
-            last_name,
-            is_verified,
-            is_plus
+            last_name
           )
         `)
-        .is('deleted_at', null)
-        .order('is_promoted', { ascending: false }) // Prioridad a promocionados (Boost/Plus)
+        .is('deleted_at', null) // Filtrar borrados
         .order('created_at', { ascending: false });
 
       // Filtrar bloqueados si existen
@@ -382,84 +372,60 @@ const SearchPage = () => {
 
           <div className="space-y-4">
             {!isLoading && filteredServices.length > 0 ? (
-              filteredServices.map((service) => {
-                const isPromoted = service.is_promoted && (!service.promoted_until || new Date(service.promoted_until) > new Date());
-                const isPlus = service.profiles?.is_plus;
-                const isVerified = service.profiles?.is_verified;
-
-                return (
-                  <div 
-                    key={service.id} 
-                    onClick={() => navigate(`/service/${service.id}`)}
-                    className={cn(
-                      "bg-white p-3 rounded-2xl border shadow-sm hover:shadow-md transition-all cursor-pointer group flex gap-4 relative overflow-hidden",
-                      isPromoted ? "border-orange-200 shadow-orange-100 bg-orange-50/10" : "border-gray-100"
+              filteredServices.map((service) => (
+                <div 
+                  key={service.id} 
+                  onClick={() => navigate(`/service/${service.id}`)}
+                  className="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-orange-100 transition-all cursor-pointer group flex gap-4"
+                >
+                  {/* Image */}
+                  <div className="h-28 w-28 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 relative">
+                    {service.image_url ? (
+                      <img src={service.image_url} alt={service.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    ) : (
+                      <div className="h-full w-full bg-orange-50 flex items-center justify-center">
+                        <SearchIcon className="h-8 w-8 text-orange-200" />
+                      </div>
                     )}
-                  >
-                    {/* Image */}
-                    <div className="h-28 w-28 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 relative">
-                      {service.image_url ? (
-                        <img src={service.image_url} alt={service.title} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                      ) : (
-                        <div className="h-full w-full bg-orange-50 flex items-center justify-center">
-                          <SearchIcon className="h-8 w-8 text-orange-200" />
-                        </div>
-                      )}
-                       
-                       {/* BADGES ON IMAGE */}
-                       <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
-                          {isPromoted && (
-                            <div className="bg-white/95 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-sm">
-                                <Star className="h-3 w-3 fill-orange-400 text-orange-400" />
-                                <span className="text-[9px] font-bold text-gray-800">TOP</span>
-                            </div>
-                          )}
-                          {isPlus && (
-                            <div className="bg-[#0239c7]/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-sm">
-                                <Crown className="h-3 w-3 text-white" />
-                                <span className="text-[9px] font-bold text-white">PLUS</span>
-                            </div>
-                          )}
+                     {(service.is_promoted && (!service.promoted_until || new Date(service.promoted_until) > new Date())) && (
+                       <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-sm z-10">
+                          <Star className="h-3 w-3 fill-orange-400 text-orange-400" />
+                          <span className="text-[10px] font-bold text-gray-800">Top</span>
                        </div>
+                     )}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 py-1 min-w-0 flex flex-col justify-between">
+                    <div>
+                      <div className="flex justify-between items-start mb-1 gap-2">
+                        <Badge variant="secondary" className="bg-orange-50 text-[#F97316] hover:bg-orange-100 border-0 text-[10px] px-2 h-5 truncate max-w-[50%]">
+                          {service.category}
+                        </Badge>
+                        <span className="text-[#F97316] font-bold text-sm whitespace-nowrap">
+                          RD$ {service.price} <span className="text-[10px] text-gray-400 font-normal">/{service.price_unit || 'servicio'}</span>
+                        </span>
+                      </div>
+                      <h3 className="font-bold text-gray-900 leading-tight mb-1 group-hover:text-[#F97316] transition-colors truncate">
+                        {service.title}
+                      </h3>
+                      <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
+                        {service.description || "Sin descripción disponible."}
+                      </p>
                     </div>
 
-                    {/* Content */}
-                    <div className="flex-1 py-1 min-w-0 flex flex-col justify-between">
-                      <div>
-                        <div className="flex justify-between items-start mb-1 gap-2">
-                          <Badge variant="secondary" className="bg-orange-50 text-[#F97316] hover:bg-orange-100 border-0 text-[10px] px-2 h-5 truncate max-w-[50%]">
-                            {service.category}
-                          </Badge>
-                          <span className="text-[#F97316] font-bold text-sm whitespace-nowrap">
-                            RD$ {service.price} <span className="text-[10px] text-gray-400 font-normal">/{service.price_unit || 'servicio'}</span>
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-center gap-1.5 mb-1">
-                            <h3 className="font-bold text-gray-900 leading-tight group-hover:text-[#F97316] transition-colors truncate">
-                              {service.title}
-                            </h3>
-                            {isVerified && <ShieldCheck className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />}
-                        </div>
-
-                        <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
-                          {service.description || "Sin descripción disponible."}
-                        </p>
+                    <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-50">
+                      <div className="flex items-center text-xs text-gray-400 font-medium truncate max-w-[60%]">
+                        <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                        {service.location || "Ubicación remota"}
                       </div>
-
-                      <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-50">
-                        <div className="flex items-center text-xs text-gray-400 font-medium truncate max-w-[60%]">
-                          <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
-                          {service.location || "Ubicación remota"}
-                        </div>
-                        <div className="flex items-center text-xs text-[#F97316] font-semibold group-hover:translate-x-1 transition-transform whitespace-nowrap">
-                          Ver detalles <ArrowRight className="h-3 w-3 ml-1" />
-                        </div>
+                      <div className="flex items-center text-xs text-[#F97316] font-semibold group-hover:translate-x-1 transition-transform whitespace-nowrap">
+                        Ver detalles <ArrowRight className="h-3 w-3 ml-1" />
                       </div>
                     </div>
                   </div>
-                )
-              })
+                </div>
+              ))
             ) : !isLoading ? (
               <div className="flex flex-col items-center justify-center py-12 text-center animate-fade-in">
                 <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mb-4">
