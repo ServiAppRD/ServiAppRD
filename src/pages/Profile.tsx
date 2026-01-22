@@ -530,7 +530,16 @@ const Profile = () => {
      navigate(`/edit-service/${serviceId}`);
   };
 
-  const handleSignOut = async () => { await supabase.auth.signOut(); navigate("/"); };
+  const handleSignOut = async () => { 
+    try {
+      await supabase.auth.signOut(); 
+    } catch (error) {
+      console.error("Error signing out", error);
+    } finally {
+      navigate("/login"); 
+    }
+  };
+
   const handleOpenMyServices = () => { setView('my-services'); fetchMyServices(session.user.id); };
   const handleOpenFavorites = (uid?: string) => { setView('favorites'); fetchFavorites(uid); };
   const handleOpenReputation = () => { setView('reputation'); fetchReputation(); };
@@ -906,7 +915,7 @@ const Profile = () => {
                     <div className="space-y-2">
                         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-2">Sesión</h3>
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">
-                            <button onClick={handleSignOut} className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"><div className="flex items-center gap-4"><div className="p-2 bg-gray-100 text-gray-600 rounded-xl"><LogOut className="h-5 w-5" /></div><span className="font-semibold text-gray-700">Cerrar Sesión</span></div></button>
+                            <button type="button" onClick={handleSignOut} className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"><div className="flex items-center gap-4"><div className="p-2 bg-gray-100 text-gray-600 rounded-xl"><LogOut className="h-5 w-5" /></div><span className="font-semibold text-gray-700">Cerrar Sesión</span></div></button>
                              <button onClick={() => setShowDeleteAccountDialog(true)} className="w-full flex items-center justify-between p-4 hover:bg-red-50 transition-colors group"><div className="flex items-center gap-4"><div className="p-2 bg-red-50 text-red-500 rounded-xl group-hover:bg-red-100 transition-colors"><Trash2 className="h-5 w-5" /></div><span className="font-semibold text-red-600">Eliminar mi cuenta</span></div></button>
                         </div>
                     </div>
