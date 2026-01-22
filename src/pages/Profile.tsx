@@ -89,14 +89,14 @@ const BOOST_OPTIONS = [
     duration: 72, 
     price: 499, 
     popular: true,
-    checkoutUrl: null 
+    checkoutUrl: "https://pagos.serviapprd.com/checkout/buy/3a20534c-d35e-4f3b-9651-a6606ca8a764?embed=1&media=0" 
   },
   { 
     label: "7 Días", 
     duration: 168, 
     price: 999, 
     popular: false,
-    checkoutUrl: null 
+    checkoutUrl: "https://pagos.serviapprd.com/checkout/buy/69382b06-f49f-4cf3-a973-3e954dc5a75a?embed=1&media=0" 
   },
 ];
 

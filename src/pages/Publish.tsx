@@ -57,8 +57,22 @@ const BOOST_PLANS = [
     popular: false, 
     checkoutUrl: "https://serviapprdrd.lemonsqueezy.com/checkout/buy/e72507b2-8ba3-49bb-8eb2-5938935acefb?embed=1&media=0" 
   },
-  { id: '3days', label: "Boost 3 Días", duration: 72, price: 499, popular: true },
-  { id: '7days', label: "Boost 7 Días", duration: 168, price: 999, popular: false },
+  { 
+    id: '3days', 
+    label: "Boost 3 Días", 
+    duration: 72, 
+    price: 499, 
+    popular: true,
+    checkoutUrl: "https://pagos.serviapprd.com/checkout/buy/3a20534c-d35e-4f3b-9651-a6606ca8a764?embed=1&media=0"
+  },
+  { 
+    id: '7days', 
+    label: "Boost 7 Días", 
+    duration: 168, 
+    price: 999, 
+    popular: false,
+    checkoutUrl: "https://pagos.serviapprd.com/checkout/buy/69382b06-f49f-4cf3-a973-3e954dc5a75a?embed=1&media=0"
+  },
 ];
 
 const DR_LOCATIONS: Record<string, string[]> = {
@@ -223,10 +237,12 @@ const Publish = () => {
     try {
       const selectedPlan = BOOST_PLANS.find(p => p.id === formData.selectedPlanId) || BOOST_PLANS[0];
       
-      // Si es el plan de pago (1day), NO activamos el boost inmediatamente. Esperamos al webhook.
-      // Si es otro plan pagado (que aun no tiene link real) o free, seguimos lógica normal.
-      const needsPayment = selectedPlan.id === '1day';
-      const isPromoted = !needsPayment && selectedPlan.id !== 'free'; // Logica legacy para otros planes sin link real
+      // Si el plan tiene un checkoutUrl, requiere pago
+      const needsPayment = !!selectedPlan.checkoutUrl && selectedPlan.price > 0;
+      
+      // Inicialmente NO promocionado si requiere pago. El webhook se encargará de activarlo.
+      const isPromoted = false; 
+      const promotedUntil = null;
 
       let imageUrl = null;
       if (formData.imageFile) {
@@ -238,14 +254,6 @@ const Publish = () => {
         imageUrl = data.publicUrl;
       } else {
         throw new Error("Imagen requerida");
-      }
-
-      // Calcular promoted_until (solo para legacy boosts o free)
-      let promotedUntil = null;
-      if (isPromoted) {
-        const now = new Date();
-        const futureDate = new Date(now.getTime() + selectedPlan.duration * 60 * 60 * 1000);
-        promotedUntil = futureDate.toISOString();
       }
 
       const { data: serviceData, error } = await supabase.from('services').insert({
@@ -269,7 +277,7 @@ const Publish = () => {
 
       if (error) throw error;
       
-      // Manejo de Pagos Lemon Squeezy (Boost 24h)
+      // Manejo de Pagos Lemon Squeezy para cualquier plan con checkoutUrl
       if (needsPayment && selectedPlan.checkoutUrl && serviceData) {
           const checkoutUrl = `${selectedPlan.checkoutUrl}&checkout[email]=${session.user.email}&checkout[custom][user_id]=${session.user.id}&checkout[custom][service_id]=${serviceData.id}`;
           
@@ -289,15 +297,6 @@ const Publish = () => {
           }, 3000);
 
       } else {
-          // Lógica Legacy para otros planes
-          if (isPromoted && selectedPlan.price > 0) {
-            await supabase.from('transactions').insert({
-              user_id: session.user.id,
-              amount: selectedPlan.price,
-              description: `Boost inicial (${selectedPlan.label}) - ${formData.title}`,
-              type: "boost"
-            });
-          }
           showSuccess("¡Servicio publicado con éxito!");
           navigate("/profile");
       }
@@ -524,7 +523,8 @@ const Publish = () => {
 
   const renderStep5 = () => {
     const selectedPlan = BOOST_PLANS.find(p => p.id === formData.selectedPlanId) || BOOST_PLANS[0];
-    
+    const needsPayment = !!selectedPlan.checkoutUrl && selectedPlan.price > 0;
+
     return (
       <div className="space-y-6 animate-fade-in">
         <div className="text-center space-y-2">
@@ -565,9 +565,15 @@ const Publish = () => {
              </span>
           </div>
         </div>
+        
+        {/* Espacio para asegurar que el botón fijo no tape contenido */}
+        <div className="h-20"></div>
       </div>
     );
   };
+
+  const selectedPlan = BOOST_PLANS.find(p => p.id === formData.selectedPlanId) || BOOST_PLANS[0];
+  const needsPayment = !!selectedPlan.checkoutUrl && selectedPlan.price > 0;
 
   return (
     <div className="min-h-screen bg-white pb-safe">
@@ -637,7 +643,7 @@ const Publish = () => {
         <div className="max-w-lg mx-auto flex gap-3">
             {step === 5 ? (
               <Button onClick={handleSubmit} disabled={loading} className="w-full bg-[#F97316] hover:bg-orange-600 text-white h-14 rounded-2xl text-lg font-bold shadow-lg shadow-orange-200">
-                {loading ? <Loader2 className="animate-spin mr-2" /> : (formData.selectedPlanId === '1day' ? `Pagar RD$ 99 y Publicar` : "Publicar Ahora")}
+                {loading ? <Loader2 className="animate-spin mr-2" /> : (needsPayment ? `Pagar RD$ ${selectedPlan.price} y Publicar` : "Publicar Ahora")}
               </Button>
             ) : (
               <Button onClick={handleNext} className="w-full bg-[#0F172A] hover:bg-slate-800 text-white h-14 rounded-2xl text-lg font-bold shadow-lg">
