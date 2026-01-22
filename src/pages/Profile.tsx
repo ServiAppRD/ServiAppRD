@@ -1064,7 +1064,7 @@ const Profile = () => {
                                 ? "border-blue-200 bg-blue-50/50 hover:bg-blue-50"
                                 : "border-gray-200 bg-gray-50 hover:bg-gray-100"
                            )}>
-                               {isPlusSlot && <div className="absolute top-3 right-3 bg-[#0239c7] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm">PLUS</div>}
+                               {isPlusSlot && <div className="absolute top-3 right-3 bg-[#0239c7] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-sm">PLUS</div>}
                                <div className={cn("p-2 rounded-full", isPlusSlot ? "bg-blue-100 text-[#0239c7]" : "bg-white text-gray-400")}>
                                    <Plus className="h-6 w-6" />
                                </div>
@@ -1095,15 +1095,19 @@ const Profile = () => {
                       <div className="flex-1"><p className="text-gray-400 text-sm">Bienvenido,</p><div className="flex items-center gap-1.5"><h1 className="text-2xl font-bold truncate max-w-[200px]">{firstName || 'Usuario'}</h1>{isPlus && <Badge className="bg-[#0239c7] text-white text-[10px]"><Crown className="h-3 w-3 mr-1" />PLUS</Badge>}</div></div>
                       <div onClick={handleOpenPreview} className="cursor-pointer relative"><ProfileAvatar size="md" className={isPlus ? "border-2 border-[#0239c7]" : "border-2 border-orange-100"} />{isPlus && (<div className="absolute -bottom-1 -right-1 bg-[#0239c7] text-white p-0.5 rounded-full border-2 border-white"><Crown className="h-3 w-3 fill-white" /></div>)}</div>
                     </div>
-                    <div className="flex justify-between gap-2 pb-2"><QuickAction icon={User} label="Perfil" onClick={handleOpenPreview} /><QuickAction icon={Star} label="Reputación" onClick={handleOpenReputation} /><QuickAction icon={Crown} label="ServiAPP Plus" onClick={() => setView('serviapp-plus')} /><QuickAction icon={HelpCircle} label="Ayuda" onClick={() => setView('help')} /></div>
+                    <div className="flex justify-between gap-2 pb-2"><QuickAction icon={User} label="Ver Perfil" onClick={handleOpenPreview} /><QuickAction icon={Star} label="Reputación" onClick={handleOpenReputation} /><QuickAction icon={Crown} label="ServiAPP Plus" onClick={() => setView('serviapp-plus')} /><QuickAction icon={HelpCircle} label="Ayuda" onClick={() => setView('help')} /></div>
                   </div>
                   <div className="px-5 space-y-6 mt-6">
                     {completedSteps < totalSteps && (<div className="bg-white rounded-2xl p-5 border border-orange-100"><div className="mb-2"><h3 className="font-bold">Completa tu perfil</h3><p className="text-sm text-gray-500">{completedSteps}/{totalSteps} pasos</p></div><Progress value={(completedSteps/totalSteps)*100} className="h-2 mb-3" /><Button onClick={()=>setView('edit')} className="w-full bg-[#F97316] h-9 text-sm">Terminar</Button></div>)}
                     <div className="space-y-6">
+                      <MenuSection title="Mi Cuenta">
+                         <MenuItem icon={Edit2} label="Editar Datos Personales" onClick={() => setView('edit')} />
+                      </MenuSection>
+
                       <MenuSection title="Mis Servicios"><MenuItem icon={Briefcase} label="Mis Publicaciones" onClick={handleOpenMyServices} /><MenuItem icon={Heart} label="Mis Favoritos" badge={myFavorites.length > 0 ? String(myFavorites.length) : undefined} onClick={() => handleOpenFavorites()} /></MenuSection>
                       <MenuSection title="Estadísticas & Verificación"><MenuItem icon={BarChart3} label="Métricas" onClick={() => setView('metrics')} /><MenuItem icon={ShieldCheck} label="Verificación" onClick={() => setView('verification')} /><MenuItem icon={Bell} label="Notificaciones" onClick={() => setView('notifications')} /></MenuSection>
                       <MenuSection title="Suscripción"><MenuItem icon={CreditCard} label="Mi Plan" onClick={() => setView('my-plan')} /></MenuSection>
-                      <MenuSection title="Preferencias"><MenuItem icon={Settings} label="Administrar Cuenta" onClick={() => setView('account-settings')} /></MenuSection>
+                      <MenuSection title="Preferencias"><MenuItem icon={Settings} label="Seguridad y Legal" onClick={() => setView('account-settings')} /></MenuSection>
                     </div>
                   </div>
                 </div>
