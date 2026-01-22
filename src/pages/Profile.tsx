@@ -76,27 +76,34 @@ const PROFILE_COLORS = [
   { name: "Turquesa", value: "#06B6D4" },
 ];
 
+// Configuración BETA para los Boosts
 const BOOST_OPTIONS = [
   { 
     label: "1 Día", 
     duration: 24, 
-    price: 99, 
-    popular: false,
-    checkoutUrl: "https://serviapprdrd.lemonsqueezy.com/checkout/buy/e72507b2-8ba3-49bb-8eb2-5938935acefb?embed=1&media=0"
+    price: 0, // GRATIS
+    originalPrice: 99,
+    popular: true,
+    disabled: false,
+    badge: "GRATIS BETA"
   },
   { 
     label: "3 Días", 
     duration: 72, 
     price: 499, 
-    popular: true,
-    checkoutUrl: null 
+    originalPrice: null,
+    popular: false,
+    disabled: true,
+    badge: "PRÓXIMAMENTE"
   },
   { 
     label: "7 Días", 
     duration: 168, 
     price: 999, 
+    originalPrice: null,
     popular: false,
-    checkoutUrl: null 
+    disabled: true,
+    badge: "PRÓXIMAMENTE"
   },
 ];
 
@@ -126,7 +133,6 @@ const Profile = () => {
   
   const [updating, setUpdating] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [buyingPlus, setBuyingPlus] = useState(false);
 
   const [myServices, setMyServices] = useState<any[]>([]);
   const [myFavorites, setMyFavorites] = useState<any[]>([]);
@@ -340,9 +346,9 @@ const Profile = () => {
     }
   };
 
+  // Deshabilitado por Beta
   const getCheckoutUrl = () => {
-    if (!session?.user) return "#";
-    return `https://serviapprdrd.lemonsqueezy.com/checkout/buy/9f95644c-f4a4-42f8-b815-1d09f609c58f?embed=1&media=0&checkout[email]=${session.user.email}&checkout[custom][user_id]=${session.user.id}`;
+    return "#"; 
   };
 
   const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -410,9 +416,17 @@ const Profile = () => {
     if (!selectedServiceToBoost || !selectedBoostOption) return;
     setProcessingBoost(true);
     try {
-        await new Promise(resolve => setTimeout(resolve, 2000));
         const option = BOOST_OPTIONS.find(o => o.duration === selectedBoostOption);
         if(!option) return;
+
+        // Si es la opción deshabilitada (por seguridad)
+        if (option.disabled) {
+            showError("Esta opción no está disponible en la Beta");
+            setProcessingBoost(false);
+            return;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 1500));
 
         const now = new Date();
         const futureDate = new Date(now.getTime() + option.duration * 60 * 60 * 1000);
@@ -427,11 +441,11 @@ const Profile = () => {
         await supabase.from('transactions').insert({
             user_id: session.user.id,
             amount: option.price,
-            description: `Boost ${option.label} - ${selectedServiceToBoost.title}`,
+            description: `Boost Beta ${option.label} - ${selectedServiceToBoost.title}`,
             type: "boost"
         });
 
-        showSuccess(`¡Boost activado por ${option.label}!`);
+        showSuccess(`¡Boost activado gratis por la Beta!`);
         setBoostModalOpen(false);
         fetchMyServices(session.user.id);
     } catch (error: any) {
@@ -714,13 +728,12 @@ const Profile = () => {
                                    <span className="text-xs font-bold text-[#0239c7] ml-1">/mes</span>
                               </div>
                            </div>
-                           <a href={isPlus ? "#" : getCheckoutUrl()} className={`lemonsqueezy-button w-full block ${isPlus ? 'pointer-events-none' : ''}`}>
-                                <Button disabled={isPlus} className="w-full h-14 bg-[#0239c7] hover:bg-[#022b9e] text-white rounded-xl font-bold text-lg shadow-xl shadow-blue-900/20 pointer-events-none">
-                                    {isPlus ? "Ya eres Plus" : "Suscribirme a Plus"}
-                                </Button>
-                           </a>
+                           {/* Beta Disable */}
+                           <Button disabled className="w-full h-14 bg-gray-200 text-gray-500 rounded-xl font-bold text-lg shadow-none pointer-events-none">
+                               Suscripciones cerradas en Beta
+                           </Button>
                            <p className="text-center text-[10px] text-gray-400">
-                               Al continuar, aceptas los <span className="underline cursor-pointer">términos y condiciones</span>.
+                               Estamos mejorando el servicio Plus. Vuelve pronto.
                            </p>
                        </div>
                    </div>
@@ -746,7 +759,7 @@ const Profile = () => {
                            </div>
                            
                            <h2 className="text-2xl font-black text-gray-900 mb-6">
-                               {isPlus ? "ServiAPP Plus" : "ServiAPP Básico"}
+                               {isPlus ? "ServiAPP Plus" : "ServiAPP Básico (Beta)"}
                            </h2>
 
                            <div className="border-t border-gray-100 my-4" />
@@ -768,17 +781,15 @@ const Profile = () => {
                        </div>
 
                        {!isPlus && (
-                           <a href={getCheckoutUrl()} className="lemonsqueezy-button block mb-8 no-underline">
-                               <div className="bg-[#0239c7] rounded-[2rem] p-6 shadow-lg shadow-blue-200 cursor-pointer flex items-center justify-between">
-                                    <div className="text-white">
-                                        <h3 className="font-bold text-lg">Mejorar a Plus</h3>
-                                        <p className="text-xs opacity-80">Desbloquea todos los beneficios</p>
-                                    </div>
-                                    <div className="bg-white/20 p-2 rounded-full">
-                                        <Crown className="h-6 w-6 text-white" />
-                                    </div>
-                               </div>
-                           </a>
+                           <div className="bg-gray-100 rounded-[2rem] p-6 cursor-not-allowed flex items-center justify-between mb-8 opacity-70">
+                                <div className="text-gray-500">
+                                    <h3 className="font-bold text-lg">Mejorar a Plus</h3>
+                                    <p className="text-xs opacity-80">No disponible en Beta</p>
+                                </div>
+                                <div className="bg-gray-200 p-2 rounded-full">
+                                    <Lock className="h-6 w-6 text-gray-400" />
+                                </div>
+                           </div>
                        )}
 
                        <div className="relative flex items-center justify-center mb-6">
@@ -1075,21 +1086,6 @@ const Profile = () => {
               </div>
             );
 
-          case 'preview':
-            return (
-              <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
-                <div className="absolute top-0 left-0 right-0 h-72 rounded-b-[3rem] z-0" style={{ backgroundColor: profileColor }} />
-                <div className="relative z-10 px-4 pt-12 md:pt-4">
-                  <div className="flex justify-between items-center text-white mb-2"><Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="text-white hover:bg-white/20"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mi Perfil</h1><Button variant="ghost" size="icon" onClick={() => setView('edit')} className="text-white hover:bg-white/20"><Edit2 className="h-5 w-5" /></Button></div>
-                  <div className="bg-white rounded-3xl shadow-xl p-6 text-center mt-24 space-y-4">
-                    <div className="relative -mt-20 mb-4 flex justify-center"><div className="p-2 bg-white rounded-full"><ProfileAvatar size="xl" className="border-4 border-white" /></div></div>
-                    <div className="flex flex-col items-center"><h2 className="text-2xl font-bold">{firstName} {lastName}</h2><p className="text-gray-500 text-sm">{session?.user.email}</p></div>
-                    <div className="grid grid-cols-1 gap-4 pt-4 text-left border-t border-gray-50"><div className="flex gap-3"><Phone className="text-gray-400 h-4 w-4"/><span>{phone || "No agregado"}</span></div><div className="flex gap-3"><MapPin className="text-gray-400 h-4 w-4"/><span>{city || "No agregado"}</span></div></div>
-                  </div>
-                </div>
-              </div>
-            );
-
           default: // DASHBOARD
             return (
                 <div className="min-h-screen bg-gray-50 pb-24 md:pb-6 pt-12 md:pt-4 animate-fade-in">
@@ -1121,23 +1117,44 @@ const Profile = () => {
       <Dialog open={boostModalOpen} onOpenChange={setBoostModalOpen}>
         <DialogContent className="sm:max-w-md rounded-3xl border-0 shadow-2xl z-[2000]">
             <DialogHeader className="space-y-3 pb-2"><div className="mx-auto bg-gradient-to-br from-[#F97316] to-pink-500 w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg"><RocketIcon className="h-7 w-7 text-white" /></div><DialogTitle className="text-center text-xl font-bold">Impulsa tu publicación</DialogTitle><DialogDescription className="text-center text-gray-500">Elige un plan para destacar tu servicio.</DialogDescription></DialogHeader>
-            <div className="flex flex-col gap-3 py-4">{BOOST_OPTIONS.map((opt) => (<div key={opt.duration} onClick={() => setSelectedBoostOption(opt.duration)} className={cn("cursor-pointer rounded-2xl border-2 p-4 flex items-center justify-between transition-all", selectedBoostOption === opt.duration ? "border-[#F97316] bg-orange-50/50 shadow-md" : "border-gray-100 bg-white hover:border-orange-100")}><div className="flex items-center gap-3"><div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center", selectedBoostOption === opt.duration ? "border-[#F97316]" : "border-gray-300")}>{selectedBoostOption === opt.duration && <div className="w-2.5 h-2.5 rounded-full bg-[#F97316]" />}</div><div><h3 className="font-bold text-gray-900">{opt.label}</h3><p className="text-xs text-gray-400">Visibilidad Premium</p></div></div><div className="text-right"><p className="text-[#F97316] font-black text-lg">RD$ {opt.price}</p></div></div>))}</div>
-            
-            {/* Logic for Payment Button */}
-            {selectedBoostOption && BOOST_OPTIONS.find(o => o.duration === selectedBoostOption)?.checkoutUrl ? (
-                <a 
-                  href={`${BOOST_OPTIONS.find(o => o.duration === selectedBoostOption)?.checkoutUrl}&checkout[email]=${session?.user?.email}&checkout[custom][user_id]=${session?.user?.id}&checkout[custom][service_id]=${selectedServiceToBoost?.id}`}
-                  className="lemonsqueezy-button w-full block"
+            <div className="flex flex-col gap-3 py-4">
+              {BOOST_OPTIONS.map((opt) => (
+                <div 
+                  key={opt.duration} 
+                  onClick={() => !opt.disabled && setSelectedBoostOption(opt.duration)} 
+                  className={cn(
+                    "relative rounded-2xl border-2 p-4 flex items-center justify-between transition-all",
+                    opt.disabled ? "opacity-60 cursor-not-allowed border-gray-100 bg-gray-50" : "cursor-pointer hover:border-orange-100",
+                    selectedBoostOption === opt.duration ? "border-[#F97316] bg-orange-50/50 shadow-md" : "border-gray-100 bg-white"
+                  )}
                 >
-                   <Button className="w-full h-12 text-lg font-bold bg-[#F97316] hover:bg-orange-600 rounded-xl shadow-lg">
-                      Pagar RD$ {BOOST_OPTIONS.find(o => o.duration === selectedBoostOption)?.price}
-                   </Button>
-                </a>
-            ) : (
-                <Button onClick={handleProcessBoost} disabled={!selectedBoostOption || processingBoost} className="w-full h-12 text-lg font-bold bg-[#F97316] hover:bg-orange-600 rounded-xl shadow-lg">
-                    {processingBoost ? <Loader2 className="animate-spin" /> : "Pagar y Activar"}
-                </Button>
-            )}
+                  {opt.badge && (
+                    <div className={cn("absolute -top-2 left-4 text-[10px] font-bold px-2 py-0.5 rounded-full text-white", opt.disabled ? "bg-gray-400" : "bg-[#F97316]")}>
+                      {opt.badge}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center", selectedBoostOption === opt.duration ? "border-[#F97316]" : "border-gray-300")}>
+                      {selectedBoostOption === opt.duration && <div className="w-2.5 h-2.5 rounded-full bg-[#F97316]" />}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900">{opt.label}</h3>
+                      <p className="text-xs text-gray-400">Visibilidad Premium</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    {opt.originalPrice && <span className="text-xs text-gray-400 line-through mr-1">RD$ {opt.originalPrice}</span>}
+                    <p className={cn("font-black text-lg", opt.price === 0 ? "text-green-600" : "text-[#F97316]")}>
+                      {opt.price === 0 ? "GRATIS" : `RD$ ${opt.price}`}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <Button onClick={handleProcessBoost} disabled={!selectedBoostOption || processingBoost} className="w-full h-12 text-lg font-bold bg-[#F97316] hover:bg-orange-600 rounded-xl shadow-lg">
+                {processingBoost ? <Loader2 className="animate-spin" /> : "Activar Ahora"}
+            </Button>
         </DialogContent>
       </Dialog>
 
