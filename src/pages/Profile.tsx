@@ -89,14 +89,14 @@ const BOOST_OPTIONS = [
     duration: 72, 
     price: 499, 
     popular: true,
-    checkoutUrl: "https://pagos.serviapprd.com/checkout/buy/3a20534c-d35e-4f3b-9651-a6606ca8a764?embed=1&media=0" 
+    checkoutUrl: null 
   },
   { 
     label: "7 Días", 
     duration: 168, 
     price: 999, 
     popular: false,
-    checkoutUrl: "https://pagos.serviapprd.com/checkout/buy/69382b06-f49f-4cf3-a973-3e954dc5a75a?embed=1&media=0" 
+    checkoutUrl: null 
   },
 ];
 
@@ -530,16 +530,7 @@ const Profile = () => {
      navigate(`/edit-service/${serviceId}`);
   };
 
-  const handleSignOut = async () => { 
-    try {
-      await supabase.auth.signOut(); 
-    } catch (error) {
-      console.error("Error signing out", error);
-    } finally {
-      navigate("/login"); 
-    }
-  };
-
+  const handleSignOut = async () => { await supabase.auth.signOut(); navigate("/"); };
   const handleOpenMyServices = () => { setView('my-services'); fetchMyServices(session.user.id); };
   const handleOpenFavorites = (uid?: string) => { setView('favorites'); fetchFavorites(uid); };
   const handleOpenReputation = () => { setView('reputation'); fetchReputation(); };
@@ -915,7 +906,7 @@ const Profile = () => {
                     <div className="space-y-2">
                         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-2">Sesión</h3>
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">
-                            <button type="button" onClick={handleSignOut} className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"><div className="flex items-center gap-4"><div className="p-2 bg-gray-100 text-gray-600 rounded-xl"><LogOut className="h-5 w-5" /></div><span className="font-semibold text-gray-700">Cerrar Sesión</span></div></button>
+                            <button onClick={handleSignOut} className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"><div className="flex items-center gap-4"><div className="p-2 bg-gray-100 text-gray-600 rounded-xl"><LogOut className="h-5 w-5" /></div><span className="font-semibold text-gray-700">Cerrar Sesión</span></div></button>
                              <button onClick={() => setShowDeleteAccountDialog(true)} className="w-full flex items-center justify-between p-4 hover:bg-red-50 transition-colors group"><div className="flex items-center gap-4"><div className="p-2 bg-red-50 text-red-500 rounded-xl group-hover:bg-red-100 transition-colors"><Trash2 className="h-5 w-5" /></div><span className="font-semibold text-red-600">Eliminar mi cuenta</span></div></button>
                         </div>
                     </div>
@@ -1135,7 +1126,7 @@ const Profile = () => {
             {/* Logic for Payment Button */}
             {selectedBoostOption && BOOST_OPTIONS.find(o => o.duration === selectedBoostOption)?.checkoutUrl ? (
                 <a 
-                  href={`${BOOST_OPTIONS.find(o => o.duration === selectedBoostOption)?.checkoutUrl}&checkout[email]=${session?.user?.email}&checkout[custom][user_id]=${session?.user?.id}&checkout[custom][service_id]=${selectedServiceToBoost?.id}&checkout[custom][duration]=${selectedBoostOption}`}
+                  href={`${BOOST_OPTIONS.find(o => o.duration === selectedBoostOption)?.checkoutUrl}&checkout[email]=${session?.user?.email}&checkout[custom][user_id]=${session?.user?.id}&checkout[custom][service_id]=${selectedServiceToBoost?.id}`}
                   className="lemonsqueezy-button w-full block"
                 >
                    <Button className="w-full h-12 text-lg font-bold bg-[#F97316] hover:bg-orange-600 rounded-xl shadow-lg">

@@ -49,30 +49,9 @@ const CATEGORIES = [
 
 const BOOST_PLANS = [
   { id: 'free', label: "Estándar", duration: 0, price: 0, popular: false },
-  { 
-    id: '1day', 
-    label: "Boost 24 Horas", 
-    duration: 24, 
-    price: 99, 
-    popular: false, 
-    checkoutUrl: "https://serviapprdrd.lemonsqueezy.com/checkout/buy/e72507b2-8ba3-49bb-8eb2-5938935acefb?embed=1&media=0" 
-  },
-  { 
-    id: '3days', 
-    label: "Boost 3 Días", 
-    duration: 72, 
-    price: 499, 
-    popular: true,
-    checkoutUrl: "https://pagos.serviapprd.com/checkout/buy/3a20534c-d35e-4f3b-9651-a6606ca8a764?embed=1&media=0"
-  },
-  { 
-    id: '7days', 
-    label: "Boost 7 Días", 
-    duration: 168, 
-    price: 999, 
-    popular: false,
-    checkoutUrl: "https://pagos.serviapprd.com/checkout/buy/69382b06-f49f-4cf3-a973-3e954dc5a75a?embed=1&media=0"
-  },
+  { id: '1day', label: "Boost 1 Día", duration: 24, price: 299, popular: false },
+  { id: '3days', label: "Boost 3 Días", duration: 72, price: 499, popular: true },
+  { id: '7days', label: "Boost 7 Días", duration: 168, price: 999, popular: false },
 ];
 
 const DR_LOCATIONS: Record<string, string[]> = {
@@ -158,7 +137,7 @@ const Publish = () => {
       }
       setSession(session);
 
-      // Verificar perfil
+      // Verificar perfil - Eliminada validación de 'city'
       const { data: profile } = await supabase.from('profiles').select('first_name, last_name, phone').eq('id', session.user.id).single();
       if (profile) {
         if (!profile.first_name || !profile.last_name || !profile.phone) {
@@ -236,13 +215,7 @@ const Publish = () => {
     setLoading(true);
     try {
       const selectedPlan = BOOST_PLANS.find(p => p.id === formData.selectedPlanId) || BOOST_PLANS[0];
-      
-      // Si el plan tiene un checkoutUrl, requiere pago
-      const needsPayment = !!selectedPlan.checkoutUrl && selectedPlan.price > 0;
-      
-      // Inicialmente NO promocionado si requiere pago. El webhook se encargará de activarlo.
-      const isPromoted = false; 
-      const promotedUntil = null;
+      const isPromoted = selectedPlan.id !== 'free';
 
       let imageUrl = null;
       if (formData.imageFile) {
@@ -256,7 +229,15 @@ const Publish = () => {
         throw new Error("Imagen requerida");
       }
 
-      const { data: serviceData, error } = await supabase.from('services').insert({
+      // Calcular promoted_until
+      let promotedUntil = null;
+      if (isPromoted) {
+        const now = new Date();
+        const futureDate = new Date(now.getTime() + selectedPlan.duration * 60 * 60 * 1000);
+        promotedUntil = futureDate.toISOString();
+      }
+
+      const { error } = await supabase.from('services').insert({
         user_id: session.user.id,
         title: formData.title,
         description: formData.description,
@@ -273,36 +254,22 @@ const Publish = () => {
           instagram: formData.instagram,
           website: formData.website
         }
-      }).select().single();
+      });
 
       if (error) throw error;
       
-      // Manejo de Pagos Lemon Squeezy para cualquier plan con checkoutUrl
-      if (needsPayment && selectedPlan.checkoutUrl && serviceData) {
-          // AÑADIMOS 'duration' A LOS CUSTOM DATA para que el webhook sepa cuánto tiempo activar
-          const checkoutUrl = `${selectedPlan.checkoutUrl}&checkout[email]=${session.user.email}&checkout[custom][user_id]=${session.user.id}&checkout[custom][service_id]=${serviceData.id}&checkout[custom][duration]=${selectedPlan.duration}`;
-          
-          showSuccess("Abriendo pasarela de pago...");
-          
-          // Crear y clickear enlace oculto para activar overlay
-          const a = document.createElement('a');
-          a.href = checkoutUrl;
-          a.className = 'lemonsqueezy-button hidden';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          
-          // Redirigir al perfil. El servicio ya se creó (invisible).
-          // Cuando el webhook reciba el pago, lo hará visible/promocionado.
-          setTimeout(() => {
-             navigate("/profile");
-             showSuccess("Servicio creado. Se activará el Boost en cuanto se confirme el pago.");
-          }, 3000);
-
-      } else {
-          showSuccess("¡Servicio publicado con éxito!");
-          navigate("/profile");
+      // Registrar transacción de Boost si hubo pago
+      if (isPromoted && selectedPlan.price > 0) {
+        await supabase.from('transactions').insert({
+          user_id: session.user.id,
+          amount: selectedPlan.price,
+          description: `Boost inicial (${selectedPlan.label}) - ${formData.title}`,
+          type: "boost"
+        });
       }
+
+      showSuccess("¡Servicio publicado con éxito!");
+      navigate("/profile");
       
     } catch (error: any) {
       console.error(error);
@@ -526,8 +493,7 @@ const Publish = () => {
 
   const renderStep5 = () => {
     const selectedPlan = BOOST_PLANS.find(p => p.id === formData.selectedPlanId) || BOOST_PLANS[0];
-    const needsPayment = !!selectedPlan.checkoutUrl && selectedPlan.price > 0;
-
+    
     return (
       <div className="space-y-6 animate-fade-in">
         <div className="text-center space-y-2">
@@ -568,15 +534,9 @@ const Publish = () => {
              </span>
           </div>
         </div>
-        
-        {/* Espacio para asegurar que el botón fijo no tape contenido */}
-        <div className="h-20"></div>
       </div>
     );
   };
-
-  const selectedPlan = BOOST_PLANS.find(p => p.id === formData.selectedPlanId) || BOOST_PLANS[0];
-  const needsPayment = !!selectedPlan.checkoutUrl && selectedPlan.price > 0;
 
   return (
     <div className="min-h-screen bg-white pb-safe">
@@ -646,7 +606,7 @@ const Publish = () => {
         <div className="max-w-lg mx-auto flex gap-3">
             {step === 5 ? (
               <Button onClick={handleSubmit} disabled={loading} className="w-full bg-[#F97316] hover:bg-orange-600 text-white h-14 rounded-2xl text-lg font-bold shadow-lg shadow-orange-200">
-                {loading ? <Loader2 className="animate-spin mr-2" /> : (needsPayment ? `Pagar RD$ ${selectedPlan.price} y Publicar` : "Publicar Ahora")}
+                {loading ? <Loader2 className="animate-spin mr-2" /> : "Publicar Ahora"}
               </Button>
             ) : (
               <Button onClick={handleNext} className="w-full bg-[#0F172A] hover:bg-slate-800 text-white h-14 rounded-2xl text-lg font-bold shadow-lg">
