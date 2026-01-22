@@ -151,7 +151,8 @@ export const DesktopNavbar = () => {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-gray-100 my-2" />
                 <div className="space-y-1">
-                    <DropdownMenuItem onClick={() => navigate('/profile')} className="rounded-xl px-3 py-2.5 cursor-pointer focus:bg-orange-50 focus:text-[#F97316]">
+                    {/* Updated Link: Points to /profile/edit */}
+                    <DropdownMenuItem onClick={() => navigate('/profile/edit')} className="rounded-xl px-3 py-2.5 cursor-pointer focus:bg-orange-50 focus:text-[#F97316]">
                       <LayoutDashboard className="mr-3 h-4 w-4" />
                       <span className="font-medium">Mi Perfil</span>
                     </DropdownMenuItem>

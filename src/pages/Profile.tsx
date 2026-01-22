@@ -190,9 +190,8 @@ const Profile = () => {
         if (view === 'my-plan') fetchTransactions(session.user.id);
       }
     });
-  }, [navigate, view]); // Re-run when view changes to load data
+  }, [navigate, view]); 
 
-  // Efecto adicional para recargar métricas si cambia el rango
   useEffect(() => {
     if (view === 'metrics' && session?.user?.id) {
         fetchRealMetrics(session.user.id);
@@ -560,7 +559,7 @@ const Profile = () => {
                 <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto md:overflow-visible h-full md:h-auto">
                    <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4">
                       <div className="flex items-center gap-3">
-                         <Button variant="ghost" size="icon" onClick={() => navigate('/profile')}><ArrowLeft className="h-6 w-6" /></Button>
+                         <Button variant="ghost" size="icon" onClick={() => navigate('/profile')} className="md:hidden"><ArrowLeft className="h-6 w-6" /></Button>
                          <h1 className="text-lg font-bold">Centro de Ayuda</h1>
                       </div>
                    </div>
@@ -600,7 +599,7 @@ const Profile = () => {
                        <div className="absolute top-0 right-0 w-64 h-64 bg-[#0a46eb] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50"></div>
                        <div className="absolute bottom-0 left-0 w-40 h-40 bg-[#3b82f6] rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 opacity-20"></div>
                        <div className="relative z-10 px-4 pt-12 md:pt-4 flex items-center justify-between h-16">
-                          <button onClick={() => navigate('/profile')} className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/20 transition-colors">
+                          <button onClick={() => navigate('/profile')} className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/20 transition-colors md:hidden">
                               <X className="h-6 w-6 text-white" />
                           </button>
                           <div className="bg-white/10 backdrop-blur-md px-4 py-1 rounded-full">
@@ -643,7 +642,7 @@ const Profile = () => {
             return (
                 <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-100 flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto md:bg-white">
                    <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center pt-6 md:pt-4">
-                      <Button variant="ghost" size="icon" onClick={() => navigate('/profile')} className="-ml-2 mr-2"><ArrowLeft className="h-6 w-6 text-black" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => navigate('/profile')} className="-ml-2 mr-2 md:hidden"><ArrowLeft className="h-6 w-6 text-black" /></Button>
                       <h1 className="text-xl font-bold text-black">Mi Plan</h1>
                    </div>
                    <div className="p-6">
@@ -669,7 +668,7 @@ const Profile = () => {
             return (
                 <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
                    <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4">
-                      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => navigate('/profile')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Notificaciones</h1></div>
+                      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => navigate('/profile')} className="md:hidden"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Notificaciones</h1></div>
                    </div>
                    <div className="p-5 space-y-6 pb-24 md:pb-6">
                        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-5">
@@ -685,7 +684,7 @@ const Profile = () => {
             return (
                 <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-white flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
                    <div className="p-4 flex items-center gap-3 pt-12 md:pt-4">
-                       <Button variant="ghost" size="icon" onClick={() => navigate('/profile/account')}><ArrowLeft className="h-6 w-6" /></Button>
+                       <Button variant="ghost" size="icon" onClick={() => navigate('/profile/account')} className="md:hidden"><ArrowLeft className="h-6 w-6" /></Button>
                        <h1 className="text-xl font-bold">Cambiar Contraseña</h1>
                    </div>
                    <div className="p-6 space-y-6">
@@ -700,7 +699,7 @@ const Profile = () => {
             return (
               <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
                  <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4">
-                    <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => navigate('/profile')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Administrar Cuenta</h1></div>
+                    <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => navigate('/profile')} className="md:hidden"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Administrar Cuenta</h1></div>
                  </div>
                  <div className="p-5 space-y-6 pb-24 md:pb-6">
                     <div className="space-y-2"><h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-2">Seguridad</h3><div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"><button onClick={() => navigate('/profile/security')} className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"><div className="flex items-center gap-4"><div className="p-2 bg-blue-50 text-blue-600 rounded-xl"><Lock className="h-5 w-5" /></div><span className="font-semibold text-gray-700">Cambiar Contraseña</span></div><ChevronRight className="h-5 w-5 text-gray-300" /></button></div></div>
@@ -714,7 +713,7 @@ const Profile = () => {
             return (
                 <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-white flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
                    <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4">
-                      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>navigate('/profile')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Verificación</h1></div>
+                      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>navigate('/profile')} className="md:hidden"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Verificación</h1></div>
                    </div>
                    <div className="p-6 flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
                        <div className="w-24 h-24 bg-orange-50 rounded-full flex items-center justify-center mb-4 border-2 border-orange-100 relative"><ShieldCheck className="h-10 w-10 text-[#F97316]" /><div className="absolute -bottom-1 -right-1 bg-[#F97316] text-white p-1.5 rounded-full border-2 border-white"><Hammer className="h-4 w-4" /></div></div>
@@ -728,7 +727,7 @@ const Profile = () => {
             return (
                 <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
                    <div className="bg-white p-4 shadow-sm sticky top-0 z-10 space-y-4 pt-12 md:pt-4">
-                      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>navigate('/profile')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Métricas de Rendimiento</h1></div>
+                      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>navigate('/profile')} className="md:hidden"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Métricas de Rendimiento</h1></div>
                       <div className="flex justify-between items-center bg-gray-100 p-1 rounded-lg">
                           {['24h', '7d', '30d', 'Año', 'Todo'].map((r) => {
                               const val = r === 'Año' ? '1y' : r === 'Todo' ? 'all' : r;
@@ -778,7 +777,7 @@ const Profile = () => {
             return (
               <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
                 <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4">
-                   <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>navigate('/profile')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Reputación</h1></div>
+                   <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>navigate('/profile')} className="md:hidden"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Reputación</h1></div>
                 </div>
                 <div className="p-5 space-y-6 pb-24 md:pb-6">
                     <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center"><div className="text-5xl font-black text-[#0F172A] mb-1">{averageRating.toFixed(1)}</div><div className="flex gap-1 mb-2">{[1,2,3,4,5].map((star) => (<Star key={star} className={cn("h-5 w-5", star <= Math.round(averageRating) ? "fill-[#F97316] text-[#F97316]" : "text-gray-200 fill-gray-100")} />))}</div><p className="text-gray-400 text-sm font-medium">{reviews.length} reseñas recibidas</p></div>
@@ -790,7 +789,7 @@ const Profile = () => {
           case 'edit':
             return (
               <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-white flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
-                <div className="flex items-center gap-4 p-4 sticky top-0 bg-white z-10 pt-12 md:pt-4 border-b md:border-none shadow-sm md:shadow-none"><Button variant="ghost" size="icon" onClick={() => navigate('/profile')} className="-ml-2"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis datos personales</h1></div>
+                <div className="flex items-center gap-4 p-4 sticky top-0 bg-white z-10 pt-12 md:pt-4 border-b md:border-none shadow-sm md:shadow-none"><Button variant="ghost" size="icon" onClick={() => navigate('/profile')} className="-ml-2 md:hidden"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis datos personales</h1></div>
                 <div className="pb-32 px-6 pt-4">
                     <div className="flex flex-col items-center mb-10"><div className="relative group"><div className="p-1.5 rounded-full border-2 border-dashed border-gray-200" style={{ borderColor: profileColor }}><ProfileAvatar size="xl" className="border-4 border-white shadow-sm" /></div><label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-[#F97316] p-2.5 rounded-full cursor-pointer shadow-lg border-2 border-white">{uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <Camera className="h-4 w-4 text-white" />}</label><input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={uploadAvatar} disabled={uploadingAvatar} /></div><div className="mt-6 w-full max-w-xs"><p className="text-xs font-bold text-gray-400 text-center uppercase mb-3">Color de Portada</p><div className="flex gap-3 overflow-x-auto p-2 no-scrollbar justify-center">{PROFILE_COLORS.map((color) => (<button key={color.value} onClick={() => setProfileColor(color.value)} className={cn("w-8 h-8 rounded-full transition-all shadow-sm flex-shrink-0 border-2 border-white ring-1 ring-gray-100", profileColor === color.value ? "scale-110 ring-2 ring-offset-2 ring-gray-900 z-10" : "hover:scale-105")} style={{ backgroundColor: color.value }} />))}</div></div></div>
                     <div className="space-y-8"><div className="space-y-5"><h3 className="text-lg font-bold">¿Cómo te llamas?</h3><div className="space-y-5"><div className="relative"><label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Nombre(s)*</label><Input value={firstName} onChange={e => setFirstName(e.target.value)} className="h-14 rounded-xl border-gray-300" /></div><div className="relative"><label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Apellido(s)*</label><Input value={lastName} onChange={e => setLastName(e.target.value)} className="h-14 rounded-xl border-gray-300" /></div></div></div><div className="space-y-5"><h3 className="text-lg font-bold">Contacto y Ubicación</h3><div className="relative"><label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Teléfono móvil</label><div className="relative"><Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" /><Input value={phone} onChange={e => setPhone(e.target.value)} type="tel" className="h-14 pl-12 rounded-xl border-gray-300" /></div></div><div className="relative"><label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Provincia</label><Select value={city} onValueChange={setCity}><SelectTrigger className="h-14 rounded-xl border-gray-300"><SelectValue placeholder="Selecciona..." /></SelectTrigger><SelectContent className="bg-white max-h-[250px] z-[1100]"><ScrollArea className="h-64">{DR_PROVINCES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</ScrollArea></SelectContent></Select></div></div></div>
@@ -802,7 +801,7 @@ const Profile = () => {
           case 'my-services':
             return (
               <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
-                <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>navigate('/profile')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Publicaciones</h1></div></div>
+                <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>navigate('/profile')} className="md:hidden"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Publicaciones</h1></div></div>
                 <div className="p-4 space-y-4 pb-24 md:pb-6">
                    <div className="flex items-center justify-between px-1"><span className="text-sm font-medium text-gray-500">Espacios utilizados</span><span className="text-sm font-bold text-gray-900">{myServices.length} / {maxSlots}</span></div>
                    {Array.from({ length: TOTAL_DISPLAY_SLOTS }).map((_, index) => {
@@ -866,7 +865,7 @@ const Profile = () => {
           case 'favorites':
             return (
               <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
-                <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => navigate('/profile')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Favoritos</h1></div></div>
+                <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => navigate('/profile')} className="md:hidden"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Favoritos</h1></div></div>
                 <div className="p-4 pb-24 md:pb-6">{myFavorites.length === 0 ? <div className="text-center py-10 text-gray-500">Sin favoritos</div> : (<div className="grid grid-cols-2 gap-4">{myFavorites.map((s) => <div key={s.id} onClick={()=>navigate(`/service/${s.id}`)}><ServiceCard title={s.title} price={`RD$ ${s.price}`} image={s.image_url} /></div>)}</div>)}</div>
               </div>
             );
