@@ -48,10 +48,10 @@ const CATEGORIES = [
 ];
 
 const BOOST_PLANS = [
-  { id: 'free', label: "Estándar", duration: 0, price: 0, popular: false },
-  { id: '1day', label: "Boost 1 Día", duration: 24, price: 299, popular: false },
-  { id: '3days', label: "Boost 3 Días", duration: 72, price: 499, popular: true },
-  { id: '7days', label: "Boost 7 Días", duration: 168, price: 999, popular: false },
+  { id: 'free', label: "Estándar", duration: 0, price: 0, popular: false, disabled: false, badge: null },
+  { id: '1day', label: "Boost 1 Día", duration: 24, price: 0, popular: true, disabled: false, badge: "GRATIS BETA" },
+  { id: '3days', label: "Boost 3 Días", duration: 72, price: 499, popular: false, disabled: true, badge: "PRÓXIMAMENTE" },
+  { id: '7days', label: "Boost 7 Días", duration: 168, price: 999, popular: false, disabled: true, badge: "PRÓXIMAMENTE" },
 ];
 
 const DR_LOCATIONS: Record<string, string[]> = {
@@ -258,8 +258,8 @@ const Publish = () => {
 
       if (error) throw error;
       
-      // Registrar transacción de Boost si hubo pago
-      if (isPromoted && selectedPlan.price > 0) {
+      // Registrar transacción de Boost si hubo pago (En este caso 0 por beta, pero se registra igual)
+      if (isPromoted) {
         await supabase.from('transactions').insert({
           user_id: session.user.id,
           amount: selectedPlan.price,
@@ -449,22 +449,30 @@ const Publish = () => {
             <div 
               key={plan.id}
               onClick={() => {
-                 setFormData({ ...formData, selectedPlanId: plan.id });
+                 if (!plan.disabled) {
+                    setFormData({ ...formData, selectedPlanId: plan.id });
+                 }
               }}
               className={cn(
-                "relative p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between group overflow-hidden",
+                "relative p-4 rounded-2xl border-2 transition-all flex items-center justify-between group overflow-hidden",
+                plan.disabled 
+                    ? "opacity-60 cursor-not-allowed border-gray-100 bg-gray-50" 
+                    : "cursor-pointer hover:border-orange-100",
                 isSelected 
                   ? "border-[#F97316] bg-orange-50/50 shadow-md" 
-                  : "border-gray-100 bg-white hover:border-orange-100"
+                  : !plan.disabled ? "border-gray-100 bg-white" : ""
               )}
             >
-              {plan.popular && (
-                <div className="absolute top-0 right-0 bg-[#F97316] text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg z-10">
-                  POPULAR
+              {(plan.popular || plan.badge) && (
+                <div className={cn(
+                    "absolute top-0 right-0 text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg z-10",
+                    plan.disabled ? "bg-gray-400" : "bg-[#F97316]"
+                )}>
+                  {plan.badge || "POPULAR"}
                 </div>
               )}
               
-              <div className="flex items-center gap-3">
+              <div className={cn("flex items-center gap-3", plan.disabled && "opacity-50")}>
                  <div className={cn(
                    "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
                    isSelected ? "bg-[#F97316] text-white" : "bg-gray-100 text-gray-400"
@@ -479,7 +487,7 @@ const Publish = () => {
                  </div>
               </div>
 
-              <div className="text-right">
+              <div className={cn("text-right", plan.disabled && "opacity-50")}>
                  <p className={cn("font-bold text-lg", isSelected ? "text-[#F97316]" : "text-gray-900")}>
                     {plan.price === 0 ? "Gratis" : `RD$ ${plan.price}`}
                  </p>
