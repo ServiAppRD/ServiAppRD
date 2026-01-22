@@ -77,9 +77,27 @@ const PROFILE_COLORS = [
 ];
 
 const BOOST_OPTIONS = [
-  { label: "1 Día", duration: 24, price: 299, popular: false },
-  { label: "3 Días", duration: 72, price: 499, popular: true },
-  { label: "7 Días", duration: 168, price: 999, popular: false },
+  { 
+    label: "1 Día", 
+    duration: 24, 
+    price: 99, 
+    popular: false,
+    checkoutUrl: "https://serviapprdrd.lemonsqueezy.com/checkout/buy/e72507b2-8ba3-49bb-8eb2-5938935acefb?embed=1&media=0"
+  },
+  { 
+    label: "3 Días", 
+    duration: 72, 
+    price: 499, 
+    popular: true,
+    checkoutUrl: null 
+  },
+  { 
+    label: "7 Días", 
+    duration: 168, 
+    price: 999, 
+    popular: false,
+    checkoutUrl: null 
+  },
 ];
 
 const SLOT_LIMIT_FREE = 5;
@@ -108,6 +126,7 @@ const Profile = () => {
   
   const [updating, setUpdating] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [buyingPlus, setBuyingPlus] = useState(false);
 
   const [myServices, setMyServices] = useState<any[]>([]);
   const [myFavorites, setMyFavorites] = useState<any[]>([]);
@@ -323,7 +342,6 @@ const Profile = () => {
 
   const getCheckoutUrl = () => {
     if (!session?.user) return "#";
-    // Enlace directo de Lemon Squeezy con datos de usuario pre-llenados
     return `https://serviapprdrd.lemonsqueezy.com/checkout/buy/9f95644c-f4a4-42f8-b815-1d09f609c58f?embed=1&media=0&checkout[email]=${session.user.email}&checkout[custom][user_id]=${session.user.id}`;
   };
 
@@ -438,11 +456,10 @@ const Profile = () => {
   };
 
   const handleDeleteAccount = async () => {
-    if (isPlus) return; // Doble verificación por seguridad
+    if (isPlus) return; 
 
     setIsDeleting(true);
     try {
-       // Llamamos a la Edge Function 'delete-user' que se encarga de borrar de auth.users
        const { error } = await supabase.functions.invoke('delete-user');
        
        if (error) {
@@ -450,7 +467,6 @@ const Profile = () => {
          throw new Error("No se pudo completar la eliminación.");
        }
 
-       // Si la función tuvo éxito, cerramos sesión local y enviamos al inicio
        await supabase.auth.signOut();
        navigate('/');
        showSuccess("Tu cuenta y datos han sido eliminados permanentemente.");
@@ -1010,7 +1026,7 @@ const Profile = () => {
                                <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-5"><CalendarRange className="h-3.5 w-3.5" /> Publicado el {new Date(s.created_at).toLocaleDateString()}</div>
                                <div className="flex items-center gap-3">
                                   {!isPromoted ? (
-                                    <Button onClick={() => {setSelectedServiceToBoost(s);setSelectedBoostOption(72);setBoostModalOpen(true);}} className="flex-1 bg-gray-900 text-white h-11 rounded-xl text-sm font-bold"><TrendingUp className="h-4 w-4 mr-2 text-yellow-400" /> Impulsar</Button>
+                                    <Button onClick={() => {setSelectedServiceToBoost(s);setSelectedBoostOption(24);setBoostModalOpen(true);}} className="flex-1 bg-gray-900 text-white h-11 rounded-xl text-sm font-bold"><TrendingUp className="h-4 w-4 mr-2 text-yellow-400" /> Impulsar</Button>
                                   ) : (<div className="flex-1 bg-orange-50 border border-orange-100 h-11 rounded-xl flex items-center justify-center text-sm font-bold text-[#F97316]"><Clock className="h-4 w-4 mr-2" /> Destacado Activo</div>)}
                                </div>
                            </div>
@@ -1106,7 +1122,22 @@ const Profile = () => {
         <DialogContent className="sm:max-w-md rounded-3xl border-0 shadow-2xl z-[2000]">
             <DialogHeader className="space-y-3 pb-2"><div className="mx-auto bg-gradient-to-br from-[#F97316] to-pink-500 w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg"><RocketIcon className="h-7 w-7 text-white" /></div><DialogTitle className="text-center text-xl font-bold">Impulsa tu publicación</DialogTitle><DialogDescription className="text-center text-gray-500">Elige un plan para destacar tu servicio.</DialogDescription></DialogHeader>
             <div className="flex flex-col gap-3 py-4">{BOOST_OPTIONS.map((opt) => (<div key={opt.duration} onClick={() => setSelectedBoostOption(opt.duration)} className={cn("cursor-pointer rounded-2xl border-2 p-4 flex items-center justify-between transition-all", selectedBoostOption === opt.duration ? "border-[#F97316] bg-orange-50/50 shadow-md" : "border-gray-100 bg-white hover:border-orange-100")}><div className="flex items-center gap-3"><div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center", selectedBoostOption === opt.duration ? "border-[#F97316]" : "border-gray-300")}>{selectedBoostOption === opt.duration && <div className="w-2.5 h-2.5 rounded-full bg-[#F97316]" />}</div><div><h3 className="font-bold text-gray-900">{opt.label}</h3><p className="text-xs text-gray-400">Visibilidad Premium</p></div></div><div className="text-right"><p className="text-[#F97316] font-black text-lg">RD$ {opt.price}</p></div></div>))}</div>
-            <Button onClick={handleProcessBoost} disabled={!selectedBoostOption || processingBoost} className="w-full h-12 text-lg font-bold bg-[#F97316] hover:bg-orange-600 rounded-xl shadow-lg">{processingBoost ? <Loader2 className="animate-spin" /> : "Pagar y Activar"}</Button>
+            
+            {/* Logic for Payment Button */}
+            {selectedBoostOption && BOOST_OPTIONS.find(o => o.duration === selectedBoostOption)?.checkoutUrl ? (
+                <a 
+                  href={`${BOOST_OPTIONS.find(o => o.duration === selectedBoostOption)?.checkoutUrl}&checkout[email]=${session?.user?.email}&checkout[custom][user_id]=${session?.user?.id}&checkout[custom][service_id]=${selectedServiceToBoost?.id}`}
+                  className="lemonsqueezy-button w-full block"
+                >
+                   <Button className="w-full h-12 text-lg font-bold bg-[#F97316] hover:bg-orange-600 rounded-xl shadow-lg">
+                      Pagar RD$ {BOOST_OPTIONS.find(o => o.duration === selectedBoostOption)?.price}
+                   </Button>
+                </a>
+            ) : (
+                <Button onClick={handleProcessBoost} disabled={!selectedBoostOption || processingBoost} className="w-full h-12 text-lg font-bold bg-[#F97316] hover:bg-orange-600 rounded-xl shadow-lg">
+                    {processingBoost ? <Loader2 className="animate-spin" /> : "Pagar y Activar"}
+                </Button>
+            )}
         </DialogContent>
       </Dialog>
 
