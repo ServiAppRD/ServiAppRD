@@ -1,16 +1,25 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, PlusCircle, User, Heart, Crown } from "lucide-react";
+import { Search, PlusCircle, User, Heart, Crown, LayoutDashboard, Briefcase, BarChart3, Settings, LogOut, ChevronDown } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const DesktopNavbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [user, setUser] = useState<any>(null);
+  const [profileData, setProfileData] = useState<any>(null);
   const [avatarUrl, setAvatarUrl] = useState("");
   const [isPlus, setIsPlus] = useState(false);
 
@@ -19,21 +28,43 @@ export const DesktopNavbar = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         setUser(session.user);
-        const { data } = await supabase.from('profiles').select('avatar_url, is_plus').eq('id', session.user.id).single();
+        const { data } = await supabase.from('profiles').select('first_name, last_name, avatar_url, is_plus').eq('id', session.user.id).single();
         if (data) {
+           setProfileData(data);
            setAvatarUrl(data.avatar_url);
            setIsPlus(data.is_plus || false);
         }
+      } else {
+        setUser(null);
+        setProfileData(null);
       }
     };
+
     getUser();
-  }, [location.pathname]);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (session) {
+            setUser(session.user);
+            getUser();
+        } else {
+            setUser(null);
+            setProfileData(null);
+        }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
     }
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/login");
   };
 
   const isActive = (path: string) => location.pathname === path;
@@ -78,31 +109,75 @@ export const DesktopNavbar = () => {
             </Button>
           </Link>
 
-          {/* Profile Dropdown / Link */}
+          {/* Profile Dropdown */}
           {user ? (
-            <Link to="/profile" className="flex items-center gap-3 ml-2 pl-2 border-l border-gray-100 cursor-pointer hover:opacity-80 transition-opacity">
-              <div className="text-right hidden lg:block">
-                <div className="flex items-center justify-end gap-1">
-                   <p className="text-xs font-bold text-gray-900">Mi Cuenta</p>
-                   {isPlus && (
-                      <span className="bg-[#0239c7] text-white text-[9px] px-1.5 py-0.5 rounded-full font-black flex items-center gap-0.5">
-                         <Crown className="h-2 w-2 fill-white" />
-                         PLUS
-                      </span>
-                   )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="flex items-center gap-3 ml-2 pl-2 border-l border-gray-100 cursor-pointer hover:opacity-80 transition-opacity group">
+                  <div className="text-right hidden lg:block">
+                    <div className="flex items-center justify-end gap-1">
+                       <p className="text-xs font-bold text-gray-900 max-w-[100px] truncate">
+                          {profileData?.first_name || "Mi Cuenta"}
+                       </p>
+                       {isPlus && (
+                          <span className="bg-[#0239c7] text-white text-[9px] px-1.5 py-0.5 rounded-full font-black flex items-center gap-0.5">
+                             <Crown className="h-2 w-2 fill-white" />
+                             PLUS
+                          </span>
+                       )}
+                    </div>
+                    <p className="text-[10px] text-gray-500 flex items-center justify-end gap-1">
+                        Gestión <ChevronDown className="h-3 w-3" />
+                    </p>
+                  </div>
+                  <Avatar className={`h-10 w-10 border-2 transition-all ${isPlus ? "border-[#0239c7] ring-2 ring-blue-50" : "border-orange-100 group-hover:border-orange-200"}`}>
+                    <AvatarImage src={avatarUrl} />
+                    <AvatarFallback className="bg-orange-50 text-[#F97316] font-bold">
+                        <User className="h-5 w-5" />
+                    </AvatarFallback>
+                  </Avatar>
                 </div>
-                <p className="text-[10px] text-gray-500">Gestión</p>
-              </div>
-              <Avatar className={`h-10 w-10 border-2 ${isPlus ? "border-[#0239c7]" : "border-orange-100"}`}>
-                <AvatarImage src={avatarUrl} />
-                <AvatarFallback className="bg-orange-50 text-[#F97316] font-bold">
-                    <User className="h-5 w-5" />
-                </AvatarFallback>
-              </Avatar>
-            </Link>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-64 p-2 rounded-2xl shadow-xl border-gray-100 bg-white mr-4" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal px-3 pt-3 pb-2">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-bold text-gray-900 leading-none">
+                        {profileData?.first_name ? `${profileData.first_name} ${profileData.last_name || ''}` : "Mi Cuenta"}
+                    </p>
+                    <p className="text-xs leading-none text-gray-500 truncate">
+                      {user.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-gray-100 my-2" />
+                <div className="space-y-1">
+                    <DropdownMenuItem onClick={() => navigate('/profile')} className="rounded-xl px-3 py-2.5 cursor-pointer focus:bg-orange-50 focus:text-[#F97316]">
+                      <LayoutDashboard className="mr-3 h-4 w-4" />
+                      <span className="font-medium">Mi Perfil</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/profile?view=my-services')} className="rounded-xl px-3 py-2.5 cursor-pointer focus:bg-orange-50 focus:text-[#F97316]">
+                      <Briefcase className="mr-3 h-4 w-4" />
+                      <span className="font-medium">Mis Publicaciones</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/profile?view=metrics')} className="rounded-xl px-3 py-2.5 cursor-pointer focus:bg-orange-50 focus:text-[#F97316]">
+                      <BarChart3 className="mr-3 h-4 w-4" />
+                      <span className="font-medium">Métricas</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/profile?view=account-settings')} className="rounded-xl px-3 py-2.5 cursor-pointer focus:bg-orange-50 focus:text-[#F97316]">
+                      <Settings className="mr-3 h-4 w-4" />
+                      <span className="font-medium">Administrar Cuenta</span>
+                    </DropdownMenuItem>
+                </div>
+                <DropdownMenuSeparator className="bg-gray-100 my-2" />
+                <DropdownMenuItem onClick={handleSignOut} className="rounded-xl px-3 py-2.5 cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-700">
+                  <LogOut className="mr-3 h-4 w-4" />
+                  <span className="font-medium">Cerrar Sesión</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <Link to="/login">
-              <Button variant="outline" className="ml-2 border-gray-200 rounded-xl font-bold">
+              <Button variant="outline" className="ml-2 border-gray-200 rounded-xl font-bold hover:bg-gray-50 text-gray-700">
                 Ingresar
               </Button>
             </Link>
