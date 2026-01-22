@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Loader2, MapPin, Star, ArrowLeft, MessageCircle, MoreVertical, Ban, ShieldCheck, Share2 } from "lucide-react";
+import { Loader2, MapPin, Star, ArrowLeft, MessageCircle, MoreVertical, Ban, ShieldCheck, Share2, Edit2 } from "lucide-react";
 import { ServiceCard } from "@/components/ServiceCard";
 import { showError, showSuccess } from "@/utils/toast";
 import { cn } from "@/lib/utils";
@@ -27,6 +27,7 @@ const PublicProfile = () => {
   const [stats, setStats] = useState({ rating: 0, count: 0 });
   const [isBlocked, setIsBlocked] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -37,14 +38,18 @@ const PublicProfile = () => {
 
         const { data: { session } } = await supabase.auth.getSession();
 
-        // 1. Check if blocked
+        // 1. Check if blocked & ownership
         if (session) {
-           const { data: blockData } = await supabase.from('blocked_users')
-             .select('id')
-             .eq('blocker_id', session.user.id)
-             .eq('blocked_user_id', id)
-             .maybeSingle();
-           if (blockData) setIsBlocked(true);
+           setIsOwnProfile(session.user.id === id);
+           
+           if (session.user.id !== id) {
+               const { data: blockData } = await supabase.from('blocked_users')
+                 .select('id')
+                 .eq('blocker_id', session.user.id)
+                 .eq('blocked_user_id', id)
+                 .maybeSingle();
+               if (blockData) setIsBlocked(true);
+           }
         }
 
         // 2. Fetch Profile
@@ -153,24 +158,37 @@ const PublicProfile = () => {
             <DrawerDescription>Gestiona tu interacción con este perfil.</DrawerDescription>
           </DrawerHeader>
           <div className="p-4 space-y-3">
-             <Button 
-                variant="outline" 
-                className={cn(
-                    "w-full justify-start h-16 text-lg font-bold rounded-2xl border-2 transition-all",
-                    isBlocked 
-                        ? "border-gray-200 bg-white text-gray-900 hover:bg-gray-50"
-                        : "border-red-100 bg-red-50 text-red-600 hover:bg-red-100"
-                )}
-                onClick={handleBlockUser}
-             >
-                <div className={cn(
-                    "h-10 w-10 rounded-full flex items-center justify-center mr-4 shadow-sm border",
-                    isBlocked ? "bg-gray-100 border-gray-200" : "bg-white border-red-100"
-                )}>
-                    {isBlocked ? <ShieldCheck className="h-5 w-5 text-gray-600" /> : <Ban className="h-5 w-5 text-red-500" />}
-                </div>
-                {isBlocked ? "Desbloquear usuario" : "Bloquear usuario"}
-             </Button>
+             {isOwnProfile ? (
+               <Button 
+                  variant="outline" 
+                  className="w-full justify-start h-16 text-lg font-bold rounded-2xl border-2 border-gray-200 bg-white text-gray-900 hover:bg-gray-50 transition-all"
+                  onClick={() => navigate('/profile?view=edit')}
+               >
+                  <div className="h-10 w-10 rounded-full flex items-center justify-center mr-4 shadow-sm border bg-white border-gray-100">
+                      <Edit2 className="h-5 w-5 text-gray-600" />
+                  </div>
+                  Editar mi perfil
+               </Button>
+             ) : (
+               <Button 
+                  variant="outline" 
+                  className={cn(
+                      "w-full justify-start h-16 text-lg font-bold rounded-2xl border-2 transition-all",
+                      isBlocked 
+                          ? "border-gray-200 bg-white text-gray-900 hover:bg-gray-50"
+                          : "border-red-100 bg-red-50 text-red-600 hover:bg-red-100"
+                  )}
+                  onClick={handleBlockUser}
+               >
+                  <div className={cn(
+                      "h-10 w-10 rounded-full flex items-center justify-center mr-4 shadow-sm border",
+                      isBlocked ? "bg-gray-100 border-gray-200" : "bg-white border-red-100"
+                  )}>
+                      {isBlocked ? <ShieldCheck className="h-5 w-5 text-gray-600" /> : <Ban className="h-5 w-5 text-red-500" />}
+                  </div>
+                  {isBlocked ? "Desbloquear usuario" : "Bloquear usuario"}
+               </Button>
+             )}
 
              <Button 
                 variant="outline"
@@ -255,6 +273,16 @@ const PublicProfile = () => {
            {isBlocked ? (
              <div className="mt-6 w-full p-4 bg-red-50 text-red-600 rounded-xl text-sm font-medium border border-red-100">
                 Has bloqueado a este usuario.
+             </div>
+           ) : isOwnProfile ? (
+             <div className="mt-6 w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full rounded-xl border-dashed border-gray-300 text-gray-500" 
+                  disabled
+                >
+                   Esta es tu vista pública
+                </Button>
              </div>
            ) : (
              <div className="mt-6 w-full grid grid-cols-2 gap-3">

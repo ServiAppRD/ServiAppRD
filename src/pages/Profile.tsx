@@ -179,6 +179,8 @@ const Profile = () => {
         
         const viewParam = searchParams.get('view');
         if (viewParam === 'favorites') handleOpenFavorites(session.user.id);
+        else if (viewParam === 'edit') setView('edit');
+        else if (viewParam === 'my-plan') setView('my-plan');
       }
     });
   }, [navigate, searchParams]);
@@ -1101,13 +1103,13 @@ const Profile = () => {
                     {completedSteps < totalSteps && (<div className="bg-white rounded-2xl p-5 border border-orange-100"><div className="mb-2"><h3 className="font-bold">Completa tu perfil</h3><p className="text-sm text-gray-500">{completedSteps}/{totalSteps} pasos</p></div><Progress value={(completedSteps/totalSteps)*100} className="h-2 mb-3" /><Button onClick={()=>setView('edit')} className="w-full bg-[#F97316] h-9 text-sm">Terminar</Button></div>)}
                     <div className="space-y-6">
                       <MenuSection title="Mi Cuenta">
-                         <MenuItem icon={Edit2} label="Editar Datos Personales" onClick={() => setView('edit')} />
+                         {/* Removed explicit Edit button as requested */}
+                         <MenuItem icon={Settings} label="Administrar Cuenta" onClick={() => setView('account-settings')} />
                       </MenuSection>
 
                       <MenuSection title="Mis Servicios"><MenuItem icon={Briefcase} label="Mis Publicaciones" onClick={handleOpenMyServices} /><MenuItem icon={Heart} label="Mis Favoritos" badge={myFavorites.length > 0 ? String(myFavorites.length) : undefined} onClick={() => handleOpenFavorites()} /></MenuSection>
                       <MenuSection title="Estadísticas & Verificación"><MenuItem icon={BarChart3} label="Métricas" onClick={() => setView('metrics')} /><MenuItem icon={ShieldCheck} label="Verificación" onClick={() => setView('verification')} /><MenuItem icon={Bell} label="Notificaciones" onClick={() => setView('notifications')} /></MenuSection>
                       <MenuSection title="Suscripción"><MenuItem icon={CreditCard} label="Mi Plan" onClick={() => setView('my-plan')} /></MenuSection>
-                      <MenuSection title="Preferencias"><MenuItem icon={Settings} label="Seguridad y Legal" onClick={() => setView('account-settings')} /></MenuSection>
                     </div>
                   </div>
                 </div>
