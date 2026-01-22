@@ -18,7 +18,6 @@ import { DesktopNavbar } from "./components/DesktopNavbar";
 import { Footer } from "./components/Footer";
 import { SplashScreen } from "@/components/SplashScreen";
 import { ActivityTracker } from "@/components/ActivityTracker";
-import { InstallAppBanner } from "@/components/InstallAppBanner";
 import { useState, useEffect } from "react";
 
 const queryClient = new QueryClient();
@@ -45,9 +44,6 @@ const AppLayout = () => {
 
       {/* Navbar Superior (Solo Desktop) */}
       {!hideDesktopNav && <DesktopNavbar />}
-
-      {/* Banner de Instalación (Visible en Web/Mobile Web) */}
-      <InstallAppBanner />
       
       {/* Contenedor Principal */}
       <div className={`
