@@ -1,7 +1,25 @@
 import { Link } from "react-router-dom";
 import { Facebook, Instagram, Twitter, Mail } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Footer = () => {
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    // Verificar sesión inicial
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    // Escuchar cambios en la autenticación
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   return (
     <footer className="hidden md:block bg-gray-50 border-t border-gray-100 mt-auto">
       <div className="max-w-7xl mx-auto px-6 py-12">
@@ -24,7 +42,14 @@ export const Footer = () => {
             <ul className="space-y-2 text-sm text-gray-600">
               <li><Link to="/search" className="hover:text-[#F97316] transition-colors">Explorar Servicios</Link></li>
               <li><Link to="/publish" className="hover:text-[#F97316] transition-colors">Publicar Anuncio</Link></li>
-              <li><Link to="/login" className="hover:text-[#F97316] transition-colors">Ingresar / Registro</Link></li>
+              <li>
+                <Link 
+                  to={session ? "/profile/edit" : "/login"} 
+                  className="hover:text-[#F97316] transition-colors"
+                >
+                  {session ? "Mi Cuenta" : "Ingresar / Registro"}
+                </Link>
+              </li>
             </ul>
           </div>
 
