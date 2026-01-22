@@ -108,7 +108,6 @@ const Profile = () => {
   
   const [updating, setUpdating] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [buyingPlus, setBuyingPlus] = useState(false);
 
   const [myServices, setMyServices] = useState<any[]>([]);
   const [myFavorites, setMyFavorites] = useState<any[]>([]);
@@ -322,37 +321,10 @@ const Profile = () => {
     }
   };
 
-  const handleBuyPlus = async () => {
-      setBuyingPlus(true);
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      try {
-          const nextMonth = new Date();
-          nextMonth.setMonth(nextMonth.getMonth() + 1);
-
-          const { error } = await supabase.from('profiles').update({ 
-              is_plus: true, 
-              plus_expires_at: nextMonth.toISOString()
-          }).eq('id', session.user.id);
-          
-          if (error) throw error;
-
-          await supabase.from('transactions').insert({
-              user_id: session.user.id,
-              amount: 499,
-              description: "Suscripción ServiAPP Plus (1 Mes)",
-              type: "subscription"
-          });
-          
-          setIsPlus(true);
-          setPlusExpiresAt(nextMonth.toISOString());
-          showSuccess("¡Bienvenido a ServiAPP Plus!");
-          setView('dashboard'); 
-      } catch (e: any) {
-          showError("Error al procesar suscripción");
-      } finally {
-          setBuyingPlus(false);
-      }
+  const getCheckoutUrl = () => {
+    if (!session?.user) return "#";
+    // Enlace directo de Lemon Squeezy con datos de usuario pre-llenados
+    return `https://serviapprdrd.lemonsqueezy.com/checkout/buy/9f95644c-f4a4-42f8-b815-1d09f609c58f?embed=1&media=0&checkout[email]=${session.user.email}&checkout[custom][user_id]=${session.user.id}`;
   };
 
   const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -726,9 +698,11 @@ const Profile = () => {
                                    <span className="text-xs font-bold text-[#0239c7] ml-1">/mes</span>
                               </div>
                            </div>
-                           <Button onClick={handleBuyPlus} disabled={buyingPlus || isPlus} className="w-full h-14 bg-[#0239c7] hover:bg-[#022b9e] text-white rounded-xl font-bold text-lg shadow-xl shadow-blue-900/20">
-                               {buyingPlus ? <Loader2 className="animate-spin" /> : (isPlus ? "Ya eres Plus" : "Suscribirme a Plus")}
-                           </Button>
+                           <a href={isPlus ? "#" : getCheckoutUrl()} className={`lemonsqueezy-button w-full block ${isPlus ? 'pointer-events-none' : ''}`}>
+                                <Button disabled={isPlus} className="w-full h-14 bg-[#0239c7] hover:bg-[#022b9e] text-white rounded-xl font-bold text-lg shadow-xl shadow-blue-900/20 pointer-events-none">
+                                    {isPlus ? "Ya eres Plus" : "Suscribirme a Plus"}
+                                </Button>
+                           </a>
                            <p className="text-center text-[10px] text-gray-400">
                                Al continuar, aceptas los <span className="underline cursor-pointer">términos y condiciones</span>.
                            </p>
@@ -778,15 +752,17 @@ const Profile = () => {
                        </div>
 
                        {!isPlus && (
-                           <div onClick={() => setView('serviapp-plus')} className="bg-[#0239c7] rounded-[2rem] p-6 shadow-lg shadow-blue-200 mb-8 cursor-pointer flex items-center justify-between">
-                                <div className="text-white">
-                                    <h3 className="font-bold text-lg">Mejorar a Plus</h3>
-                                    <p className="text-xs opacity-80">Desbloquea todos los beneficios</p>
-                                </div>
-                                <div className="bg-white/20 p-2 rounded-full">
-                                    <Crown className="h-6 w-6 text-white" />
-                                </div>
-                           </div>
+                           <a href={getCheckoutUrl()} className="lemonsqueezy-button block mb-8 no-underline">
+                               <div className="bg-[#0239c7] rounded-[2rem] p-6 shadow-lg shadow-blue-200 cursor-pointer flex items-center justify-between">
+                                    <div className="text-white">
+                                        <h3 className="font-bold text-lg">Mejorar a Plus</h3>
+                                        <p className="text-xs opacity-80">Desbloquea todos los beneficios</p>
+                                    </div>
+                                    <div className="bg-white/20 p-2 rounded-full">
+                                        <Crown className="h-6 w-6 text-white" />
+                                    </div>
+                               </div>
+                           </a>
                        )}
 
                        <div className="relative flex items-center justify-center mb-6">
