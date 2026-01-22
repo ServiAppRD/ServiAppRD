@@ -47,8 +47,8 @@ export const MobileNavbar = () => {
   }
 
   const isActive = (path: string) => {
-    if (path === "/profile?view=favorites") {
-        return location.pathname === "/profile" && location.search.includes("view=favorites");
+    if (path === "/profile/favorites") {
+        return location.pathname === "/profile/favorites";
     }
     return location.pathname === path && !location.search;
   };
@@ -77,7 +77,7 @@ export const MobileNavbar = () => {
       <NavItem icon={Home} label="Inicio" path="/" />
       <NavItem icon={Search} label="Buscar" path="/search" />
       <NavItem icon={PlusCircle} label="Publicar" path="/publish" />
-      <NavItem icon={Heart} label="Favoritos" path="/profile?view=favorites" />
+      <NavItem icon={Heart} label="Favoritos" path="/profile/favorites" />
       
       {/* Account Tab with Avatar logic */}
       <NavItem 

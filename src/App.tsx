@@ -55,9 +55,21 @@ const AppLayout = () => {
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           
-          {/* USAMOS KEY PARA FORZAR RECARGA AL VOLVER AL PERFIL */}
-          <Route path="/profile" element={<Profile key={location.key} />} />
-          
+          {/* Rutas de Perfil Desglosadas */}
+          <Route path="/profile" element={<Profile key="dashboard" />} />
+          <Route path="/profile/edit" element={<Profile key="edit" />} />
+          <Route path="/profile/publications" element={<Profile key="publications" />} />
+          <Route path="/profile/favorites" element={<Profile key="favorites" />} />
+          <Route path="/profile/reputation" element={<Profile key="reputation" />} />
+          <Route path="/profile/metrics" element={<Profile key="metrics" />} />
+          <Route path="/profile/verification" element={<Profile key="verification" />} />
+          <Route path="/profile/account" element={<Profile key="account" />} />
+          <Route path="/profile/security" element={<Profile key="security" />} />
+          <Route path="/profile/plus" element={<Profile key="plus" />} />
+          <Route path="/profile/plan" element={<Profile key="plan" />} />
+          <Route path="/profile/notifications" element={<Profile key="notifications" />} />
+          <Route path="/profile/help" element={<Profile key="help" />} />
+
           <Route path="/user/:id" element={<PublicProfile />} /> 
           <Route path="/search" element={<Search />} />
           <Route path="/publish" element={<Publish />} />
