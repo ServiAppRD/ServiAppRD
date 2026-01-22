@@ -1135,7 +1135,7 @@ const Profile = () => {
             {/* Logic for Payment Button */}
             {selectedBoostOption && BOOST_OPTIONS.find(o => o.duration === selectedBoostOption)?.checkoutUrl ? (
                 <a 
-                  href={`${BOOST_OPTIONS.find(o => o.duration === selectedBoostOption)?.checkoutUrl}&checkout[email]=${session?.user?.email}&checkout[custom][user_id]=${session?.user?.id}&checkout[custom][service_id]=${selectedServiceToBoost?.id}`}
+                  href={`${BOOST_OPTIONS.find(o => o.duration === selectedBoostOption)?.checkoutUrl}&checkout[email]=${session?.user?.email}&checkout[custom][user_id]=${session?.user?.id}&checkout[custom][service_id]=${selectedServiceToBoost?.id}&checkout[custom][duration]=${selectedBoostOption}`}
                   className="lemonsqueezy-button w-full block"
                 >
                    <Button className="w-full h-12 text-lg font-bold bg-[#F97316] hover:bg-orange-600 rounded-xl shadow-lg">

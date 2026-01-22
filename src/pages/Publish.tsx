@@ -279,7 +279,8 @@ const Publish = () => {
       
       // Manejo de Pagos Lemon Squeezy para cualquier plan con checkoutUrl
       if (needsPayment && selectedPlan.checkoutUrl && serviceData) {
-          const checkoutUrl = `${selectedPlan.checkoutUrl}&checkout[email]=${session.user.email}&checkout[custom][user_id]=${session.user.id}&checkout[custom][service_id]=${serviceData.id}`;
+          // AÑADIMOS 'duration' A LOS CUSTOM DATA para que el webhook sepa cuánto tiempo activar
+          const checkoutUrl = `${selectedPlan.checkoutUrl}&checkout[email]=${session.user.email}&checkout[custom][user_id]=${session.user.id}&checkout[custom][service_id]=${serviceData.id}&checkout[custom][duration]=${selectedPlan.duration}`;
           
           showSuccess("Abriendo pasarela de pago...");
           
@@ -291,9 +292,11 @@ const Publish = () => {
           a.click();
           document.body.removeChild(a);
           
-          // Opcional: Redirigir al perfil en el fondo para que cuando cierren el overlay vean sus servicios
+          // Redirigir al perfil. El servicio ya se creó (invisible).
+          // Cuando el webhook reciba el pago, lo hará visible/promocionado.
           setTimeout(() => {
              navigate("/profile");
+             showSuccess("Servicio creado. Se activará el Boost en cuanto se confirme el pago.");
           }, 3000);
 
       } else {
