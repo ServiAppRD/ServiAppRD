@@ -116,7 +116,7 @@ const Profile = () => {
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   
-  const [view, setView] = useState<'dashboard' | 'edit' | 'preview' | 'my-services' | 'reputation' | 'favorites' | 'metrics' | 'verification' | 'account-settings' | 'change-password' | 'serviapp-plus' | 'my-plan' | 'notifications' | 'help'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'edit' | 'my-services' | 'reputation' | 'favorites' | 'metrics' | 'verification' | 'account-settings' | 'change-password' | 'serviapp-plus' | 'my-plan' | 'notifications' | 'help'>('dashboard');
   
   const [session, setSession] = useState<any>(null);
   
@@ -346,11 +346,6 @@ const Profile = () => {
     }
   };
 
-  // Deshabilitado por Beta
-  const getCheckoutUrl = () => {
-    return "#"; 
-  };
-
   const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       setUploadingAvatar(true);
@@ -549,6 +544,12 @@ const Profile = () => {
   const handleOpenFavorites = (uid?: string) => { setView('favorites'); fetchFavorites(uid); };
   const handleOpenReputation = () => { setView('reputation'); fetchReputation(); };
   const handleBackToDashboard = () => { if(searchParams.get('view')) navigate('/profile', {replace:true}); setView('dashboard'); };
+  
+  const handleOpenPreview = () => {
+    if (session?.user?.id) {
+       navigate(`/user/${session.user.id}`);
+    }
+  };
 
   const ProfileAvatar = ({ size = "md", className = "" }: { size?: "sm" | "md" | "lg" | "xl", className?: string }) => {
     const sizeClasses = { sm: "h-8 w-8 text-xs", md: "h-12 w-12 text-lg", lg: "h-24 w-24 text-3xl", xl: "h-28 w-28 text-4xl" };
@@ -1092,9 +1093,9 @@ const Profile = () => {
                   <div className="bg-white pt-4 pb-4 px-6 shadow-sm rounded-b-[2.5rem] relative z-10">
                     <div className="flex justify-between items-center mb-6">
                       <div className="flex-1"><p className="text-gray-400 text-sm">Bienvenido,</p><div className="flex items-center gap-1.5"><h1 className="text-2xl font-bold truncate max-w-[200px]">{firstName || 'Usuario'}</h1>{isPlus && <Badge className="bg-[#0239c7] text-white text-[10px]"><Crown className="h-3 w-3 mr-1" />PLUS</Badge>}</div></div>
-                      <div onClick={() => setView('preview')} className="cursor-pointer relative"><ProfileAvatar size="md" className={isPlus ? "border-2 border-[#0239c7]" : "border-2 border-orange-100"} />{isPlus && (<div className="absolute -bottom-1 -right-1 bg-[#0239c7] text-white p-0.5 rounded-full border-2 border-white"><Crown className="h-3 w-3 fill-white" /></div>)}</div>
+                      <div onClick={handleOpenPreview} className="cursor-pointer relative"><ProfileAvatar size="md" className={isPlus ? "border-2 border-[#0239c7]" : "border-2 border-orange-100"} />{isPlus && (<div className="absolute -bottom-1 -right-1 bg-[#0239c7] text-white p-0.5 rounded-full border-2 border-white"><Crown className="h-3 w-3 fill-white" /></div>)}</div>
                     </div>
-                    <div className="flex justify-between gap-2 pb-2"><QuickAction icon={User} label="Perfil" onClick={() => setView('preview')} /><QuickAction icon={Star} label="Reputación" onClick={handleOpenReputation} /><QuickAction icon={Crown} label="ServiAPP Plus" onClick={() => setView('serviapp-plus')} /><QuickAction icon={HelpCircle} label="Ayuda" onClick={() => setView('help')} /></div>
+                    <div className="flex justify-between gap-2 pb-2"><QuickAction icon={User} label="Perfil" onClick={handleOpenPreview} /><QuickAction icon={Star} label="Reputación" onClick={handleOpenReputation} /><QuickAction icon={Crown} label="ServiAPP Plus" onClick={() => setView('serviapp-plus')} /><QuickAction icon={HelpCircle} label="Ayuda" onClick={() => setView('help')} /></div>
                   </div>
                   <div className="px-5 space-y-6 mt-6">
                     {completedSteps < totalSteps && (<div className="bg-white rounded-2xl p-5 border border-orange-100"><div className="mb-2"><h3 className="font-bold">Completa tu perfil</h3><p className="text-sm text-gray-500">{completedSteps}/{totalSteps} pasos</p></div><Progress value={(completedSteps/totalSteps)*100} className="h-2 mb-3" /><Button onClick={()=>setView('edit')} className="w-full bg-[#F97316] h-9 text-sm">Terminar</Button></div>)}
