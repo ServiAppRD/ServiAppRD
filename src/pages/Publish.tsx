@@ -49,7 +49,14 @@ const CATEGORIES = [
 
 const BOOST_PLANS = [
   { id: 'free', label: "Estándar", duration: 0, price: 0, popular: false },
-  { id: '1day', label: "Boost 1 Día", duration: 24, price: 299, popular: false },
+  { 
+    id: '1day', 
+    label: "Boost 24 Horas", 
+    duration: 24, 
+    price: 99, 
+    popular: false, 
+    checkoutUrl: "https://serviapprdrd.lemonsqueezy.com/checkout/buy/e72507b2-8ba3-49bb-8eb2-5938935acefb?embed=1&media=0" 
+  },
   { id: '3days', label: "Boost 3 Días", duration: 72, price: 499, popular: true },
   { id: '7days', label: "Boost 7 Días", duration: 168, price: 999, popular: false },
 ];
@@ -137,7 +144,7 @@ const Publish = () => {
       }
       setSession(session);
 
-      // Verificar perfil - Eliminada validación de 'city'
+      // Verificar perfil
       const { data: profile } = await supabase.from('profiles').select('first_name, last_name, phone').eq('id', session.user.id).single();
       if (profile) {
         if (!profile.first_name || !profile.last_name || !profile.phone) {
@@ -215,7 +222,11 @@ const Publish = () => {
     setLoading(true);
     try {
       const selectedPlan = BOOST_PLANS.find(p => p.id === formData.selectedPlanId) || BOOST_PLANS[0];
-      const isPromoted = selectedPlan.id !== 'free';
+      
+      // Si es el plan de pago (1day), NO activamos el boost inmediatamente. Esperamos al webhook.
+      // Si es otro plan pagado (que aun no tiene link real) o free, seguimos lógica normal.
+      const needsPayment = selectedPlan.id === '1day';
+      const isPromoted = !needsPayment && selectedPlan.id !== 'free'; // Logica legacy para otros planes sin link real
 
       let imageUrl = null;
       if (formData.imageFile) {
@@ -229,7 +240,7 @@ const Publish = () => {
         throw new Error("Imagen requerida");
       }
 
-      // Calcular promoted_until
+      // Calcular promoted_until (solo para legacy boosts o free)
       let promotedUntil = null;
       if (isPromoted) {
         const now = new Date();
@@ -237,7 +248,7 @@ const Publish = () => {
         promotedUntil = futureDate.toISOString();
       }
 
-      const { error } = await supabase.from('services').insert({
+      const { data: serviceData, error } = await supabase.from('services').insert({
         user_id: session.user.id,
         title: formData.title,
         description: formData.description,
@@ -254,22 +265,42 @@ const Publish = () => {
           instagram: formData.instagram,
           website: formData.website
         }
-      });
+      }).select().single();
 
       if (error) throw error;
       
-      // Registrar transacción de Boost si hubo pago
-      if (isPromoted && selectedPlan.price > 0) {
-        await supabase.from('transactions').insert({
-          user_id: session.user.id,
-          amount: selectedPlan.price,
-          description: `Boost inicial (${selectedPlan.label}) - ${formData.title}`,
-          type: "boost"
-        });
-      }
+      // Manejo de Pagos Lemon Squeezy (Boost 24h)
+      if (needsPayment && selectedPlan.checkoutUrl && serviceData) {
+          const checkoutUrl = `${selectedPlan.checkoutUrl}&checkout[email]=${session.user.email}&checkout[custom][user_id]=${session.user.id}&checkout[custom][service_id]=${serviceData.id}`;
+          
+          showSuccess("Abriendo pasarela de pago...");
+          
+          // Crear y clickear enlace oculto para activar overlay
+          const a = document.createElement('a');
+          a.href = checkoutUrl;
+          a.className = 'lemonsqueezy-button hidden';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          
+          // Opcional: Redirigir al perfil en el fondo para que cuando cierren el overlay vean sus servicios
+          setTimeout(() => {
+             navigate("/profile");
+          }, 3000);
 
-      showSuccess("¡Servicio publicado con éxito!");
-      navigate("/profile");
+      } else {
+          // Lógica Legacy para otros planes
+          if (isPromoted && selectedPlan.price > 0) {
+            await supabase.from('transactions').insert({
+              user_id: session.user.id,
+              amount: selectedPlan.price,
+              description: `Boost inicial (${selectedPlan.label}) - ${formData.title}`,
+              type: "boost"
+            });
+          }
+          showSuccess("¡Servicio publicado con éxito!");
+          navigate("/profile");
+      }
       
     } catch (error: any) {
       console.error(error);
@@ -606,7 +637,7 @@ const Publish = () => {
         <div className="max-w-lg mx-auto flex gap-3">
             {step === 5 ? (
               <Button onClick={handleSubmit} disabled={loading} className="w-full bg-[#F97316] hover:bg-orange-600 text-white h-14 rounded-2xl text-lg font-bold shadow-lg shadow-orange-200">
-                {loading ? <Loader2 className="animate-spin mr-2" /> : "Publicar Ahora"}
+                {loading ? <Loader2 className="animate-spin mr-2" /> : (formData.selectedPlanId === '1day' ? `Pagar RD$ 99 y Publicar` : "Publicar Ahora")}
               </Button>
             ) : (
               <Button onClick={handleNext} className="w-full bg-[#0F172A] hover:bg-slate-800 text-white h-14 rounded-2xl text-lg font-bold shadow-lg">
