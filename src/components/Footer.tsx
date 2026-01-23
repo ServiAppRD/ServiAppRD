@@ -24,7 +24,7 @@ export const Footer = () => {
             <ul className="space-y-2 text-sm text-gray-600">
               <li><Link to="/search" className="hover:text-[#F97316] transition-colors">Explorar Servicios</Link></li>
               <li><Link to="/publish" className="hover:text-[#F97316] transition-colors">Publicar Anuncio</Link></li>
-              <li><Link to="/login" className="hover:text-[#F97316] transition-colors">Ingresar / Registro</Link></li>
+              <li><Link to="/profile-edit" className="hover:text-[#F97316] transition-colors">Mi Perfil / Ingresar</Link></li>
             </ul>
           </div>
 
