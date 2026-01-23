@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,10 +76,35 @@ const PROFILE_COLORS = [
   { name: "Turquesa", value: "#06B6D4" },
 ];
 
+// Configuración BETA para los Boosts
 const BOOST_OPTIONS = [
-  { label: "1 Día", duration: 24, price: 0, originalPrice: 99, popular: true, disabled: false, badge: "GRATIS BETA" },
-  { label: "3 Días", duration: 72, price: 499, originalPrice: null, popular: false, disabled: true, badge: "PRÓXIMAMENTE" },
-  { label: "7 Días", duration: 168, price: 999, originalPrice: null, popular: false, disabled: true, badge: "PRÓXIMAMENTE" },
+  { 
+    label: "1 Día", 
+    duration: 24, 
+    price: 0, // GRATIS
+    originalPrice: 99,
+    popular: true,
+    disabled: false,
+    badge: "GRATIS BETA"
+  },
+  { 
+    label: "3 Días", 
+    duration: 72, 
+    price: 499, 
+    originalPrice: null,
+    popular: false,
+    disabled: true,
+    badge: "PRÓXIMAMENTE"
+  },
+  { 
+    label: "7 Días", 
+    duration: 168, 
+    price: 999, 
+    originalPrice: null,
+    popular: false,
+    disabled: true,
+    badge: "PRÓXIMAMENTE"
+  },
 ];
 
 const SLOT_LIMIT_FREE = 5;
@@ -88,39 +113,14 @@ const TOTAL_DISPLAY_SLOTS = 10;
 
 const Profile = () => {
   const navigate = useNavigate();
-  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   
-  // Mapping paths to views
-  const getInitialView = () => {
-      const path = location.pathname;
-      if (path === '/profile/edit') return 'edit';
-      if (path === '/profile/publications') return 'my-services';
-      if (path === '/profile/favorites') return 'favorites';
-      if (path === '/profile/reputation') return 'reputation';
-      if (path === '/profile/metrics') return 'metrics';
-      if (path === '/profile/verification') return 'verification';
-      if (path === '/profile/account') return 'account-settings';
-      if (path === '/profile/security') return 'change-password';
-      if (path === '/profile/plus') return 'serviapp-plus';
-      if (path === '/profile/plan') return 'my-plan';
-      if (path === '/profile/notifications') return 'notifications';
-      if (path === '/profile/help') return 'help';
-      
-      // Fallback for query params (Legacy/Mobile support)
-      const params = new URLSearchParams(location.search);
-      if (params.get('view') === 'favorites') return 'favorites';
-      if (params.get('view') === 'my-services') return 'my-services';
-      
-      return 'dashboard';
-  };
-
-  const [view, setView] = useState(getInitialView());
+  const [view, setView] = useState<'dashboard' | 'edit' | 'my-services' | 'reputation' | 'favorites' | 'metrics' | 'verification' | 'account-settings' | 'change-password' | 'serviapp-plus' | 'my-plan' | 'notifications' | 'help'>('dashboard');
   
   const [session, setSession] = useState<any>(null);
-  const [profileData, setProfileData] = useState<any>(null);
   
-  // Form States
+  const [profileData, setProfileData] = useState<any>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
@@ -134,7 +134,6 @@ const Profile = () => {
   const [updating, setUpdating] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
-  // Data States
   const [myServices, setMyServices] = useState<any[]>([]);
   const [myFavorites, setMyFavorites] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
@@ -142,7 +141,6 @@ const Profile = () => {
   const [completedSteps, setCompletedSteps] = useState(0);
   const [totalSteps, setTotalSteps] = useState(0);
 
-  // Metrics States
   const [metricsTimeRange, setMetricsTimeRange] = useState('7d');
   const [metricsData, setMetricsData] = useState<any[]>([]);
   const [recentViewers, setRecentViewers] = useState<any[]>([]);
@@ -150,29 +148,25 @@ const Profile = () => {
   const [totalClicks, setTotalClicks] = useState(0);
   const [loadingMetrics, setLoadingMetrics] = useState(false);
 
-  // Boost States
   const [boostModalOpen, setBoostModalOpen] = useState(false);
   const [selectedServiceToBoost, setSelectedServiceToBoost] = useState<any>(null);
   const [selectedBoostOption, setSelectedBoostOption] = useState<number | null>(null);
   const [processingBoost, setProcessingBoost] = useState(false);
 
-  // Account States
   const [newPassword, setNewPassword] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [showDeleteAccountDialog, setShowDeleteAccountDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
   const [showBoostDeleteWarning, setShowBoostDeleteWarning] = useState(false);
   const [serviceToDelete, setServiceToDelete] = useState<string | null>(null);
   const [deleteTimer, setDeleteTimer] = useState(5);
+
   const [pushEnabled, setPushEnabled] = useState(true);
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [transactions, setTransactions] = useState<any[]>([]);
 
   const maxSlots = isPlus ? SLOT_LIMIT_PLUS : SLOT_LIMIT_FREE;
-
-  useEffect(() => {
-    setView(getInitialView());
-  }, [location.pathname, location.search]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -181,22 +175,24 @@ const Profile = () => {
         navigate("/login");
       } else {
         getProfile(session.user.id);
+        fetchMyServices(session.user.id);
         
-        // Cargar datos según la vista actual
-        if (view === 'my-services') fetchMyServices(session.user.id);
-        if (view === 'favorites') fetchFavorites(session.user.id);
-        if (view === 'reputation') fetchReputation();
-        if (view === 'metrics') fetchRealMetrics(session.user.id);
-        if (view === 'my-plan') fetchTransactions(session.user.id);
+        const viewParam = searchParams.get('view');
+        if (viewParam === 'favorites') handleOpenFavorites(session.user.id);
+        else if (viewParam === 'edit') setView('edit');
+        else if (viewParam === 'my-plan') setView('my-plan');
       }
     });
-  }, [navigate, view]); 
+  }, [navigate, searchParams]);
 
   useEffect(() => {
     if (view === 'metrics' && session?.user?.id) {
-        fetchRealMetrics(session.user.id);
+        fetchRealMetrics();
     }
-  }, [metricsTimeRange]);
+    if (view === 'my-plan' && session?.user?.id) {
+        fetchTransactions();
+    }
+  }, [view, metricsTimeRange, session]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -206,12 +202,12 @@ const Profile = () => {
     return () => clearTimeout(timer);
   }, [showBoostDeleteWarning, deleteTimer]);
 
-  const fetchTransactions = async (uid: string) => {
+  const fetchTransactions = async () => {
       try {
           const { data, error } = await supabase
             .from('transactions')
             .select('*')
-            .eq('user_id', uid)
+            .eq('user_id', session.user.id)
             .order('created_at', { ascending: false });
           
           if (!error && data) setTransactions(data);
@@ -220,7 +216,7 @@ const Profile = () => {
       }
   };
 
-  const fetchRealMetrics = async (uid: string) => {
+  const fetchRealMetrics = async () => {
     setLoadingMetrics(true);
     try {
         const now = new Date();
@@ -235,7 +231,7 @@ const Profile = () => {
         const { data: events, error } = await supabase
             .from('service_analytics')
             .select('event_type, created_at, viewer_id')
-            .eq('owner_id', uid)
+            .eq('owner_id', session.user.id)
             .gte('created_at', startDate.toISOString())
             .order('created_at', { ascending: true });
 
@@ -405,7 +401,7 @@ const Profile = () => {
       showSuccess("Perfil actualizado");
       setProfileData({...profileData, ...updates});
       calculateCompletion(updates);
-      navigate('/profile'); // Vuelve al dashboard
+      setView('dashboard');
     } catch (error: any) {
       showError(error.message);
     } finally {
@@ -420,6 +416,7 @@ const Profile = () => {
         const option = BOOST_OPTIONS.find(o => o.duration === selectedBoostOption);
         if(!option) return;
 
+        // Si es la opción deshabilitada (por seguridad)
         if (option.disabled) {
             showError("Esta opción no está disponible en la Beta");
             setProcessingBoost(false);
@@ -465,7 +462,7 @@ const Profile = () => {
     else {
       showSuccess("Contraseña actualizada exitosamente");
       setNewPassword("");
-      navigate('/profile/account');
+      setView('account-settings');
     }
   };
 
@@ -476,7 +473,10 @@ const Profile = () => {
     try {
        const { error } = await supabase.functions.invoke('delete-user');
        
-       if (error) throw new Error("No se pudo completar la eliminación.");
+       if (error) {
+         console.error(error);
+         throw new Error("No se pudo completar la eliminación.");
+       }
 
        await supabase.auth.signOut();
        navigate('/');
@@ -498,8 +498,8 @@ const Profile = () => {
         .order('created_at', {ascending: false});
     setMyServices(data || []);
   };
-  const fetchFavorites = async (uid: string) => {
-    const { data } = await supabase.from('favorites').select(`service_id, services:service_id(*)`).eq('user_id', uid);
+  const fetchFavorites = async (uid?: string) => {
+    const { data } = await supabase.from('favorites').select(`service_id, services:service_id(*)`).eq('user_id', uid || session.user.id);
     setMyFavorites(data?.map((i:any) => i.services).filter((s:any) => s && !s.deleted_at) || []);
   };
   const fetchReputation = async () => {
@@ -510,6 +510,7 @@ const Profile = () => {
   
   const handleClickDelete = (service: any) => {
     const isBoosted = service.is_promoted && service.promoted_until && new Date(service.promoted_until) > new Date();
+    
     if (isBoosted) {
       setServiceToDelete(service.id);
       setDeleteTimer(5);
@@ -521,25 +522,37 @@ const Profile = () => {
 
   const handleConfirmDelete = async (id: string | null) => {
     if (!id) return;
+    
     if (!showBoostDeleteWarning) {
-        if (!confirm("¿Estás seguro de eliminar este servicio?")) return;
+        if (!confirm("¿Estás seguro de eliminar este servicio? Desaparecerá de las búsquedas, pero mantendrás tus métricas históricas.")) return;
     }
+
     const { error } = await supabase.from('services').update({ deleted_at: new Date().toISOString() }).eq('id', id);
-    if (error) { showError("Error al eliminar"); } else { 
+    if (error) { 
+        showError("Error al eliminar"); 
+    } else { 
         setMyServices(prev => prev.filter(s => s.id !== id)); 
         showSuccess("Servicio eliminado"); 
         setShowBoostDeleteWarning(false);
     }
   };
 
-  const handleEditService = (serviceId: string) => { navigate(`/edit-service/${serviceId}`); };
-  const handleSignOut = async () => { await supabase.auth.signOut(); navigate("/"); };
-  
-  const handleOpenPreview = () => {
-    if (session?.user?.id) navigate(`/user/${session.user.id}`);
+  const handleEditService = (serviceId: string) => {
+     navigate(`/edit-service/${serviceId}`);
   };
 
-  // Profile Avatar Component
+  const handleSignOut = async () => { await supabase.auth.signOut(); navigate("/"); };
+  const handleOpenMyServices = () => { setView('my-services'); fetchMyServices(session.user.id); };
+  const handleOpenFavorites = (uid?: string) => { setView('favorites'); fetchFavorites(uid); };
+  const handleOpenReputation = () => { setView('reputation'); fetchReputation(); };
+  const handleBackToDashboard = () => { if(searchParams.get('view')) navigate('/profile', {replace:true}); setView('dashboard'); };
+  
+  const handleOpenPreview = () => {
+    if (session?.user?.id) {
+       navigate(`/user/${session.user.id}`);
+    }
+  };
+
   const ProfileAvatar = ({ size = "md", className = "" }: { size?: "sm" | "md" | "lg" | "xl", className?: string }) => {
     const sizeClasses = { sm: "h-8 w-8 text-xs", md: "h-12 w-12 text-lg", lg: "h-24 w-24 text-3xl", xl: "h-28 w-28 text-4xl" };
     return (
@@ -559,7 +572,7 @@ const Profile = () => {
                 <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto md:overflow-visible h-full md:h-auto">
                    <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4">
                       <div className="flex items-center gap-3">
-                         <Button variant="ghost" size="icon" onClick={() => navigate('/profile')} className="md:hidden"><ArrowLeft className="h-6 w-6" /></Button>
+                         <Button variant="ghost" size="icon" onClick={() => setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button>
                          <h1 className="text-lg font-bold">Centro de Ayuda</h1>
                       </div>
                    </div>
@@ -579,11 +592,62 @@ const Profile = () => {
                                     Es muy sencillo. Solo tienes que buscar el servicio que necesitas, entrar a su publicación y en la parte inferior verás los botones de <span className="font-bold text-green-600">WhatsApp</span> y <span className="font-bold text-gray-900">Llamar</span>. El contacto es directo con el profesional.
                                 </AccordionContent>
                             </AccordionItem>
-                            {/* ... more items could be here ... */}
+
+                            <AccordionItem value="item-2" className="bg-white border rounded-2xl px-4 py-1 shadow-sm border-gray-100">
+                                <AccordionTrigger className="hover:no-underline font-bold text-gray-800 text-left">¿Es seguro contratar por aquí?</AccordionTrigger>
+                                <AccordionContent className="text-gray-600 leading-relaxed pt-2 space-y-3">
+                                    <p>En ServiAPP trabajamos para que sea seguro. Contamos con dos sistemas clave:</p>
+                                    <ul className="list-disc pl-5 space-y-1">
+                                        <li><span className="font-bold">Reseñas reales:</span> Mira las estrellas y comentarios que otros clientes han dejado en el perfil del técnico.</li>
+                                        <li><span className="font-bold text-[#0239c7]">Sello Plus:</span> Los usuarios Plus han verificado su información con nosotros.</li>
+                                    </ul>
+                                    <p className="text-xs italic bg-gray-50 p-2 rounded-lg border">Consejo: Nunca pagues por adelantado sin haber conocido al técnico o revisado su trabajo.</p>
+                                </AccordionContent>
+                            </AccordionItem>
+
+                            <AccordionItem value="item-3" className="bg-white border rounded-2xl px-4 py-1 shadow-sm border-gray-100">
+                                <AccordionTrigger className="hover:no-underline font-bold text-gray-800 text-left">¿Qué hago si un técnico no llega?</AccordionTrigger>
+                                <AccordionContent className="text-gray-600 leading-relaxed pt-2">
+                                    ServiAPP es una plataforma de contacto, por lo que no gestionamos directamente las citas. Si un profesional no cumple:
+                                    <ol className="list-decimal pl-5 mt-2 space-y-2">
+                                        <li>Intenta contactarlo por WhatsApp.</li>
+                                        <li>Deja una reseña en su perfil explicando lo sucedido para alertar a otros.</li>
+                                        <li>Usa el botón de <span className="font-bold text-red-500">Reportar</span> en su anuncio si sospechas de una estafa.</li>
+                                    </ol>
+                                </AccordionContent>
+                            </AccordionItem>
+
+                            <AccordionItem value="item-4" className="bg-white border rounded-2xl px-4 py-1 shadow-sm border-gray-100">
+                                <AccordionTrigger className="hover:no-underline font-bold text-gray-800 text-left">¿Cómo funcionan los Boosts?</AccordionTrigger>
+                                <AccordionContent className="text-gray-600 leading-relaxed pt-2">
+                                    Los Boosts sirven para que tu anuncio aparezca en los **primeros lugares** de la búsqueda y en la sección de destacados de la pantalla principal. Puedes elegir duraciones de <span className="font-bold">24 horas, 3 días o 7 días</span>. Al terminar el tiempo, tu anuncio volverá a su posición normal.
+                                </AccordionContent>
+                            </AccordionItem>
+
+                            <AccordionItem value="item-5" className="bg-white border rounded-2xl px-4 py-1 shadow-sm border-gray-100">
+                                <AccordionTrigger className="hover:no-underline font-bold text-gray-800 text-left">¿Por qué no veo mi anuncio?</AccordionTrigger>
+                                <AccordionContent className="text-gray-600 leading-relaxed pt-2">
+                                    Hay varias razones:
+                                    <ul className="list-disc pl-5 mt-2 space-y-2">
+                                        <li><span className="font-bold">Expiración:</span> Si tenías un Boost, este pudo haber terminado.</li>
+                                        <li><span className="font-bold">Revisión:</span> Si el anuncio infringe normas, puede ser pausado.</li>
+                                        <li><span className="font-bold">Límite:</span> Recuerda que el plan gratis permite hasta 5 anuncios activos.</li>
+                                    </ul>
+                                    Revisa la sección "Mis Publicaciones" para ver el estado actual.
+                                </AccordionContent>
+                            </AccordionItem>
+
+                            <AccordionItem value="item-6" className="bg-white border rounded-2xl px-4 py-1 shadow-sm border-gray-100">
+                                <AccordionTrigger className="hover:no-underline font-bold text-gray-800 text-left">¿Cómo verifico mi perfil?</AccordionTrigger>
+                                <AccordionContent className="text-gray-600 leading-relaxed pt-2">
+                                    Actualmente el sello de verificación se obtiene al suscribirse al **Plan Plus**. Muy pronto habilitaremos una verificación gratuita adicional mediante escaneo de documentos con IA para aumentar la confianza en tu perfil.
+                                </AccordionContent>
+                            </AccordionItem>
                        </Accordion>
 
                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mt-4 text-center space-y-4">
                            <h3 className="font-bold text-gray-900">¿Todavía tienes dudas?</h3>
+                           <p className="text-xs text-gray-500">Nuestro equipo de soporte está disponible por correo electrónico.</p>
                            <Button variant="outline" className="w-full h-12 rounded-xl border-[#F97316] text-[#F97316] hover:bg-orange-50 font-bold" onClick={() => window.location.href = 'mailto:soporte@serviapprd.com'}>
                                <MessageCircle className="mr-2 h-5 w-5" /> Contactar Soporte
                            </Button>
@@ -599,7 +663,7 @@ const Profile = () => {
                        <div className="absolute top-0 right-0 w-64 h-64 bg-[#0a46eb] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50"></div>
                        <div className="absolute bottom-0 left-0 w-40 h-40 bg-[#3b82f6] rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 opacity-20"></div>
                        <div className="relative z-10 px-4 pt-12 md:pt-4 flex items-center justify-between h-16">
-                          <button onClick={() => navigate('/profile')} className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/20 transition-colors md:hidden">
+                          <button onClick={() => setView('dashboard')} className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/20 transition-colors">
                               <X className="h-6 w-6 text-white" />
                           </button>
                           <div className="bg-white/10 backdrop-blur-md px-4 py-1 rounded-full">
@@ -623,14 +687,57 @@ const Profile = () => {
                    </div>
                    <div className="flex-1 overflow-y-auto px-6 py-8 space-y-8 pb-[180px]">
                        <div className="space-y-6">
-                           <div className="flex items-start gap-4"><div className="mt-1"><ShieldCheck className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div><div><h3 className="font-bold text-gray-900 text-sm md:text-base">Insignia de Verificación</h3><p className="text-xs text-gray-500 mt-0.5">Genera confianza.</p></div></div>
-                           <div className="flex items-start gap-4"><div className="mt-1"><TrendingUp className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div><div><h3 className="font-bold text-gray-900 text-sm md:text-base">Posicionamiento</h3><p className="text-xs text-gray-500 mt-0.5">Aparece antes en búsquedas.</p></div></div>
+                           <div className="flex items-start gap-4">
+                               <div className="mt-1"><ShieldCheck className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div>
+                               <div>
+                                   <h3 className="font-bold text-gray-900 text-sm md:text-base">Insignia de Verificación inmediata</h3>
+                                   <p className="text-xs text-gray-500 mt-0.5">Genera máxima confianza en tus clientes.</p>
+                               </div>
+                           </div>
+                           <div className="flex items-start gap-4">
+                               <div className="mt-1"><TrendingUp className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div>
+                               <div>
+                                   <h3 className="font-bold text-gray-900 text-sm md:text-base">Posicionamiento Prioritario</h3>
+                                   <p className="text-xs text-gray-500 mt-0.5">Aparece antes que la competencia en búsquedas.</p>
+                               </div>
+                           </div>
+                           <div className="flex items-start gap-4">
+                               <div className="mt-1"><BarChart3 className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div>
+                               <div>
+                                   <h3 className="font-bold text-gray-900 text-sm md:text-base">Métricas Avanzadas de Negocio</h3>
+                                   <p className="text-xs text-gray-500 mt-0.5">Descubre quién visita tu perfil y cuándo.</p>
+                               </div>
+                           </div>
+                            <div className="flex items-start gap-4">
+                               <div className="mt-1"><Zap className="h-6 w-6 text-gray-900" strokeWidth={2.5} /></div>
+                               <div>
+                                   <h3 className="font-bold text-gray-900 text-sm md:text-base">Publicaciones Ilimitadas ({SLOT_LIMIT_PLUS})</h3>
+                                   <p className="text-xs text-gray-500 mt-0.5">Duplica tu capacidad de publicación.</p>
+                               </div>
+                           </div>
+                       </div>
+                       <div className="pt-4">
+                           <h3 className="font-bold text-lg text-gray-900">¿Listo para crecer?</h3>
+                           <p className="text-gray-500 text-sm mt-1">Cancela tu suscripción cuando quieras.</p>
                        </div>
                    </div>
                    <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100 pb-safe z-20 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)]">
                        <div className="max-w-md mx-auto flex flex-col gap-3">
-                           <div className="flex justify-between items-end mb-1"><span className="text-sm font-medium text-gray-500">Total a pagar</span><div className="text-right"><span className="text-xs text-gray-400 line-through mr-2">RD$ 899</span><span className="text-2xl font-black text-gray-900">RD$ 499</span><span className="text-xs font-bold text-[#0239c7] ml-1">/mes</span></div></div>
-                           <Button disabled className="w-full h-14 bg-gray-200 text-gray-500 rounded-xl font-bold text-lg shadow-none pointer-events-none">Suscripciones cerradas en Beta</Button>
+                           <div className="flex justify-between items-end mb-1">
+                              <span className="text-sm font-medium text-gray-500">Total a pagar</span>
+                              <div className="text-right">
+                                   <span className="text-xs text-gray-400 line-through mr-2">RD$ 899</span>
+                                   <span className="text-2xl font-black text-gray-900">RD$ 499</span>
+                                   <span className="text-xs font-bold text-[#0239c7] ml-1">/mes</span>
+                              </div>
+                           </div>
+                           {/* Beta Disable */}
+                           <Button disabled className="w-full h-14 bg-gray-200 text-gray-500 rounded-xl font-bold text-lg shadow-none pointer-events-none">
+                               Suscripciones cerradas en Beta
+                           </Button>
+                           <p className="text-center text-[10px] text-gray-400">
+                               Estamos mejorando el servicio Plus. Vuelve pronto.
+                           </p>
                        </div>
                    </div>
                 </div>
@@ -642,21 +749,92 @@ const Profile = () => {
             return (
                 <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-100 flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto md:bg-white">
                    <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center pt-6 md:pt-4">
-                      <Button variant="ghost" size="icon" onClick={() => navigate('/profile')} className="-ml-2 mr-2 md:hidden"><ArrowLeft className="h-6 w-6 text-black" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="-ml-2 mr-2">
+                          <ArrowLeft className="h-6 w-6 text-black" />
+                      </Button>
                       <h1 className="text-xl font-bold text-black">Mi Plan</h1>
                    </div>
+
                    <div className="p-6">
                        <div className="bg-white rounded-[2rem] p-6 shadow-sm mb-8 border border-gray-100">
-                           <h2 className="text-2xl font-black text-gray-900 mb-6">{isPlus ? "ServiAPP Plus" : "ServiAPP Básico (Beta)"}</h2>
+                           <div className="w-16 h-16 bg-transparent rounded-2xl flex items-center justify-center mb-4 shadow-sm overflow-hidden">
+                               <img src="/serviapp-s-logo.png" className="w-full h-full object-cover" alt="Logo" /> 
+                           </div>
+                           
+                           <h2 className="text-2xl font-black text-gray-900 mb-6">
+                               {isPlus ? "ServiAPP Plus" : "ServiAPP Básico (Beta)"}
+                           </h2>
+
+                           <div className="border-t border-gray-100 my-4" />
+
                            <div className="space-y-3">
-                               <div className="flex items-center gap-3"><CreditCard className="h-5 w-5 text-gray-800" /><span className="text-sm font-medium text-gray-700">{isPlus ? "RD$499 al mes" : "Gratis"}</span></div>
-                               <div className="flex items-center gap-3"><Calendar className="h-5 w-5 text-gray-800" /><span className="text-sm font-medium text-gray-700">{isPlus ? `${renewalDate}` : "Siempre activo"}</span></div>
+                               <div className="flex items-center gap-3">
+                                   <CreditCard className="h-5 w-5 text-gray-800" />
+                                   <span className="text-sm font-medium text-gray-700">
+                                       {isPlus ? "RD$499 al mes" : "Gratis"}
+                                   </span>
+                               </div>
+                               <div className="flex items-center gap-3">
+                                   <Calendar className="h-5 w-5 text-gray-800" />
+                                   <span className="text-sm font-medium text-gray-700">
+                                       {isPlus ? `${renewalDate}` : "Siempre activo"}
+                                   </span>
+                               </div>
                            </div>
                        </div>
+
+                       {!isPlus && (
+                           <div className="bg-gray-100 rounded-[2rem] p-6 cursor-not-allowed flex items-center justify-between mb-8 opacity-70">
+                                <div className="text-gray-500">
+                                    <h3 className="font-bold text-lg">Mejorar a Plus</h3>
+                                    <p className="text-xs opacity-80">No disponible en Beta</p>
+                                </div>
+                                <div className="bg-gray-200 p-2 rounded-full">
+                                    <Lock className="h-6 w-6 text-gray-400" />
+                                </div>
+                           </div>
+                       )}
+
+                       <div className="relative flex items-center justify-center mb-6">
+                           <div className="bg-white px-4 rounded-full py-1 z-10 shadow-sm border border-gray-100">
+                               <h3 className="text-sm font-black text-gray-900 uppercase tracking-wide">HISTORIAL DE PAGOS</h3>
+                           </div>
+                           <div className="absolute inset-0 flex items-center">
+                               <div className="w-full border-t border-gray-300" />
+                           </div> 
+                       </div>
+
                        <div className="space-y-4 pb-24 md:pb-6">
+                           {transactions.length === 0 && !isPlus && (
+                              <div className="bg-white p-4 rounded-3xl w-full flex items-center justify-between shadow-sm opacity-70 border border-gray-100">
+                                  <div className="flex items-center gap-4">
+                                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500">
+                                          <User className="h-5 w-5" />
+                                      </div>
+                                      <div>
+                                          <p className="font-bold text-gray-900">Plan Gratuito</p>
+                                          <p className="text-xs text-gray-500">Siempre activo</p>
+                                      </div>
+                                  </div>
+                                  <span className="font-bold text-gray-900">RD$ 0.00</span>
+                              </div>
+                           )}
+
                            {transactions.map((tx) => (
                               <div key={tx.id} className="bg-white p-4 rounded-3xl w-full flex items-center justify-between shadow-sm border border-gray-100">
-                                  <div className="flex items-center gap-4"><div className={cn("w-10 h-10 rounded-full flex items-center justify-center", tx.type === 'subscription' ? "bg-blue-100 text-blue-600" : "bg-orange-100 text-[#F97316]")}>{tx.type === 'subscription' ? <Crown className="h-5 w-5" /> : <RocketIcon className="h-5 w-5" />}</div><div><p className="font-bold text-gray-900 text-sm max-w-[150px] truncate">{tx.description}</p><p className="text-xs text-gray-500">{new Date(tx.created_at).toLocaleDateString()}</p></div></div><span className="font-bold text-gray-900">RD$ {tx.amount}</span>
+                                  <div className="flex items-center gap-4">
+                                      <div className={cn(
+                                          "w-10 h-10 rounded-full flex items-center justify-center",
+                                          tx.type === 'subscription' ? "bg-blue-100 text-blue-600" : "bg-orange-100 text-[#F97316]"
+                                      )}>
+                                          {tx.type === 'subscription' ? <Crown className="h-5 w-5" /> : <RocketIcon className="h-5 w-5" />}
+                                      </div>
+                                      <div>
+                                          <p className="font-bold text-gray-900 text-sm max-w-[150px] truncate">{tx.description}</p>
+                                          <p className="text-xs text-gray-500">{new Date(tx.created_at).toLocaleDateString()}</p>
+                                      </div>
+                                  </div>
+                                  <span className="font-bold text-gray-900">RD$ {tx.amount}</span>
                               </div>
                            ))}
                        </div>
@@ -668,13 +846,28 @@ const Profile = () => {
             return (
                 <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
                    <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4">
-                      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => navigate('/profile')} className="md:hidden"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Notificaciones</h1></div>
+                      <div className="flex items-center gap-3">
+                         <Button variant="ghost" size="icon" onClick={() => setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button>
+                         <h1 className="text-lg font-bold">Notificaciones</h1>
+                      </div>
                    </div>
                    <div className="p-5 space-y-6 pb-24 md:pb-6">
                        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-5">
-                           <div className="flex items-center justify-between"><div className="space-y-0.5"><h4 className="font-bold text-gray-900 text-sm">Notificaciones Push</h4><p className="text-xs text-gray-500">Recibe alertas en tu dispositivo</p></div><Switch checked={pushEnabled} onCheckedChange={setPushEnabled} /></div>
+                           <div className="flex items-center justify-between">
+                               <div className="space-y-0.5">
+                                   <h4 className="font-bold text-gray-900 text-sm">Notificaciones Push</h4>
+                                   <p className="text-xs text-gray-500">Recibe alertas en tu dispositivo</p>
+                               </div>
+                               <Switch checked={pushEnabled} onCheckedChange={setPushEnabled} />
+                           </div>
                            <div className="h-px bg-gray-50" />
-                           <div className="flex items-center justify-between"><div className="space-y-0.5"><h4 className="font-bold text-gray-900 text-sm">Correos electrónicos</h4><p className="text-xs text-gray-500">Resumen semanal y ofertas</p></div><Switch checked={emailEnabled} onCheckedChange={setEmailEnabled} /></div>
+                           <div className="flex items-center justify-between">
+                               <div className="space-y-0.5">
+                                   <h4 className="font-bold text-gray-900 text-sm">Correos electrónicos</h4>
+                                   <p className="text-xs text-gray-500">Resumen semanal y ofertas</p>
+                               </div>
+                               <Switch checked={emailEnabled} onCheckedChange={setEmailEnabled} />
+                           </div>
                        </div>
                    </div>
                 </div>
@@ -684,13 +877,22 @@ const Profile = () => {
             return (
                 <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-white flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
                    <div className="p-4 flex items-center gap-3 pt-12 md:pt-4">
-                       <Button variant="ghost" size="icon" onClick={() => navigate('/profile/account')} className="md:hidden"><ArrowLeft className="h-6 w-6" /></Button>
+                       <Button variant="ghost" size="icon" onClick={() => setView('account-settings')}><ArrowLeft className="h-6 w-6" /></Button>
                        <h1 className="text-xl font-bold">Cambiar Contraseña</h1>
                    </div>
                    <div className="p-6 space-y-6">
                        <div className="flex justify-center mb-6"><div className="h-24 w-24 bg-blue-50 rounded-full flex items-center justify-center"><Lock className="h-10 w-10 text-blue-500" /></div></div>
-                       <div className="space-y-4"><div className="space-y-2"><Label>Nueva Contraseña</Label><Input type="password" placeholder="Mínimo 6 caracteres" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white" /></div></div>
-                       <div className="pt-4"><Button onClick={handleUpdatePassword} disabled={passwordLoading || !newPassword} className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-200">{passwordLoading ? <Loader2 className="animate-spin" /> : "Actualizar Contraseña"}</Button></div>
+                       <div className="space-y-4">
+                           <div className="space-y-2">
+                               <Label>Nueva Contraseña</Label>
+                               <Input type="password" placeholder="Mínimo 6 caracteres" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white" />
+                           </div>
+                       </div>
+                       <div className="pt-4">
+                           <Button onClick={handleUpdatePassword} disabled={passwordLoading || !newPassword} className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-200">
+                                {passwordLoading ? <Loader2 className="animate-spin" /> : "Actualizar Contraseña"}
+                           </Button>
+                       </div>
                    </div>
                 </div>
             );
@@ -699,12 +901,29 @@ const Profile = () => {
             return (
               <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
                  <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4">
-                    <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => navigate('/profile')} className="md:hidden"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Administrar Cuenta</h1></div>
+                    <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Administrar Cuenta</h1></div>
                  </div>
                  <div className="p-5 space-y-6 pb-24 md:pb-6">
-                    <div className="space-y-2"><h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-2">Seguridad</h3><div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"><button onClick={() => navigate('/profile/security')} className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"><div className="flex items-center gap-4"><div className="p-2 bg-blue-50 text-blue-600 rounded-xl"><Lock className="h-5 w-5" /></div><span className="font-semibold text-gray-700">Cambiar Contraseña</span></div><ChevronRight className="h-5 w-5 text-gray-300" /></button></div></div>
-                    <div className="space-y-2"><h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-2">Información Legal</h3><div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50"><button onClick={() => navigate('/terms')} className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"><div className="flex items-center gap-4"><div className="p-2 bg-orange-50 text-[#F97316] rounded-xl"><FileText className="h-5 w-5" /></div><span className="font-semibold text-gray-700">Términos y Condiciones</span></div><ChevronRight className="h-5 w-5 text-gray-300" /></button><button onClick={() => navigate('/privacy')} className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"><div className="flex items-center gap-4"><div className="p-2 bg-blue-50 text-blue-600 rounded-xl"><Shield className="h-5 w-5" /></div><span className="font-semibold text-gray-700">Política de Privacidad</span></div><ChevronRight className="h-5 w-5 text-gray-300" /></button></div></div>
-                    <div className="space-y-2"><h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-2">Sesión</h3><div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50"><button onClick={handleSignOut} className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"><div className="flex items-center gap-4"><div className="p-2 bg-gray-100 text-gray-600 rounded-xl"><LogOut className="h-5 w-5" /></div><span className="font-semibold text-gray-700">Cerrar Sesión</span></div></button><button onClick={() => setShowDeleteAccountDialog(true)} className="w-full flex items-center justify-between p-4 hover:bg-red-50 transition-colors group"><div className="flex items-center gap-4"><div className="p-2 bg-red-50 text-red-500 rounded-xl group-hover:bg-red-100 transition-colors"><Trash2 className="h-5 w-5" /></div><span className="font-semibold text-red-600">Eliminar mi cuenta</span></div></button></div></div>
+                    <div className="space-y-2">
+                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-2">Seguridad</h3>
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                            <button onClick={() => setView('change-password')} className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"><div className="flex items-center gap-4"><div className="p-2 bg-blue-50 text-blue-600 rounded-xl"><Lock className="h-5 w-5" /></div><span className="font-semibold text-gray-700">Cambiar Contraseña</span></div><ChevronRight className="h-5 w-5 text-gray-300" /></button>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-2">Información Legal</h3>
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">
+                            <button onClick={() => navigate('/terms')} className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"><div className="flex items-center gap-4"><div className="p-2 bg-orange-50 text-[#F97316] rounded-xl"><FileText className="h-5 w-5" /></div><span className="font-semibold text-gray-700">Términos y Condiciones</span></div><ChevronRight className="h-5 w-5 text-gray-300" /></button>
+                             <button onClick={() => navigate('/privacy')} className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"><div className="flex items-center gap-4"><div className="p-2 bg-blue-50 text-blue-600 rounded-xl"><Shield className="h-5 w-5" /></div><span className="font-semibold text-gray-700">Política de Privacidad</span></div><ChevronRight className="h-5 w-5 text-gray-300" /></button>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-2">Sesión</h3>
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">
+                            <button onClick={handleSignOut} className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"><div className="flex items-center gap-4"><div className="p-2 bg-gray-100 text-gray-600 rounded-xl"><LogOut className="h-5 w-5" /></div><span className="font-semibold text-gray-700">Cerrar Sesión</span></div></button>
+                             <button onClick={() => setShowDeleteAccountDialog(true)} className="w-full flex items-center justify-between p-4 hover:bg-red-50 transition-colors group"><div className="flex items-center gap-4"><div className="p-2 bg-red-50 text-red-500 rounded-xl group-hover:bg-red-100 transition-colors"><Trash2 className="h-5 w-5" /></div><span className="font-semibold text-red-600">Eliminar mi cuenta</span></div></button>
+                        </div>
+                    </div>
                  </div>
               </div>
             );
@@ -713,12 +932,12 @@ const Profile = () => {
             return (
                 <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-white flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
                    <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4">
-                      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>navigate('/profile')} className="md:hidden"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Verificación</h1></div>
+                      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Verificación</h1></div>
                    </div>
                    <div className="p-6 flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
                        <div className="w-24 h-24 bg-orange-50 rounded-full flex items-center justify-center mb-4 border-2 border-orange-100 relative"><ShieldCheck className="h-10 w-10 text-[#F97316]" /><div className="absolute -bottom-1 -right-1 bg-[#F97316] text-white p-1.5 rounded-full border-2 border-white"><Hammer className="h-4 w-4" /></div></div>
                        <div className="space-y-2 max-w-xs mx-auto"><h2 className="text-2xl font-bold text-gray-900">¡Próximamente!</h2><p className="text-gray-500 text-sm leading-relaxed">Estamos finalizando los detalles de nuestro sistema de verificación segura con IA.</p></div>
-                       <Button onClick={() => navigate('/profile')} className="w-full max-w-sm bg-[#F97316] hover:bg-orange-600 rounded-xl h-12 shadow-lg shadow-orange-100">Entendido</Button>
+                       <Button onClick={() => setView('dashboard')} className="w-full max-w-sm bg-[#F97316] hover:bg-orange-600 rounded-xl h-12 shadow-lg shadow-orange-100">Entendido</Button>
                    </div>
                 </div>
             );
@@ -727,7 +946,7 @@ const Profile = () => {
             return (
                 <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
                    <div className="bg-white p-4 shadow-sm sticky top-0 z-10 space-y-4 pt-12 md:pt-4">
-                      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>navigate('/profile')} className="md:hidden"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Métricas de Rendimiento</h1></div>
+                      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Métricas de Rendimiento</h1></div>
                       <div className="flex justify-between items-center bg-gray-100 p-1 rounded-lg">
                           {['24h', '7d', '30d', 'Año', 'Todo'].map((r) => {
                               const val = r === 'Año' ? '1y' : r === 'Todo' ? 'all' : r;
@@ -764,7 +983,7 @@ const Profile = () => {
                                            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">{recentViewers.map((viewer: any, idx) => (<div key={idx} className="flex items-center gap-3 p-4"><Avatar className="h-10 w-10"><AvatarImage src={viewer.avatar_url} /><AvatarFallback>{viewer.first_name?.[0]}</AvatarFallback></Avatar><div className="flex-1 min-w-0"><p className="font-bold text-sm text-gray-900 truncate">{viewer.first_name} {viewer.last_name}</p><p className="text-xs text-gray-400">Visitó tu perfil</p></div><span className="text-[10px] text-gray-400">{new Date(viewer.visited_at).toLocaleDateString()}</span></div>))}</div>
                                        ) : (<div className="text-center py-8 bg-white rounded-3xl border border-dashed border-gray-200">No hay visitas recientes.</div>)
                                    ) : (
-                                       <div className="relative bg-white rounded-3xl border border-gray-100 shadow-sm p-6 text-center overflow-hidden"><div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-6"><Lock className="h-6 w-6 text-gray-400 mb-2" /><h3 className="font-bold text-gray-900 mb-1">Función Plus</h3><p className="text-sm text-gray-500 mb-4">Descubre quién visita tu perfil.</p><Button onClick={() => navigate('/profile/plus')} className="bg-[#0239c7] hover:bg-[#022b9e] text-white rounded-xl">Desbloquear</Button></div><div className="opacity-30 blur-sm pointer-events-none space-y-4">{[1,2,3].map(i => (<div key={i} className="flex items-center gap-3"><div className="h-10 w-10 bg-gray-200 rounded-full" /><div className="flex-1 space-y-2"><div className="h-3 w-24 bg-gray-200 rounded" /><div className="h-2 w-16 bg-gray-100 rounded" /></div></div>))}</div></div>
+                                       <div className="relative bg-white rounded-3xl border border-gray-100 shadow-sm p-6 text-center overflow-hidden"><div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-6"><Lock className="h-6 w-6 text-gray-400 mb-2" /><h3 className="font-bold text-gray-900 mb-1">Función Plus</h3><p className="text-sm text-gray-500 mb-4">Descubre quién visita tu perfil.</p><Button onClick={() => setView('serviapp-plus')} className="bg-[#0239c7] hover:bg-[#022b9e] text-white rounded-xl">Desbloquear</Button></div><div className="opacity-30 blur-sm pointer-events-none space-y-4">{[1,2,3].map(i => (<div key={i} className="flex items-center gap-3"><div className="h-10 w-10 bg-gray-200 rounded-full" /><div className="flex-1 space-y-2"><div className="h-3 w-24 bg-gray-200 rounded" /><div className="h-2 w-16 bg-gray-100 rounded" /></div></div>))}</div></div>
                                    )}
                                </div>
                            </>
@@ -777,7 +996,7 @@ const Profile = () => {
             return (
               <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
                 <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4">
-                   <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>navigate('/profile')} className="md:hidden"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Reputación</h1></div>
+                   <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Reputación</h1></div>
                 </div>
                 <div className="p-5 space-y-6 pb-24 md:pb-6">
                     <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center"><div className="text-5xl font-black text-[#0F172A] mb-1">{averageRating.toFixed(1)}</div><div className="flex gap-1 mb-2">{[1,2,3,4,5].map((star) => (<Star key={star} className={cn("h-5 w-5", star <= Math.round(averageRating) ? "fill-[#F97316] text-[#F97316]" : "text-gray-200 fill-gray-100")} />))}</div><p className="text-gray-400 text-sm font-medium">{reviews.length} reseñas recibidas</p></div>
@@ -789,7 +1008,7 @@ const Profile = () => {
           case 'edit':
             return (
               <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-white flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
-                <div className="flex items-center gap-4 p-4 sticky top-0 bg-white z-10 pt-12 md:pt-4 border-b md:border-none shadow-sm md:shadow-none"><Button variant="ghost" size="icon" onClick={() => navigate('/profile')} className="-ml-2 md:hidden"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis datos personales</h1></div>
+                <div className="flex items-center gap-4 p-4 sticky top-0 bg-white z-10 pt-12 md:pt-4 border-b md:border-none shadow-sm md:shadow-none"><Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="-ml-2"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis datos personales</h1></div>
                 <div className="pb-32 px-6 pt-4">
                     <div className="flex flex-col items-center mb-10"><div className="relative group"><div className="p-1.5 rounded-full border-2 border-dashed border-gray-200" style={{ borderColor: profileColor }}><ProfileAvatar size="xl" className="border-4 border-white shadow-sm" /></div><label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-[#F97316] p-2.5 rounded-full cursor-pointer shadow-lg border-2 border-white">{uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <Camera className="h-4 w-4 text-white" />}</label><input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={uploadAvatar} disabled={uploadingAvatar} /></div><div className="mt-6 w-full max-w-xs"><p className="text-xs font-bold text-gray-400 text-center uppercase mb-3">Color de Portada</p><div className="flex gap-3 overflow-x-auto p-2 no-scrollbar justify-center">{PROFILE_COLORS.map((color) => (<button key={color.value} onClick={() => setProfileColor(color.value)} className={cn("w-8 h-8 rounded-full transition-all shadow-sm flex-shrink-0 border-2 border-white ring-1 ring-gray-100", profileColor === color.value ? "scale-110 ring-2 ring-offset-2 ring-gray-900 z-10" : "hover:scale-105")} style={{ backgroundColor: color.value }} />))}</div></div></div>
                     <div className="space-y-8"><div className="space-y-5"><h3 className="text-lg font-bold">¿Cómo te llamas?</h3><div className="space-y-5"><div className="relative"><label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Nombre(s)*</label><Input value={firstName} onChange={e => setFirstName(e.target.value)} className="h-14 rounded-xl border-gray-300" /></div><div className="relative"><label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Apellido(s)*</label><Input value={lastName} onChange={e => setLastName(e.target.value)} className="h-14 rounded-xl border-gray-300" /></div></div></div><div className="space-y-5"><h3 className="text-lg font-bold">Contacto y Ubicación</h3><div className="relative"><label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Teléfono móvil</label><div className="relative"><Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" /><Input value={phone} onChange={e => setPhone(e.target.value)} type="tel" className="h-14 pl-12 rounded-xl border-gray-300" /></div></div><div className="relative"><label className="absolute -top-2.5 left-4 bg-white px-1.5 text-xs font-medium text-gray-500 z-10">Provincia</label><Select value={city} onValueChange={setCity}><SelectTrigger className="h-14 rounded-xl border-gray-300"><SelectValue placeholder="Selecciona..." /></SelectTrigger><SelectContent className="bg-white max-h-[250px] z-[1100]"><ScrollArea className="h-64">{DR_PROVINCES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</ScrollArea></SelectContent></Select></div></div></div>
@@ -801,7 +1020,7 @@ const Profile = () => {
           case 'my-services':
             return (
               <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
-                <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>navigate('/profile')} className="md:hidden"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Publicaciones</h1></div></div>
+                <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Publicaciones</h1></div></div>
                 <div className="p-4 space-y-4 pb-24 md:pb-6">
                    <div className="flex items-center justify-between px-1"><span className="text-sm font-medium text-gray-500">Espacios utilizados</span><span className="text-sm font-bold text-gray-900">{myServices.length} / {maxSlots}</span></div>
                    {Array.from({ length: TOTAL_DISPLAY_SLOTS }).map((_, index) => {
@@ -829,7 +1048,7 @@ const Profile = () => {
                        );
                      } else if (isLocked) {
                         return (
-                           <div key={`locked-${index}`} onClick={() => navigate('/profile/plus')} className="h-32 rounded-3xl border border-gray-100 bg-gray-50 flex flex-col items-center justify-center gap-2 cursor-pointer relative overflow-hidden group">
+                           <div key={`locked-${index}`} onClick={() => setView('serviapp-plus')} className="h-32 rounded-3xl border border-gray-100 bg-gray-50 flex flex-col items-center justify-center gap-2 cursor-pointer relative overflow-hidden group">
                                <div className="absolute inset-0 bg-white/40 group-hover:bg-white/0 transition-colors" />
                                <div className="absolute top-3 right-3"><Lock className="h-4 w-4 text-gray-400" /></div>
                                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
@@ -865,7 +1084,7 @@ const Profile = () => {
           case 'favorites':
             return (
               <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
-                <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => navigate('/profile')} className="md:hidden"><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Favoritos</h1></div></div>
+                <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={handleBackToDashboard}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Favoritos</h1></div></div>
                 <div className="p-4 pb-24 md:pb-6">{myFavorites.length === 0 ? <div className="text-center py-10 text-gray-500">Sin favoritos</div> : (<div className="grid grid-cols-2 gap-4">{myFavorites.map((s) => <div key={s.id} onClick={()=>navigate(`/service/${s.id}`)}><ServiceCard title={s.title} price={`RD$ ${s.price}`} image={s.image_url} /></div>)}</div>)}</div>
               </div>
             );
@@ -878,18 +1097,19 @@ const Profile = () => {
                       <div className="flex-1"><p className="text-gray-400 text-sm">Bienvenido,</p><div className="flex items-center gap-1.5"><h1 className="text-2xl font-bold truncate max-w-[200px]">{firstName || 'Usuario'}</h1>{isPlus && <Badge className="bg-[#0239c7] text-white text-[10px]"><Crown className="h-3 w-3 mr-1" />PLUS</Badge>}</div></div>
                       <div onClick={handleOpenPreview} className="cursor-pointer relative"><ProfileAvatar size="md" className={isPlus ? "border-2 border-[#0239c7]" : "border-2 border-orange-100"} />{isPlus && (<div className="absolute -bottom-1 -right-1 bg-[#0239c7] text-white p-0.5 rounded-full border-2 border-white"><Crown className="h-3 w-3 fill-white" /></div>)}</div>
                     </div>
-                    <div className="flex justify-between gap-2 pb-2"><QuickAction icon={User} label="Ver Perfil" onClick={handleOpenPreview} /><QuickAction icon={Star} label="Reputación" onClick={() => navigate('/profile/reputation')} /><QuickAction icon={Crown} label="ServiAPP Plus" onClick={() => navigate('/profile/plus')} /><QuickAction icon={HelpCircle} label="Ayuda" onClick={() => navigate('/profile/help')} /></div>
+                    <div className="flex justify-between gap-2 pb-2"><QuickAction icon={User} label="Ver Perfil" onClick={handleOpenPreview} /><QuickAction icon={Star} label="Reputación" onClick={handleOpenReputation} /><QuickAction icon={Crown} label="ServiAPP Plus" onClick={() => setView('serviapp-plus')} /><QuickAction icon={HelpCircle} label="Ayuda" onClick={() => setView('help')} /></div>
                   </div>
                   <div className="px-5 space-y-6 mt-6">
-                    {completedSteps < totalSteps && (<div className="bg-white rounded-2xl p-5 border border-orange-100"><div className="mb-2"><h3 className="font-bold">Completa tu perfil</h3><p className="text-sm text-gray-500">{completedSteps}/{totalSteps} pasos</p></div><Progress value={(completedSteps/totalSteps)*100} className="h-2 mb-3" /><Button onClick={()=>navigate('/profile/edit')} className="w-full bg-[#F97316] h-9 text-sm">Terminar</Button></div>)}
+                    {completedSteps < totalSteps && (<div className="bg-white rounded-2xl p-5 border border-orange-100"><div className="mb-2"><h3 className="font-bold">Completa tu perfil</h3><p className="text-sm text-gray-500">{completedSteps}/{totalSteps} pasos</p></div><Progress value={(completedSteps/totalSteps)*100} className="h-2 mb-3" /><Button onClick={()=>setView('edit')} className="w-full bg-[#F97316] h-9 text-sm">Terminar</Button></div>)}
                     <div className="space-y-6">
                       <MenuSection title="Mi Cuenta">
-                         <MenuItem icon={Settings} label="Administrar Cuenta" onClick={() => navigate('/profile/account')} />
+                         {/* Removed explicit Edit button as requested */}
+                         <MenuItem icon={Settings} label="Administrar Cuenta" onClick={() => setView('account-settings')} />
                       </MenuSection>
 
-                      <MenuSection title="Mis Servicios"><MenuItem icon={Briefcase} label="Mis Publicaciones" onClick={() => navigate('/profile/publications')} /><MenuItem icon={Heart} label="Mis Favoritos" badge={myFavorites.length > 0 ? String(myFavorites.length) : undefined} onClick={() => navigate('/profile/favorites')} /></MenuSection>
-                      <MenuSection title="Estadísticas & Verificación"><MenuItem icon={BarChart3} label="Métricas" onClick={() => navigate('/profile/metrics')} /><MenuItem icon={ShieldCheck} label="Verificación" onClick={() => navigate('/profile/verification')} /><MenuItem icon={Bell} label="Notificaciones" onClick={() => navigate('/profile/notifications')} /></MenuSection>
-                      <MenuSection title="Suscripción"><MenuItem icon={CreditCard} label="Mi Plan" onClick={() => navigate('/profile/plan')} /></MenuSection>
+                      <MenuSection title="Mis Servicios"><MenuItem icon={Briefcase} label="Mis Publicaciones" onClick={handleOpenMyServices} /><MenuItem icon={Heart} label="Mis Favoritos" badge={myFavorites.length > 0 ? String(myFavorites.length) : undefined} onClick={() => handleOpenFavorites()} /></MenuSection>
+                      <MenuSection title="Estadísticas & Verificación"><MenuItem icon={BarChart3} label="Métricas" onClick={() => setView('metrics')} /><MenuItem icon={ShieldCheck} label="Verificación" onClick={() => setView('verification')} /><MenuItem icon={Bell} label="Notificaciones" onClick={() => setView('notifications')} /></MenuSection>
+                      <MenuSection title="Suscripción"><MenuItem icon={CreditCard} label="Mi Plan" onClick={() => setView('my-plan')} /></MenuSection>
                     </div>
                   </div>
                 </div>
