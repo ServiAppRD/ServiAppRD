@@ -58,10 +58,11 @@ const AppLayout = () => {
           {/* Rutas de Perfil (Mobile & Desktop) */}
           <Route path="/profile" element={<Profile key={location.key} />} />
           
-          {/* Rutas específicas para Desktop/Web (Mismo componente, diferente URL) */}
+          {/* Rutas específicas para Desktop/Web */}
           <Route path="/profile-publications" element={<Profile key="publications" />} />
           <Route path="/profile-metrics" element={<Profile key="metrics" />} />
           <Route path="/profile-settings" element={<Profile key="settings" />} />
+          <Route path="/profile-edit" element={<Profile key="edit" />} />
           
           <Route path="/user/:id" element={<PublicProfile />} /> 
           <Route path="/search" element={<Search />} />
