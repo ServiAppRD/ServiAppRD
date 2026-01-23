@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, ArrowLeft, MapPin, Check, Phone, Calendar, Star, MessageCircle, Send, Facebook, Instagram, Globe, AlertCircle, Flag, MoreVertical, Share2, ShieldAlert, ChevronRight, Crown } from "lucide-react";
+import { Loader2, ArrowLeft, MapPin, Check, Phone, Calendar, Star, MessageCircle, Send, Facebook, Instagram, Globe, AlertCircle, Flag, MoreVertical, Share2, ShieldAlert, ChevronRight, Crown, Clock, Briefcase } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { showSuccess, showError } from "@/utils/toast";
 import { useState, useEffect, useRef } from "react";
@@ -237,6 +237,10 @@ const ServiceDetail = () => {
   const formattedDate = new Date(service.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
   const social = service.social_media as { facebook?: string; instagram?: string; website?: string } | null;
   const serviceAreas = Array.isArray(service.service_areas) ? service.service_areas : [];
+  
+  // Datos nuevos
+  const currency = service.currency === 'USD' ? 'USD$' : 'RD$';
+  const schedule = service.work_schedule as { start: string, end: string } | null;
 
   return (
     <div className="min-h-screen bg-white pb-32 animate-fade-in">
@@ -288,16 +292,42 @@ const ServiceDetail = () => {
 
       <div className="px-5 -mt-6 relative z-10 bg-white rounded-t-3xl pt-6 space-y-6">
         <div>
-          <div className="flex items-baseline gap-2 mb-2"><span className="text-3xl font-bold text-[#F97316]">RD$ {service.price}</span>{service.price_unit && <span className="text-sm text-gray-400 font-medium">/{service.price_unit}</span>}</div>
+          <div className="flex items-baseline gap-2 mb-2"><span className="text-3xl font-bold text-[#F97316]">{currency} {service.price}</span>{service.price_unit && <span className="text-sm text-gray-400 font-medium">/{service.price_unit}</span>}</div>
           <h1 className="text-2xl font-bold text-gray-900 leading-tight mb-3">{service.title}</h1>
-          <div className="flex flex-wrap items-center gap-y-2 gap-x-3 text-sm"><Badge className="bg-orange-50 text-[#F97316] hover:bg-orange-100 border-0">{service.category}</Badge><div className="flex items-center text-gray-500 font-medium"><MapPin className="h-4 w-4 mr-1 text-gray-400" />{service.location}</div><div className="flex items-center text-gray-500"><Calendar className="h-4 w-4 mr-1 text-gray-400" />{formattedDate}</div></div>
+          <div className="flex flex-wrap items-center gap-y-2 gap-x-3 text-sm">
+             <Badge className="bg-orange-50 text-[#F97316] hover:bg-orange-100 border-0">{service.category}</Badge>
+             <div className="flex items-center text-gray-500 font-medium"><MapPin className="h-4 w-4 mr-1 text-gray-400" />{service.location}</div>
+             <div className="flex items-center text-gray-500"><Calendar className="h-4 w-4 mr-1 text-gray-400" />{formattedDate}</div>
+          </div>
+        </div>
+        
+        {/* NEW PROFESSIONAL INFO */}
+        <div className="grid grid-cols-2 gap-3">
+           {service.experience_years && (
+              <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 flex items-center gap-3">
+                 <div className="bg-white p-2 rounded-full shadow-sm text-blue-500"><Briefcase className="h-4 w-4" /></div>
+                 <div>
+                    <p className="text-xs text-gray-500 font-medium">Experiencia</p>
+                    <p className="text-sm font-bold text-gray-900 leading-tight">{service.experience_years}</p>
+                 </div>
+              </div>
+           )}
+           {schedule && schedule.start && schedule.end && (
+              <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 flex items-center gap-3">
+                 <div className="bg-white p-2 rounded-full shadow-sm text-green-500"><Clock className="h-4 w-4" /></div>
+                 <div>
+                    <p className="text-xs text-gray-500 font-medium">Horario</p>
+                    <p className="text-sm font-bold text-gray-900 leading-tight">{schedule.start} - {schedule.end}</p>
+                 </div>
+              </div>
+           )}
         </div>
 
         <div className="h-px bg-gray-100 w-full" />
 
         {serviceAreas.length > 0 && (<div className="bg-gray-50 rounded-xl p-4 border border-gray-100"><h3 className="font-bold text-gray-900 text-sm mb-2 flex items-center gap-2"><MapPin className="h-4 w-4 text-[#F97316]" /> Cobertura en {service.location}</h3><div className="flex flex-wrap gap-2">{serviceAreas.map((area: string, i: number) => (<span key={i} className="bg-white border border-gray-200 text-gray-600 text-xs px-2.5 py-1 rounded-md shadow-sm font-medium">{area}</span>))}</div></div>)}
 
-        {/* Perfil Clicable - AHORA CON STATS GLOBALES Y BADGE PLUS */}
+        {/* Perfil Clicable */}
         <div className="flex items-center gap-3 p-2 -mx-2 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer group" onClick={() => navigate(`/user/${service.user_id}`)}>
           <Avatar className={cn("h-14 w-14 border", service.profiles?.is_plus ? "border-[#0239c7]" : "border-gray-100")}>
             <AvatarImage src={service.profiles?.avatar_url} />

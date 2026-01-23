@@ -24,7 +24,7 @@ import {
   DollarSign, Sparkles, UploadCloud, X, Loader2, Rocket, User, Zap,
   Facebook, Instagram, Globe, MapPin,
   Wrench, Droplets, Car, Hammer, Leaf, Laptop, Scissors, HardHat, Truck, GraduationCap, Heart, Calendar, MoreHorizontal, Crown,
-  TrendingUp, CheckCircle2, ShieldCheck
+  TrendingUp, CheckCircle2, ShieldCheck, Briefcase, Clock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ServiceCard } from "@/components/ServiceCard";
@@ -45,6 +45,14 @@ const CATEGORIES = [
   { name: "Salud y Bienestar", icon: Heart },
   { name: "Eventos", icon: Calendar },
   { name: "Otros Servicios", icon: MoreHorizontal }
+];
+
+const EXPERIENCE_OPTIONS = [
+  "Menos de 1 año",
+  "1 - 3 años",
+  "3 - 5 años",
+  "5 - 10 años",
+  "+10 años de experiencia"
 ];
 
 const BOOST_PLANS = [
@@ -110,6 +118,10 @@ const Publish = () => {
     title: "",
     description: "",
     price: "",
+    currency: "DOP",
+    experience: "",
+    workStart: "08:00",
+    workEnd: "18:00",
     province: "", // Provincia seleccionada
     serviceAreas: [] as string[], // Sectores seleccionados
     features: [] as string[],
@@ -137,7 +149,7 @@ const Publish = () => {
       }
       setSession(session);
 
-      // Verificar perfil - Eliminada validación de 'city'
+      // Verificar perfil
       const { data: profile } = await supabase.from('profiles').select('first_name, last_name, phone').eq('id', session.user.id).single();
       if (profile) {
         if (!profile.first_name || !profile.last_name || !profile.phone) {
@@ -164,6 +176,7 @@ const Publish = () => {
     if (step === 3) {
       if (!formData.title) return showError("Escribe un título");
       if (!formData.price) return showError("Define un precio");
+      if (!formData.experience) return showError("Selecciona tus años de experiencia");
       if (!formData.province) return showError("Selecciona una provincia");
       if (formData.serviceAreas.length === 0) return showError("Selecciona al menos un sector");
     }
@@ -243,6 +256,9 @@ const Publish = () => {
         description: formData.description,
         category: formData.category,
         price: parseFloat(formData.price),
+        currency: formData.currency,
+        experience_years: formData.experience,
+        work_schedule: { start: formData.workStart, end: formData.workEnd },
         location: formData.province,
         service_areas: formData.serviceAreas,
         image_url: imageUrl,
@@ -258,7 +274,7 @@ const Publish = () => {
 
       if (error) throw error;
       
-      // Registrar transacción de Boost si hubo pago (En este caso 0 por beta, pero se registra igual)
+      // Registrar transacción de Boost si hubo pago
       if (isPromoted) {
         await supabase.from('transactions').insert({
           user_id: session.user.id,
@@ -352,14 +368,81 @@ const Publish = () => {
   const renderStep3 = () => (
     <div className="space-y-6 animate-fade-in pb-10">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-gray-900">Detalles y Ubicación</h2>
-        <p className="text-gray-500">Describe tu servicio y dónde trabajas</p>
+        <h2 className="text-2xl font-bold text-gray-900">Detalles Profesionales</h2>
+        <p className="text-gray-500">Destaca tu servicio con información completa</p>
       </div>
-      <div className="space-y-4">
+      
+      <div className="space-y-5">
         <div className="space-y-2"><Label>Título del Anuncio</Label><Input placeholder="Ej. Plomero Experto 24/7" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="h-12 text-lg" /></div>
-        <div className="space-y-2"><Label>Descripción Detallada</Label><Textarea placeholder="Describe tu experiencia, herramientas, garantía, etc." value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="min-h-[120px]" /></div>
+        <div className="space-y-2"><Label>Descripción Detallada</Label><Textarea placeholder="Describe tu experiencia, herramientas, garantía, etc." value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="min-h-[100px]" /></div>
         
-        <div className="space-y-2"><Label>Precio Base (RD$)</Label><div className="relative"><DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" /><Input type="number" placeholder="0.00" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className="pl-10 h-12 text-lg font-bold" /></div></div>
+        {/* PRECIO + MONEDA */}
+        <div className="space-y-2">
+          <Label>Precio Base</Label>
+          <div className="flex gap-2">
+            <Select value={formData.currency} onValueChange={(val) => setFormData({ ...formData, currency: val })}>
+               <SelectTrigger className="w-[100px] h-12 bg-gray-50 border-gray-200"><SelectValue /></SelectTrigger>
+               <SelectContent>
+                 <SelectItem value="DOP">RD$</SelectItem>
+                 <SelectItem value="USD">USD$</SelectItem>
+               </SelectContent>
+            </Select>
+            <div className="relative flex-1">
+               <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+               <Input type="number" placeholder="0.00" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className="pl-10 h-12 text-lg font-bold" />
+            </div>
+          </div>
+        </div>
+
+        {/* EXPERIENCIA (Botones) */}
+        <div className="space-y-3">
+          <Label className="flex items-center gap-2"><Briefcase className="h-4 w-4 text-[#F97316]" /> Años de Experiencia</Label>
+          <div className="flex flex-wrap gap-2">
+            {EXPERIENCE_OPTIONS.map((exp) => {
+              const isActive = formData.experience === exp;
+              return (
+                <button
+                  key={exp}
+                  onClick={() => setFormData({ ...formData, experience: exp })}
+                  className={cn(
+                    "px-4 py-2 rounded-full text-sm font-medium transition-all border",
+                    isActive 
+                      ? "bg-[#F97316] text-white border-[#F97316] shadow-sm" 
+                      : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                  )}
+                >
+                  {exp}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* HORARIO LABORAL */}
+        <div className="space-y-3">
+           <Label className="flex items-center gap-2"><Clock className="h-4 w-4 text-[#F97316]" /> Horario Laboral</Label>
+           <div className="flex items-center gap-3">
+             <div className="flex-1 space-y-1">
+                <span className="text-xs text-gray-500 ml-1">Inicio</span>
+                <Input 
+                   type="time" 
+                   value={formData.workStart} 
+                   onChange={(e) => setFormData({ ...formData, workStart: e.target.value })}
+                   className="h-12 text-center font-medium"
+                />
+             </div>
+             <span className="text-gray-400 pt-5">-</span>
+             <div className="flex-1 space-y-1">
+                <span className="text-xs text-gray-500 ml-1">Fin</span>
+                <Input 
+                   type="time" 
+                   value={formData.workEnd} 
+                   onChange={(e) => setFormData({ ...formData, workEnd: e.target.value })}
+                   className="h-12 text-center font-medium"
+                />
+             </div>
+           </div>
+        </div>
 
         {/* SELECCIÓN DE ZONA */}
         <div className="bg-gray-50 p-4 rounded-xl space-y-4 border border-gray-200 mt-4">
@@ -501,7 +584,8 @@ const Publish = () => {
 
   const renderStep5 = () => {
     const selectedPlan = BOOST_PLANS.find(p => p.id === formData.selectedPlanId) || BOOST_PLANS[0];
-    
+    const currencySymbol = formData.currency === 'USD' ? 'USD$' : 'RD$';
+
     return (
       <div className="space-y-6 animate-fade-in">
         <div className="text-center space-y-2">
@@ -513,7 +597,7 @@ const Publish = () => {
           <div className="transform scale-110 pointer-events-none">
             <ServiceCard 
               title={formData.title} 
-              price={`RD$ ${formData.price}`} 
+              price={`${currencySymbol} ${formData.price}`} 
               image={formData.imagePreview || ""} 
               badge={selectedPlan.id !== 'free' ? { text: "Destacado", color: "orange" } : undefined} 
             />
@@ -522,6 +606,8 @@ const Publish = () => {
 
         <div className="bg-white border rounded-xl p-4 space-y-3">
           <div className="flex justify-between text-sm"><span className="text-gray-500">Categoría</span><span className="font-medium text-gray-900">{formData.category}</span></div>
+          <div className="flex justify-between text-sm"><span className="text-gray-500">Experiencia</span><span className="font-medium text-gray-900">{formData.experience}</span></div>
+          <div className="flex justify-between text-sm"><span className="text-gray-500">Horario</span><span className="font-medium text-gray-900">{formData.workStart} - {formData.workEnd}</span></div>
           <div className="flex justify-between text-sm"><span className="text-gray-500">Provincia</span><span className="font-medium text-gray-900">{formData.province}</span></div>
           <div className="flex justify-between text-sm items-start"><span className="text-gray-500">Sectores</span><span className="font-medium text-gray-900 text-right max-w-[60%]">{formData.serviceAreas.length > 3 ? `${formData.serviceAreas.slice(0,3).join(", ")}...` : formData.serviceAreas.join(", ")}</span></div>
           <div className="flex justify-between text-sm pt-2 border-t mt-2">
