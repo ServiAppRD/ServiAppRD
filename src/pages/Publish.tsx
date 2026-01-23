@@ -269,7 +269,7 @@ const Publish = () => {
       }
 
       showSuccess("¡Servicio publicado con éxito!");
-      navigate("/profile");
+      navigate("/");
       
     } catch (error: any) {
       console.error(error);
