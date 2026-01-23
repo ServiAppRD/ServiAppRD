@@ -55,8 +55,13 @@ const AppLayout = () => {
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           
-          {/* USAMOS KEY PARA FORZAR RECARGA AL VOLVER AL PERFIL */}
+          {/* Rutas de Perfil (Mobile & Desktop) */}
           <Route path="/profile" element={<Profile key={location.key} />} />
+          
+          {/* Rutas específicas para Desktop/Web (Mismo componente, diferente URL) */}
+          <Route path="/profile-publications" element={<Profile key="publications" />} />
+          <Route path="/profile-metrics" element={<Profile key="metrics" />} />
+          <Route path="/profile-settings" element={<Profile key="settings" />} />
           
           <Route path="/user/:id" element={<PublicProfile />} /> 
           <Route path="/search" element={<Search />} />

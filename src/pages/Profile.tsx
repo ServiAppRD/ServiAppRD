@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -113,6 +113,7 @@ const TOTAL_DISPLAY_SLOTS = 10;
 
 const Profile = () => {
   const navigate = useNavigate();
+  const location = useLocation(); // Hook añadido
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   
@@ -177,13 +178,26 @@ const Profile = () => {
         getProfile(session.user.id);
         fetchMyServices(session.user.id);
         
-        const viewParam = searchParams.get('view');
-        if (viewParam === 'favorites') handleOpenFavorites(session.user.id);
-        else if (viewParam === 'edit') setView('edit');
-        else if (viewParam === 'my-plan') setView('my-plan');
+        // 1. Manejo de URLs de escritorio (NUEVO)
+        const path = location.pathname;
+        if (path === '/profile-publications') setView('my-services');
+        else if (path === '/profile-metrics') setView('metrics');
+        else if (path === '/profile-settings') setView('account-settings');
+        
+        // 2. Manejo de query params (Móvil / Legacy)
+        else {
+          const viewParam = searchParams.get('view');
+          if (viewParam === 'favorites') handleOpenFavorites(session.user.id);
+          else if (viewParam === 'edit') setView('edit');
+          else if (viewParam === 'my-plan') setView('my-plan');
+          else if (viewParam === 'metrics') setView('metrics');
+          else if (viewParam === 'my-services') setView('my-services');
+          else if (viewParam === 'account-settings') setView('account-settings');
+          else setView('dashboard'); // Default
+        }
       }
     });
-  }, [navigate, searchParams]);
+  }, [navigate, searchParams, location.pathname]);
 
   useEffect(() => {
     if (view === 'metrics' && session?.user?.id) {
@@ -545,7 +559,7 @@ const Profile = () => {
   const handleOpenMyServices = () => { setView('my-services'); fetchMyServices(session.user.id); };
   const handleOpenFavorites = (uid?: string) => { setView('favorites'); fetchFavorites(uid); };
   const handleOpenReputation = () => { setView('reputation'); fetchReputation(); };
-  const handleBackToDashboard = () => { if(searchParams.get('view')) navigate('/profile', {replace:true}); setView('dashboard'); };
+  const handleBackToDashboard = () => { if(searchParams.get('view') || location.pathname !== '/profile') navigate('/profile', {replace:true}); setView('dashboard'); };
   
   const handleOpenPreview = () => {
     if (session?.user?.id) {
@@ -749,7 +763,7 @@ const Profile = () => {
             return (
                 <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-100 flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto md:bg-white">
                    <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center pt-6 md:pt-4">
-                      <Button variant="ghost" size="icon" onClick={() => setView('dashboard')} className="-ml-2 mr-2">
+                      <Button variant="ghost" size="icon" onClick={handleBackToDashboard} className="-ml-2 mr-2">
                           <ArrowLeft className="h-6 w-6 text-black" />
                       </Button>
                       <h1 className="text-xl font-bold text-black">Mi Plan</h1>
@@ -847,7 +861,7 @@ const Profile = () => {
                 <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
                    <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4">
                       <div className="flex items-center gap-3">
-                         <Button variant="ghost" size="icon" onClick={() => setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button>
+                         <Button variant="ghost" size="icon" onClick={handleBackToDashboard}><ArrowLeft className="h-6 w-6" /></Button>
                          <h1 className="text-lg font-bold">Notificaciones</h1>
                       </div>
                    </div>
@@ -901,7 +915,7 @@ const Profile = () => {
             return (
               <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
                  <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4">
-                    <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={() => setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Administrar Cuenta</h1></div>
+                    <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={handleBackToDashboard}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Administrar Cuenta</h1></div>
                  </div>
                  <div className="p-5 space-y-6 pb-24 md:pb-6">
                     <div className="space-y-2">
@@ -932,12 +946,12 @@ const Profile = () => {
             return (
                 <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-white flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
                    <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4">
-                      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Verificación</h1></div>
+                      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={handleBackToDashboard}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Verificación</h1></div>
                    </div>
                    <div className="p-6 flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
                        <div className="w-24 h-24 bg-orange-50 rounded-full flex items-center justify-center mb-4 border-2 border-orange-100 relative"><ShieldCheck className="h-10 w-10 text-[#F97316]" /><div className="absolute -bottom-1 -right-1 bg-[#F97316] text-white p-1.5 rounded-full border-2 border-white"><Hammer className="h-4 w-4" /></div></div>
                        <div className="space-y-2 max-w-xs mx-auto"><h2 className="text-2xl font-bold text-gray-900">¡Próximamente!</h2><p className="text-gray-500 text-sm leading-relaxed">Estamos finalizando los detalles de nuestro sistema de verificación segura con IA.</p></div>
-                       <Button onClick={() => setView('dashboard')} className="w-full max-w-sm bg-[#F97316] hover:bg-orange-600 rounded-xl h-12 shadow-lg shadow-orange-100">Entendido</Button>
+                       <Button onClick={handleBackToDashboard} className="w-full max-w-sm bg-[#F97316] hover:bg-orange-600 rounded-xl h-12 shadow-lg shadow-orange-100">Entendido</Button>
                    </div>
                 </div>
             );
@@ -946,7 +960,7 @@ const Profile = () => {
             return (
                 <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
                    <div className="bg-white p-4 shadow-sm sticky top-0 z-10 space-y-4 pt-12 md:pt-4">
-                      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Métricas de Rendimiento</h1></div>
+                      <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={handleBackToDashboard}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Métricas de Rendimiento</h1></div>
                       <div className="flex justify-between items-center bg-gray-100 p-1 rounded-lg">
                           {['24h', '7d', '30d', 'Año', 'Todo'].map((r) => {
                               const val = r === 'Año' ? '1y' : r === 'Todo' ? 'all' : r;
@@ -996,7 +1010,7 @@ const Profile = () => {
             return (
               <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
                 <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4">
-                   <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Reputación</h1></div>
+                   <div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={handleBackToDashboard}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Reputación</h1></div>
                 </div>
                 <div className="p-5 space-y-6 pb-24 md:pb-6">
                     <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center"><div className="text-5xl font-black text-[#0F172A] mb-1">{averageRating.toFixed(1)}</div><div className="flex gap-1 mb-2">{[1,2,3,4,5].map((star) => (<Star key={star} className={cn("h-5 w-5", star <= Math.round(averageRating) ? "fill-[#F97316] text-[#F97316]" : "text-gray-200 fill-gray-100")} />))}</div><p className="text-gray-400 text-sm font-medium">{reviews.length} reseñas recibidas</p></div>
@@ -1020,7 +1034,7 @@ const Profile = () => {
           case 'my-services':
             return (
               <div className="fixed inset-0 md:relative md:inset-auto md:z-0 z-[1000] bg-gray-50 flex flex-col animate-fade-in overflow-y-auto h-full md:h-auto">
-                <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={()=>setView('dashboard')}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Publicaciones</h1></div></div>
+                <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center justify-between pt-12 md:pt-4"><div className="flex items-center gap-3"><Button variant="ghost" size="icon" onClick={handleBackToDashboard}><ArrowLeft className="h-6 w-6" /></Button><h1 className="text-lg font-bold">Mis Publicaciones</h1></div></div>
                 <div className="p-4 space-y-4 pb-24 md:pb-6">
                    <div className="flex items-center justify-between px-1"><span className="text-sm font-medium text-gray-500">Espacios utilizados</span><span className="text-sm font-bold text-gray-900">{myServices.length} / {maxSlots}</span></div>
                    {Array.from({ length: TOTAL_DISPLAY_SLOTS }).map((_, index) => {

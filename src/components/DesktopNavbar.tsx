@@ -155,15 +155,19 @@ export const DesktopNavbar = () => {
                       <LayoutDashboard className="mr-3 h-4 w-4" />
                       <span className="font-medium">Mi Perfil</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/profile?view=my-services')} className="rounded-xl px-3 py-2.5 cursor-pointer focus:bg-orange-50 focus:text-[#F97316]">
+                    
+                    {/* Nuevas Rutas de Escritorio */}
+                    <DropdownMenuItem onClick={() => navigate('/profile-publications')} className="rounded-xl px-3 py-2.5 cursor-pointer focus:bg-orange-50 focus:text-[#F97316]">
                       <Briefcase className="mr-3 h-4 w-4" />
                       <span className="font-medium">Mis Publicaciones</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/profile?view=metrics')} className="rounded-xl px-3 py-2.5 cursor-pointer focus:bg-orange-50 focus:text-[#F97316]">
+                    
+                    <DropdownMenuItem onClick={() => navigate('/profile-metrics')} className="rounded-xl px-3 py-2.5 cursor-pointer focus:bg-orange-50 focus:text-[#F97316]">
                       <BarChart3 className="mr-3 h-4 w-4" />
                       <span className="font-medium">Métricas</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/profile?view=account-settings')} className="rounded-xl px-3 py-2.5 cursor-pointer focus:bg-orange-50 focus:text-[#F97316]">
+                    
+                    <DropdownMenuItem onClick={() => navigate('/profile-settings')} className="rounded-xl px-3 py-2.5 cursor-pointer focus:bg-orange-50 focus:text-[#F97316]">
                       <Settings className="mr-3 h-4 w-4" />
                       <span className="font-medium">Administrar Cuenta</span>
                     </DropdownMenuItem>
