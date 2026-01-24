@@ -1,5 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.192.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,39 +7,66 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS
+  // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { frontPath, backPath, selfiePath, userId } = await req.json()
-    
-    // 1. Inicializar Supabase Admin
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
-    const AI_KEY = Deno.env.get('AI_KEY')
-    if (!AI_KEY) throw new Error('AI_KEY no configurada')
-
-    console.log(`[verify-identity] Iniciando verificación para usuario: ${userId}`)
-
-    // 2. Generar URLs temporales para la IA (Cortas, 60 segundos)
-    const getUrl = async (path: string) => {
-       const { data } = await supabaseAdmin.storage.from('verification-docs').createSignedUrl(path, 60)
-       return data?.signedUrl
+    // 1. Parse Request
+    let body;
+    try {
+      body = await req.json();
+    } catch (e) {
+      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
-    const frontImage = await getUrl(frontPath)
-    const backImage = await getUrl(backPath)
-    const selfieImage = await getUrl(selfiePath)
+    const { frontPath, backPath, selfiePath, userId } = body;
 
-    if(!frontImage || !backImage || !selfieImage) throw new Error("Error generando links")
+    if (!frontPath || !backPath || !selfiePath || !userId) {
+      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // 2. Initialize Supabase Admin Client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // 3. Preparar el Prompt para la IA
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const AI_KEY = Deno.env.get('AI_KEY');
+    if (!AI_KEY) {
+      console.error("AI_KEY is missing");
+      // Don't expose internal config error to client, but log it
+      throw new Error('Server configuration error');
+    }
+
+    console.log(`[verify-identity] Processing for user: ${userId}`);
+
+    // 3. Generate Signed URLs (Valid for 60 seconds)
+    const createUrl = async (path: string) => {
+       const { data, error } = await supabaseAdmin.storage.from('verification-docs').createSignedUrl(path, 120); // increased to 120s
+       if (error) throw error;
+       return data?.signedUrl;
+    }
+
+    const [frontImage, backImage, selfieImage] = await Promise.all([
+        createUrl(frontPath),
+        createUrl(backPath),
+        createUrl(selfiePath)
+    ]);
+
+    if (!frontImage || !backImage || !selfieImage) {
+        throw new Error("Failed to generate access URLs for documents");
+    }
+
+    // 4. Call OpenAI API
+    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${AI_KEY}`,
@@ -50,61 +77,68 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Eres un experto en seguridad de República Dominicana. Analiza 3 imágenes: 
-            1. Cédula Frontal
-            2. Cédula Trasera
-            3. Selfie del usuario.
+            content: `You are an expert identity verification AI for Dominican Republic documents. 
+            Analyze the 3 provided images: 
+            1. ID Card Front
+            2. ID Card Back
+            3. User Selfie
             
-            Tareas:
-            1. Verifica que sea una Cédula de Identidad y Electoral Dominicana válida (no borrosa, no cortada).
-            2. Verifica que la foto en la Cédula coincida con la Selfie.
+            Tasks:
+            1. Verify the ID is a valid "Cédula de Identidad y Electoral" from Dominican Republic.
+            2. Check if the ID photo matches the User Selfie.
+            3. Ensure documents are legible and not screen captures.
             
-            Responde ESTRICTAMENTE en JSON:
+            Respond ONLY in JSON format:
             {
               "approved": boolean,
-              "reason": "breve explicación",
-              "confidence": number (0-1)
+              "reason": "short explanation",
+              "confidence": number (0.0 to 1.0)
             }`
           },
           {
             role: 'user',
             content: [
-              { type: 'text', text: 'Verifica esta identidad.' },
+              { type: 'text', text: 'Verify this identity.' },
               { type: 'image_url', image_url: { url: frontImage } },
               { type: 'image_url', image_url: { url: backImage } },
               { type: 'image_url', image_url: { url: selfieImage } }
             ]
           }
         ],
-        max_tokens: 300
+        max_tokens: 300,
+        temperature: 0
       })
-    })
+    });
 
-    const aiData = await response.json()
-    
-    // Parsear respuesta IA
-    let analysis
-    try {
-      const content = aiData.choices?.[0]?.message?.content || '{}'
-      // Limpiar markdown si la IA lo pone
-      const cleanContent = content.replace(/```json/g, '').replace(/```/g, '').trim()
-      analysis = JSON.parse(cleanContent)
-    } catch (e) {
-      console.error("[verify-identity] Error IA", e)
-      analysis = { approved: false, reason: "Error de análisis IA", confidence: 0 }
+    if (!aiResponse.ok) {
+        const errText = await aiResponse.text();
+        console.error("[verify-identity] OpenAI Error:", errText);
+        throw new Error(`OpenAI API Error: ${aiResponse.status}`);
     }
 
-    console.log("[verify-identity] Resultado:", analysis)
+    const aiData = await aiResponse.json();
+    
+    // 5. Parse AI Response
+    let analysis;
+    try {
+      const content = aiData.choices?.[0]?.message?.content || '{}';
+      const cleanContent = content.replace(/```json/g, '').replace(/```/g, '').trim();
+      analysis = JSON.parse(cleanContent);
+    } catch (e) {
+      console.error("[verify-identity] Failed to parse AI response", e);
+      analysis = { approved: false, reason: "AI parsing error", confidence: 0 };
+    }
 
-    // 4. Actualizar Base de Datos según resultado
-    let status = 'manual_review'
-    let isVerified = false
+    console.log("[verify-identity] Analysis result:", analysis);
+
+    // 6. Update Database
+    // We approve automatically only if confidence is very high
+    let status = 'manual_review';
+    let isVerified = false;
 
     if (analysis.approved && analysis.confidence > 0.85) {
-       status = 'verified'
-       isVerified = true
-    } else {
-       status = 'manual_review' // Fallback a manual si la IA duda
+       status = 'verified';
+       isVerified = true;
     }
 
     const { error: updateError } = await supabaseAdmin
@@ -113,20 +147,23 @@ serve(async (req) => {
         is_verified: isVerified,
         verification_status: status
       })
-      .eq('id', userId)
+      .eq('id', userId);
 
-    if (updateError) throw updateError
+    if (updateError) {
+        console.error("[verify-identity] DB Update Error:", updateError);
+        throw updateError;
+    }
 
     return new Response(
       JSON.stringify({ success: true, status, analysis }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    );
 
-  } catch (error) {
-    console.error("[verify-identity] Error crítico:", error)
+  } catch (error: any) {
+    console.error("[verify-identity] Critical Error:", error.message);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-    )
+      JSON.stringify({ error: error.message || 'Internal Server Error' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+    );
   }
 })
