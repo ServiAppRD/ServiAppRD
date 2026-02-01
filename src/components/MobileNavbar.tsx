@@ -1,4 +1,4 @@
-import { Home, PlusCircle, Search, User, Crown, Sparkles, Send, Bot, Loader2 } from "lucide-react";
+import { Home, PlusCircle, Search, User, Crown, Sparkles, Send, Bot, Loader2, MapPin, Star, Phone, Navigation } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,10 +15,23 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+
+interface PlaceData {
+  id: string;
+  name: string;
+  address: string;
+  rating: number;
+  user_ratings_total: number;
+  open_now?: boolean;
+  image: string | null;
+  place_id: string;
+}
 
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
+  places?: PlaceData[];
 }
 
 export const MobileNavbar = () => {
@@ -32,7 +45,7 @@ export const MobileNavbar = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'assistant', content: '👋 ¡Hola! Soy el asistente de ServiAPP. Busco en Google Places y en nuestra base de datos para encontrar lo que necesitas.' }
+    { role: 'assistant', content: '👋 ¡Hola! Soy el asistente de ServiAPP. Puedo encontrar profesionales verificados o buscar en Google Maps lo que necesites.' }
   ]);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -53,7 +66,6 @@ export const MobileNavbar = () => {
 
     fetchProfile();
     
-    // Subscribe to auth changes to update avatar/plus status
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
         fetchProfile();
     });
@@ -91,7 +103,11 @@ export const MobileNavbar = () => {
 
       if (error) throw error;
 
-      setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: data.response,
+        places: data.places 
+      }]);
 
     } catch (error) {
       console.error(error);
@@ -101,7 +117,10 @@ export const MobileNavbar = () => {
     }
   };
 
-  // Ocultar la barra de navegación en rutas específicas:
+  const openGoogleMaps = (placeName: string, placeId: string) => {
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(placeName)}&query_place_id=${placeId}`, '_blank');
+  };
+
   const shouldHideNavbar = 
     ["/publish", "/login"].includes(location.pathname) || 
     location.pathname.startsWith("/service/") ||
@@ -135,7 +154,6 @@ export const MobileNavbar = () => {
   );
 
   return (
-    // Navbar Z-index es 999. El Drawer tendrá z-2000 para estar encima.
     <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-3 px-6 flex justify-between items-center z-[999] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
       <NavItem icon={Home} label="Inicio" path="/" />
       <NavItem icon={Search} label="Buscar" path="/search" />
@@ -153,7 +171,6 @@ export const MobileNavbar = () => {
            </button>
         </DrawerTrigger>
         
-        {/* DrawerContent con Z-Index superior al Navbar (2000 vs 999) */}
         <DrawerContent className="h-[85vh] flex flex-col rounded-t-[2rem] z-[2000]">
            <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-200 mt-4 mb-2" />
            <DrawerHeader className="text-left border-b border-gray-50 pb-4">
@@ -164,7 +181,7 @@ export const MobileNavbar = () => {
                  <div>
                     <DrawerTitle className="text-lg font-bold text-gray-900">Asistente ServiAPP</DrawerTitle>
                     <DrawerDescription className="text-xs text-gray-500">
-                        Búsqueda inteligente con IA + Google Places
+                        Busca servicios en nuestra red o en Google Maps
                     </DrawerDescription>
                  </div>
               </div>
@@ -172,9 +189,9 @@ export const MobileNavbar = () => {
 
            <div className="flex-1 bg-gray-50 overflow-hidden relative">
               <ScrollArea className="h-full px-4 py-4" ref={scrollRef}>
-                 <div className="flex flex-col gap-4 pb-4">
+                 <div className="flex flex-col gap-6 pb-6">
                     {messages.map((msg, idx) => (
-                       <div key={idx} className={cn("flex w-full", msg.role === 'user' ? "justify-end" : "justify-start")}>
+                       <div key={idx} className={cn("flex flex-col w-full gap-2", msg.role === 'user' ? "items-end" : "items-start")}>
                           <div className={cn(
                             "max-w-[85%] p-3.5 text-sm leading-relaxed shadow-sm",
                             msg.role === 'user' 
@@ -187,13 +204,53 @@ export const MobileNavbar = () => {
                                 }} />
                              ) : msg.content}
                           </div>
+
+                          {/* Render Places Cards if available */}
+                          {msg.places && msg.places.length > 0 && (
+                            <div className="w-full flex gap-3 overflow-x-auto pb-2 px-1 snap-x no-scrollbar mt-1">
+                               {msg.places.map((place) => (
+                                 <div 
+                                    key={place.id} 
+                                    className="snap-center shrink-0 w-[220px] bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col"
+                                 >
+                                    <div className="h-28 w-full bg-gray-100 relative">
+                                       {place.image ? (
+                                         <img src={place.image} alt={place.name} className="w-full h-full object-cover" />
+                                       ) : (
+                                         <div className="w-full h-full flex items-center justify-center bg-orange-50 text-orange-200">
+                                            <MapPin className="h-10 w-10" />
+                                         </div>
+                                       )}
+                                       {place.rating > 0 && (
+                                         <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-sm text-xs font-bold">
+                                            <Star className="h-3 w-3 fill-orange-400 text-orange-400" />
+                                            {place.rating} <span className="text-gray-400 font-normal">({place.user_ratings_total})</span>
+                                         </div>
+                                       )}
+                                    </div>
+                                    <div className="p-3 flex flex-col flex-1">
+                                       <h4 className="font-bold text-gray-900 text-sm line-clamp-1">{place.name}</h4>
+                                       <p className="text-xs text-gray-500 line-clamp-2 mt-1 mb-3 flex-1">{place.address}</p>
+                                       
+                                       <Button 
+                                          size="sm" 
+                                          className="w-full bg-gray-50 hover:bg-gray-100 text-[#F97316] font-bold text-xs h-8 border border-gray-100"
+                                          onClick={() => openGoogleMaps(place.name, place.place_id)}
+                                       >
+                                          <Navigation className="h-3 w-3 mr-1.5" /> Ver en Mapa
+                                       </Button>
+                                    </div>
+                                 </div>
+                               ))}
+                            </div>
+                          )}
                        </div>
                     ))}
                     {isAiLoading && (
                        <div className="flex justify-start w-full">
                           <div className="bg-white p-4 rounded-2xl rounded-tl-sm border border-gray-100 shadow-sm flex items-center gap-2">
                              <Loader2 className="h-4 w-4 animate-spin text-[#F97316]" />
-                             <span className="text-xs text-gray-500 font-medium">Consultando red global...</span>
+                             <span className="text-xs text-gray-500 font-medium">Buscando los mejores lugares...</span>
                           </div>
                        </div>
                     )}
@@ -206,10 +263,10 @@ export const MobileNavbar = () => {
                  <Input 
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
-                    placeholder="Escribe qué necesitas..."
+                    placeholder="Ej. Plomeros cerca de mi..."
                     className="flex-1 h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-[#F97316]"
                     disabled={isAiLoading}
-                    autoFocus={false} // Evitar auto-focus para no saltar teclado inmediatamente
+                    autoFocus={false}
                  />
                  <Button 
                     type="submit" 
@@ -224,7 +281,6 @@ export const MobileNavbar = () => {
         </DrawerContent>
       </Drawer>
       
-      {/* Account Tab with Avatar logic */}
       <NavItem 
         path="/profile" 
         label="Cuenta" 
