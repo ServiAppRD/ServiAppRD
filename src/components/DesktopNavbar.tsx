@@ -1,9 +1,9 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, PlusCircle, User, Heart, Crown, LayoutDashboard, Briefcase, BarChart3, Settings, LogOut, ChevronDown } from "lucide-react";
+import { Search, PlusCircle, User, Crown, LayoutDashboard, Briefcase, BarChart3, Settings, LogOut, ChevronDown, Sparkles, Send, Loader2, Bot } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
@@ -13,6 +13,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
 
 export const DesktopNavbar = () => {
   const navigate = useNavigate();
@@ -22,6 +37,15 @@ export const DesktopNavbar = () => {
   const [profileData, setProfileData] = useState<any>(null);
   const [avatarUrl, setAvatarUrl] = useState("");
   const [isPlus, setIsPlus] = useState(false);
+
+  // AI Chat States
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    { role: 'assistant', content: '¡Hola! Soy la IA de ServiAPP. ¿Qué servicio profesional estás buscando hoy? Puedo buscar en toda la red para ti.' }
+  ]);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const getUser = async () => {
@@ -55,10 +79,46 @@ export const DesktopNavbar = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Auto-scroll chat
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isChatOpen]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
+    }
+  };
+
+  const handleAiSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim() || isAiLoading) return;
+
+    const userMsg = chatInput;
+    setChatInput("");
+    setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+    setIsAiLoading(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-search', {
+        body: { 
+          query: userMsg,
+          location: profileData?.city || "Santo Domingo" // Usa la ciudad del usuario si existe
+        }
+      });
+
+      if (error) throw error;
+
+      setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
+
+    } catch (error) {
+      console.error(error);
+      setMessages(prev => [...prev, { role: 'assistant', content: "Lo siento, tuve un problema conectando con la base de datos global. Intenta de nuevo." }]);
+    } finally {
+      setIsAiLoading(false);
     }
   };
 
@@ -97,11 +157,86 @@ export const DesktopNavbar = () => {
             </Button>
           </Link>
           
-          <Link to="/profile?view=favorites">
-             <Button variant="ghost" size="icon" className="text-gray-500 hover:text-[#F97316] hover:bg-orange-50">
-                <Heart className="h-5 w-5" />
-             </Button>
-          </Link>
+          {/* AI CHAT BUTTON (Replaces Favorites) */}
+          <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                variant="ghost" 
+                className="gap-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 font-bold border border-indigo-100 bg-indigo-50/50 rounded-xl px-4"
+              >
+                <Sparkles className="h-4 w-4 fill-indigo-200" />
+                IA Assistant
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px] p-0 gap-0 overflow-hidden rounded-2xl border-0 shadow-2xl h-[600px] flex flex-col">
+               <DialogHeader className="p-4 bg-gradient-to-r from-indigo-600 to-violet-600 text-white shrink-0">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white/20 rounded-full backdrop-blur-sm">
+                       <Bot className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <DialogTitle className="text-white">Asistente ServiAPP</DialogTitle>
+                      <DialogDescription className="text-indigo-100 text-xs">
+                        Impulsado por GPT-5 y Google Places
+                      </DialogDescription>
+                    </div>
+                  </div>
+               </DialogHeader>
+               
+               {/* Chat Area */}
+               <div className="flex-1 bg-gray-50 overflow-hidden relative">
+                  <ScrollArea className="h-full p-4" ref={scrollRef}>
+                     <div className="flex flex-col gap-4 pb-4">
+                        {messages.map((msg, idx) => (
+                           <div key={idx} className={cn("flex w-full", msg.role === 'user' ? "justify-end" : "justify-start")}>
+                              <div className={cn(
+                                "max-w-[85%] p-3.5 text-sm leading-relaxed shadow-sm",
+                                msg.role === 'user' 
+                                  ? "bg-[#F97316] text-white rounded-2xl rounded-tr-sm" 
+                                  : "bg-white text-gray-700 rounded-2xl rounded-tl-sm border border-gray-100"
+                              )}>
+                                 {msg.role === 'assistant' ? (
+                                    <div className="markdown-body" dangerouslySetInnerHTML={{ 
+                                       __html: msg.content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>') 
+                                    }} />
+                                 ) : msg.content}
+                              </div>
+                           </div>
+                        ))}
+                        {isAiLoading && (
+                           <div className="flex justify-start w-full">
+                              <div className="bg-white p-4 rounded-2xl rounded-tl-sm border border-gray-100 shadow-sm flex items-center gap-2">
+                                 <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+                                 <span className="text-xs text-gray-500 font-medium">Buscando profesionales reales...</span>
+                              </div>
+                           </div>
+                        )}
+                     </div>
+                  </ScrollArea>
+               </div>
+
+               {/* Input Area */}
+               <div className="p-4 bg-white border-t border-gray-100 shrink-0">
+                  <form onSubmit={handleAiSubmit} className="flex gap-2">
+                     <Input 
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        placeholder="Ej: Necesito un electricista en Piantini..."
+                        className="flex-1 h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-indigo-500"
+                        disabled={isAiLoading}
+                     />
+                     <Button 
+                        type="submit" 
+                        size="icon" 
+                        disabled={!chatInput.trim() || isAiLoading}
+                        className="h-12 w-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200"
+                     >
+                        <Send className="h-5 w-5" />
+                     </Button>
+                  </form>
+               </div>
+            </DialogContent>
+          </Dialog>
 
           <Link to="/publish">
             <Button className="bg-[#F97316] hover:bg-orange-600 text-white rounded-xl px-6 font-bold shadow-lg shadow-orange-100 transition-all hover:-translate-y-0.5">
