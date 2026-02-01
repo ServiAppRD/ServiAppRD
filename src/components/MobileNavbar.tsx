@@ -34,6 +34,67 @@ interface ChatMessage {
   places?: PlaceData[];
 }
 
+// Subcomponente para manejar individualmente cada tarjeta y sus errores de imagen
+const PlaceCard = ({ place, onOpenMap }: { place: PlaceData; onOpenMap: (name: string, id: string) => void }) => {
+  const [imageError, setImageError] = useState(false);
+
+  return (
+    <div 
+      className="snap-center shrink-0 w-[85vw] max-w-[320px] bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col"
+    >
+       <div className="h-44 w-full bg-gray-100 relative">
+          {place.image && !imageError ? (
+             <img 
+               src={place.image} 
+               alt={place.name} 
+               className="w-full h-full object-cover"
+               onError={() => setImageError(true)}
+               loading="lazy"
+             />
+          ) : (
+             <div className="w-full h-full flex flex-col items-center justify-center bg-orange-50 text-orange-200 p-4 text-center">
+                <MapPin className="h-10 w-10 mb-2 opacity-50" />
+                <span className="text-xs text-orange-400 font-medium px-4">
+                  Imagen no disponible
+                </span>
+             </div>
+          )}
+          
+          {place.rating > 0 && (
+             <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-sm text-xs font-bold border border-gray-100">
+                <Star className="h-3.5 w-3.5 fill-orange-400 text-orange-400" />
+                <span className="text-gray-900">{place.rating}</span>
+                <span className="text-gray-400 font-normal">({place.user_ratings_total})</span>
+             </div>
+          )}
+
+          {place.open_now !== undefined && (
+             <div className={cn(
+                "absolute top-3 right-3 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider shadow-sm",
+                place.open_now ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+             )}>
+                {place.open_now ? "Abierto" : "Cerrado"}
+             </div>
+          )}
+       </div>
+       
+       <div className="p-4 flex flex-col flex-1">
+          <h4 className="font-bold text-gray-900 text-base line-clamp-1 mb-1">{place.name}</h4>
+          <p className="text-sm text-gray-500 line-clamp-2 mb-4 flex-1 leading-relaxed">
+            {place.address}
+          </p>
+          
+          <Button 
+             className="w-full bg-[#F97316] hover:bg-orange-600 text-white font-bold text-sm h-10 rounded-xl shadow-md shadow-orange-100"
+             onClick={() => onOpenMap(place.name, place.place_id)}
+          >
+             <Navigation className="h-4 w-4 mr-2" /> Cómo llegar
+          </Button>
+       </div>
+    </div>
+  );
+};
+
 export const MobileNavbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -191,9 +252,9 @@ export const MobileNavbar = () => {
               <ScrollArea className="h-full px-4 py-4" ref={scrollRef}>
                  <div className="flex flex-col gap-6 pb-6">
                     {messages.map((msg, idx) => (
-                       <div key={idx} className={cn("flex flex-col w-full gap-2", msg.role === 'user' ? "items-end" : "items-start")}>
+                       <div key={idx} className={cn("flex flex-col w-full gap-3", msg.role === 'user' ? "items-end" : "items-start")}>
                           <div className={cn(
-                            "max-w-[85%] p-3.5 text-sm leading-relaxed shadow-sm",
+                            "max-w-[90%] p-4 text-sm leading-relaxed shadow-sm break-words whitespace-pre-wrap",
                             msg.role === 'user' 
                               ? "bg-[#F97316] text-white rounded-2xl rounded-tr-sm" 
                               : "bg-white text-gray-700 rounded-2xl rounded-tl-sm border border-gray-100"
@@ -207,41 +268,16 @@ export const MobileNavbar = () => {
 
                           {/* Render Places Cards if available */}
                           {msg.places && msg.places.length > 0 && (
-                            <div className="w-full flex gap-3 overflow-x-auto pb-2 px-1 snap-x no-scrollbar mt-1">
+                            <div className="w-full flex gap-4 overflow-x-auto pb-4 px-1 snap-x no-scrollbar mt-1 -ml-1">
                                {msg.places.map((place) => (
-                                 <div 
-                                    key={place.id} 
-                                    className="snap-center shrink-0 w-[220px] bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col"
-                                 >
-                                    <div className="h-28 w-full bg-gray-100 relative">
-                                       {place.image ? (
-                                         <img src={place.image} alt={place.name} className="w-full h-full object-cover" />
-                                       ) : (
-                                         <div className="w-full h-full flex items-center justify-center bg-orange-50 text-orange-200">
-                                            <MapPin className="h-10 w-10" />
-                                         </div>
-                                       )}
-                                       {place.rating > 0 && (
-                                         <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-sm text-xs font-bold">
-                                            <Star className="h-3 w-3 fill-orange-400 text-orange-400" />
-                                            {place.rating} <span className="text-gray-400 font-normal">({place.user_ratings_total})</span>
-                                         </div>
-                                       )}
-                                    </div>
-                                    <div className="p-3 flex flex-col flex-1">
-                                       <h4 className="font-bold text-gray-900 text-sm line-clamp-1">{place.name}</h4>
-                                       <p className="text-xs text-gray-500 line-clamp-2 mt-1 mb-3 flex-1">{place.address}</p>
-                                       
-                                       <Button 
-                                          size="sm" 
-                                          className="w-full bg-gray-50 hover:bg-gray-100 text-[#F97316] font-bold text-xs h-8 border border-gray-100"
-                                          onClick={() => openGoogleMaps(place.name, place.place_id)}
-                                       >
-                                          <Navigation className="h-3 w-3 mr-1.5" /> Ver en Mapa
-                                       </Button>
-                                    </div>
-                                 </div>
+                                 <PlaceCard 
+                                   key={place.id} 
+                                   place={place} 
+                                   onOpenMap={openGoogleMaps} 
+                                 />
                                ))}
+                               {/* Spacer for right padding */}
+                               <div className="w-2 shrink-0" />
                             </div>
                           )}
                        </div>
