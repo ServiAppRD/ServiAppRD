@@ -4,8 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Send, Bot, Loader2, MapPin, Star, Sparkles } from "lucide-react";
+import { ArrowLeft, Send, Loader2, MapPin, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { showSuccess, showError } from "@/utils/toast";
 
@@ -185,14 +184,14 @@ const AiAssistant = () => {
 
   return (
     <div className="flex flex-col h-[100dvh] bg-white fixed inset-0 z-[2000]">
-        {/* Header */}
-        <div className="px-4 pt-4 pb-2 bg-white border-b border-gray-100 flex items-center gap-3 shrink-0">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full hover:bg-gray-50">
+        {/* Header - Aumentado el padding top para evitar status bar */}
+        <div className="px-4 pt-safe mt-4 pb-3 bg-white border-b border-gray-100 flex items-center gap-3 shrink-0">
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full hover:bg-gray-50 -ml-2">
                 <ArrowLeft className="h-6 w-6 text-gray-700" />
             </Button>
             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-pink-500 rounded-full flex items-center justify-center shadow-lg shadow-orange-200">
-                    <Sparkles className="h-5 w-5 text-white" />
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-sm border border-gray-100 overflow-hidden">
+                    <img src="/ai-icon.png" alt="AI" className="w-full h-full object-cover" />
                 </div>
                 <div>
                     <h1 className="font-bold text-gray-900 leading-tight">Asistente IA</h1>
@@ -214,7 +213,10 @@ const AiAssistant = () => {
                         
                         {/* Avatar for Assistant */}
                         {msg.role === 'assistant' && (
-                             <span className="text-[10px] text-gray-400 font-medium ml-2 mb-1">ServiAPP Bot</span>
+                             <span className="text-[10px] text-gray-400 font-medium ml-2 mb-1 flex items-center gap-1">
+                                <img src="/ai-icon.png" className="w-3 h-3 rounded-full" />
+                                ServiAPP Bot
+                             </span>
                         )}
 
                         <div className={cn(
