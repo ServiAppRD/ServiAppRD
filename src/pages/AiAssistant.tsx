@@ -4,9 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, Send, Loader2, MapPin, Star, Sparkles } from "lucide-react";
+import { ArrowLeft, Send, Loader2, MapPin, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { showSuccess, showError } from "@/utils/toast";
+
+// URL directa del proyecto para evitar errores de variables de entorno
+const SUPABASE_PROJECT_URL = "https://nuciqjpwltieyrdzvagf.supabase.co";
 
 interface PlaceData {
   id: string;
@@ -143,7 +146,7 @@ const AiAssistant = () => {
     try {
       const { data: { session: currentSession } } = await supabase.auth.getSession();
       
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-search`, {
+      const response = await fetch(`${SUPABASE_PROJECT_URL}/functions/v1/ai-search`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -155,7 +158,15 @@ const AiAssistant = () => {
           })
       });
 
-      const data = await response.json();
+      // Protección contra respuestas no-JSON
+      const text = await response.text();
+      let data;
+      try {
+          data = JSON.parse(text);
+      } catch (e) {
+          console.error("Respuesta no válida:", text);
+          throw new Error("El asistente no respondió correctamente. Intenta de nuevo.");
+      }
 
       if (!response.ok) {
           if (response.status === 429) {
@@ -174,7 +185,7 @@ const AiAssistant = () => {
       console.error(error);
       setMessages(prev => [...prev, { 
           role: 'system', 
-          content: error.message || "Lo siento, tuve un problema. Intenta más tarde.",
+          content: error.message || "Lo siento, tuve un problema de conexión. Intenta más tarde.",
           isError: true 
       }]);
     } finally {
