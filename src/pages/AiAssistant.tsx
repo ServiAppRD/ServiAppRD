@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, Send, Loader2, MapPin, Star } from "lucide-react";
+import { ArrowLeft, Send, Loader2, MapPin, Star, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { showSuccess, showError } from "@/utils/toast";
 
@@ -185,7 +185,7 @@ const AiAssistant = () => {
   return (
     <div className="flex flex-col h-[100dvh] bg-white fixed inset-0 z-[2000]">
         {/* Header - Aumentado el padding top para evitar status bar */}
-        <div className="px-4 pt-safe mt-4 pb-3 bg-white border-b border-gray-100 flex items-center gap-3 shrink-0">
+        <div className="px-4 pt-14 pb-3 bg-white border-b border-gray-100 flex items-center gap-3 shrink-0 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] z-20">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full hover:bg-gray-50 -ml-2">
                 <ArrowLeft className="h-6 w-6 text-gray-700" />
             </Button>
