@@ -135,30 +135,35 @@ export const MobileNavbar = () => {
   );
 
   return (
-    // Se añade un padding-bottom calculado: área segura + 16px (pb-4) para levantar la barra
+    // Navbar Z-index es 999. El Drawer tendrá z-2000 para estar encima.
     <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-3 px-6 flex justify-between items-center z-[999] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
       <NavItem icon={Home} label="Inicio" path="/" />
       <NavItem icon={Search} label="Buscar" path="/search" />
       <NavItem icon={PlusCircle} label="Publicar" path="/publish" />
       
-      {/* AI Chat Button (Replaces Favorites) */}
+      {/* AI Chat Button */}
       <Drawer open={isChatOpen} onOpenChange={setIsChatOpen}>
         <DrawerTrigger asChild>
-           <button className="flex flex-col items-center justify-center gap-1 min-w-[3.5rem] text-indigo-500">
-              <Sparkles className="h-6 w-6 fill-indigo-100" strokeWidth={2} />
-              <span className="text-[10px] font-bold text-indigo-600">IA</span>
+           <button className={cn(
+               "flex flex-col items-center justify-center gap-1 min-w-[3.5rem] transition-colors",
+               isChatOpen ? "text-[#F97316]" : "text-gray-400 hover:text-gray-600"
+           )}>
+              <Sparkles className={cn("h-6 w-6", isChatOpen ? "fill-[#F97316]" : "")} strokeWidth={2} />
+              <span className="text-[10px] font-medium">IA</span>
            </button>
         </DrawerTrigger>
-        <DrawerContent className="h-[80vh] flex flex-col rounded-t-[2rem]">
+        
+        {/* DrawerContent con Z-Index superior al Navbar (2000 vs 999) */}
+        <DrawerContent className="h-[85vh] flex flex-col rounded-t-[2rem] z-[2000]">
            <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-200 mt-4 mb-2" />
            <DrawerHeader className="text-left border-b border-gray-50 pb-4">
               <div className="flex items-center gap-3">
-                 <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                    <Bot className="h-6 w-6 text-indigo-600" />
+                 <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                    <Bot className="h-6 w-6 text-[#F97316]" />
                  </div>
                  <div>
-                    <DrawerTitle className="text-lg font-bold">Asistente ServiAPP</DrawerTitle>
-                    <DrawerDescription className="text-xs">
+                    <DrawerTitle className="text-lg font-bold text-gray-900">Asistente ServiAPP</DrawerTitle>
+                    <DrawerDescription className="text-xs text-gray-500">
                         Búsqueda inteligente con IA + Google Places
                     </DrawerDescription>
                  </div>
@@ -173,7 +178,7 @@ export const MobileNavbar = () => {
                           <div className={cn(
                             "max-w-[85%] p-3.5 text-sm leading-relaxed shadow-sm",
                             msg.role === 'user' 
-                              ? "bg-indigo-600 text-white rounded-2xl rounded-tr-sm" 
+                              ? "bg-[#F97316] text-white rounded-2xl rounded-tr-sm" 
                               : "bg-white text-gray-700 rounded-2xl rounded-tl-sm border border-gray-100"
                           )}>
                              {msg.role === 'assistant' ? (
@@ -187,7 +192,7 @@ export const MobileNavbar = () => {
                     {isAiLoading && (
                        <div className="flex justify-start w-full">
                           <div className="bg-white p-4 rounded-2xl rounded-tl-sm border border-gray-100 shadow-sm flex items-center gap-2">
-                             <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+                             <Loader2 className="h-4 w-4 animate-spin text-[#F97316]" />
                              <span className="text-xs text-gray-500 font-medium">Consultando red global...</span>
                           </div>
                        </div>
@@ -202,15 +207,15 @@ export const MobileNavbar = () => {
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     placeholder="Escribe qué necesitas..."
-                    className="flex-1 h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-indigo-500"
+                    className="flex-1 h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:border-[#F97316]"
                     disabled={isAiLoading}
-                    autoFocus={false}
+                    autoFocus={false} // Evitar auto-focus para no saltar teclado inmediatamente
                  />
                  <Button 
                     type="submit" 
                     size="icon" 
                     disabled={!chatInput.trim() || isAiLoading}
-                    className="h-12 w-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200"
+                    className="h-12 w-12 rounded-xl bg-[#F97316] hover:bg-orange-600 text-white shadow-lg shadow-orange-200"
                  >
                     <Send className="h-5 w-5" />
                  </Button>
