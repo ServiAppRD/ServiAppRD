@@ -426,27 +426,27 @@ const Publish = () => {
           </div>
         </div>
 
-        {/* HORARIO LABORAL */}
+        {/* HORARIO LABORAL - FIXED LAYOUT */}
         <div className="space-y-3">
            <Label className="flex items-center gap-2"><Clock className="h-4 w-4 text-[#F97316]" /> Horario Laboral</Label>
-           <div className="flex items-center gap-3">
-             <div className="flex-1 space-y-1">
+           <div className="grid grid-cols-[1fr,auto,1fr] items-center gap-2">
+             <div className="space-y-1">
                 <span className="text-xs text-gray-500 ml-1">Inicio</span>
                 <Input 
                    type="time" 
                    value={formData.workStart} 
                    onChange={(e) => setFormData({ ...formData, workStart: e.target.value })}
-                   className="h-12 text-center font-medium"
+                   className="h-12 text-center font-medium w-full min-w-0"
                 />
              </div>
              <span className="text-gray-400 pt-5">-</span>
-             <div className="flex-1 space-y-1">
+             <div className="space-y-1">
                 <span className="text-xs text-gray-500 ml-1">Fin</span>
                 <Input 
                    type="time" 
                    value={formData.workEnd} 
                    onChange={(e) => setFormData({ ...formData, workEnd: e.target.value })}
-                   className="h-12 text-center font-medium"
+                   className="h-12 text-center font-medium w-full min-w-0"
                 />
              </div>
            </div>
