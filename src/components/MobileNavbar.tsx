@@ -1,10 +1,9 @@
-import { Home, PlusCircle, Search, User, Crown, Sparkles, Lock } from "lucide-react";
+import { Home, PlusCircle, Search, User, Crown } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { showError } from "@/utils/toast";
 
 export const MobileNavbar = () => {
   const navigate = useNavigate();
@@ -41,17 +40,8 @@ export const MobileNavbar = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleAiClick = () => {
-      if (!session) {
-          showError("Inicia sesión para usar la IA");
-          navigate('/login');
-          return;
-      }
-      navigate('/ai-assistant');
-  };
-
   const shouldHideNavbar = 
-    ["/publish", "/login", "/ai-assistant", "/account-elimination"].includes(location.pathname) || 
+    ["/publish", "/login", "/account-elimination"].includes(location.pathname) || 
     location.pathname.startsWith("/service/") ||
     location.pathname.startsWith("/edit-service/") ||
     location.pathname.startsWith("/user/");
@@ -88,30 +78,6 @@ export const MobileNavbar = () => {
       <NavItem icon={Home} label="Inicio" path="/" />
       <NavItem icon={Search} label="Buscar" path="/search" />
       <NavItem icon={PlusCircle} label="Publicar" path="/publish" />
-      
-      {/* AI Assistant Button */}
-      {session ? (
-         <button 
-            onClick={handleAiClick}
-            className="flex flex-col items-center justify-center gap-1 min-w-[3.5rem] transition-colors text-gray-400 hover:text-gray-600"
-         >
-            <Sparkles className="h-6 w-6" strokeWidth={2} />
-            <span className="text-[10px] font-medium">IA</span>
-         </button>
-      ) : (
-          <button 
-             onClick={handleAiClick}
-             className="flex flex-col items-center justify-center gap-1 min-w-[3.5rem] transition-colors text-gray-400 hover:text-gray-600"
-          >
-              <div className="relative">
-                 <Sparkles className="h-6 w-6" strokeWidth={2} />
-                 <div className="absolute -top-1 -right-1 bg-gray-100 rounded-full p-0.5 border border-white">
-                    <Lock className="h-2.5 w-2.5 text-gray-400" />
-                 </div>
-              </div>
-              <span className="text-[10px] font-medium">IA</span>
-          </button>
-      )}
       
       <NavItem 
         path="/profile" 

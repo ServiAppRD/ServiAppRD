@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Wrench, Loader2, Info, Crown, Sparkles, Clock, 
-  Search, Droplets, Zap, Car, Laptop, ArrowRight, Grid, ShieldCheck, Rocket
+  Search, Droplets, Zap, Car, Laptop, ArrowRight, Grid, ShieldCheck, Rocket, Smartphone
 } from "lucide-react";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { useNavigate, Link } from "react-router-dom";
@@ -283,32 +283,36 @@ const Index = () => {
                <Sparkles className="h-8 w-8 text-[#F97316]" />
             </div>
             <div className="space-y-2">
-               <AlertDialogTitle className="text-xl font-bold text-gray-900">Bienvenido a ServiAPP</AlertDialogTitle>
+               <AlertDialogTitle className="text-xl font-bold text-gray-900">¡Bienvenido a la Beta!</AlertDialogTitle>
                <AlertDialogDescription className="text-gray-500 text-sm leading-relaxed">
-                  La plataforma líder que conecta a los mejores profesionales con clientes en República Dominicana.
+                  Gracias por probar la versión inicial de ServiAPP. Estamos construyendo algo grande.
                </AlertDialogDescription>
             </div>
             
             <div className="bg-gray-50 p-4 rounded-xl text-left space-y-3 border border-gray-100">
                <div className="flex gap-3">
-                  <div className="mt-0.5 bg-white p-1 rounded-md shadow-sm h-fit"><ShieldCheck className="h-4 w-4 text-[#F97316]" /></div>
+                  <div className="mt-0.5 bg-white p-1 rounded-md shadow-sm h-fit"><Info className="h-4 w-4 text-[#F97316]" /></div>
                   <div>
-                     <h4 className="font-bold text-gray-900 text-xs">Seguridad Primero</h4>
-                     <p className="text-xs text-gray-500 leading-snug mt-0.5">Verificamos perfiles para tu tranquilidad.</p>
+                     <h4 className="font-bold text-gray-900 text-xs">Fase de Prueba</h4>
+                     <p className="text-xs text-gray-500 leading-snug mt-0.5">
+                        Aún estamos sumando proveedores. Es posible que veas pocos servicios al principio.
+                     </p>
                   </div>
                </div>
                <div className="flex gap-3">
-                  <div className="mt-0.5 bg-white p-1 rounded-md shadow-sm h-fit"><Rocket className="h-4 w-4 text-[#F97316]" /></div>
+                  <div className="mt-0.5 bg-white p-1 rounded-md shadow-sm h-fit"><Smartphone className="h-4 w-4 text-[#F97316]" /></div>
                   <div>
-                     <h4 className="font-bold text-gray-900 text-xs">Crecimiento Constante</h4>
-                     <p className="text-xs text-gray-500 leading-snug mt-0.5">Estamos sumando nuevos expertos cada día en tu zona.</p>
+                     <h4 className="font-bold text-gray-900 text-xs">Próximamente App Nativa</h4>
+                     <p className="text-xs text-gray-500 leading-snug mt-0.5">
+                        Muy pronto podrás descargarnos directamente desde Google Play Store y App Store.
+                     </p>
                   </div>
                </div>
             </div>
           </AlertDialogHeader>
           <AlertDialogFooter className="pt-2">
             <AlertDialogAction onClick={handleCloseWelcome} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl font-bold h-12 shadow-lg shadow-orange-200">
-              Comenzar a explorar
+              Entendido, explorar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
