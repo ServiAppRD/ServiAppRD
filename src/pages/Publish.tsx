@@ -111,6 +111,7 @@ const Publish = () => {
   // Dialogs State
   const [showPublishWelcome, setShowPublishWelcome] = useState(false);
   const [showIncompleteProfileDialog, setShowIncompleteProfileDialog] = useState(false);
+  const [missingFields, setMissingFields] = useState<string[]>([]);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -150,9 +151,16 @@ const Publish = () => {
       setSession(session);
 
       // Verificar perfil
-      const { data: profile } = await supabase.from('profiles').select('first_name, last_name, phone').eq('id', session.user.id).single();
+      const { data: profile } = await supabase.from('profiles').select('first_name, last_name, phone, city').eq('id', session.user.id).single();
       if (profile) {
-        if (!profile.first_name || !profile.last_name || !profile.phone) {
+        const missing = [];
+        if (!profile.first_name) missing.push("Nombre");
+        if (!profile.last_name) missing.push("Apellido");
+        if (!profile.phone) missing.push("Teléfono");
+        if (!profile.city) missing.push("Provincia/Ciudad");
+
+        if (missing.length > 0) {
+          setMissingFields(missing);
           setShowIncompleteProfileDialog(true);
           return;
         }
@@ -674,8 +682,23 @@ const Publish = () => {
 
       <AlertDialog open={showIncompleteProfileDialog} onOpenChange={setShowIncompleteProfileDialog}>
         <AlertDialogContent className="rounded-2xl w-[90%] max-w-sm mx-auto">
-          <AlertDialogHeader className="text-center"><div className="mx-auto bg-red-100 w-12 h-12 rounded-full flex items-center justify-center mb-2"><User className="h-6 w-6 text-red-500" /></div><AlertDialogTitle className="text-xl font-bold text-center">Perfil incompleto</AlertDialogTitle><AlertDialogDescription className="text-center text-gray-600 mt-2">Te falta: Teléfono.</AlertDialogDescription></AlertDialogHeader>
-          <AlertDialogFooter className="flex-col gap-2 space-y-2"><AlertDialogAction onClick={() => navigate('/profile')} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl">Completar perfil</AlertDialogAction><AlertDialogCancel onClick={() => {setShowIncompleteProfileDialog(false);navigate('/');}} className="w-full mt-2 rounded-xl border-gray-200">Cancelar</AlertDialogCancel></AlertDialogFooter>
+          <AlertDialogHeader className="text-center">
+            <div className="mx-auto bg-red-100 w-12 h-12 rounded-full flex items-center justify-center mb-2">
+              <User className="h-6 w-6 text-red-500" />
+            </div>
+            <AlertDialogTitle className="text-xl font-bold text-center">Perfil incompleto</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-gray-600 mt-2">
+              Para publicar, necesitas completar: <span className="font-bold text-gray-900">{missingFields.join(", ")}</span>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 space-y-2">
+            <AlertDialogAction onClick={() => navigate('/profile?view=edit')} className="w-full bg-[#F97316] hover:bg-orange-600 rounded-xl">
+              Completar perfil
+            </AlertDialogAction>
+            <AlertDialogCancel onClick={() => {setShowIncompleteProfileDialog(false);navigate('/');}} className="w-full mt-2 rounded-xl border-gray-200">
+              Cancelar
+            </AlertDialogCancel>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
